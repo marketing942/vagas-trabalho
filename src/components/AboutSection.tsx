@@ -1,4 +1,6 @@
+import Link from "next/link";
 import type { SiteSettings } from "@/lib/types";
+import Icon from "./Icon";
 
 interface AboutSectionProps {
   settings: SiteSettings;
@@ -14,6 +16,10 @@ export default function AboutSection({ settings }: AboutSectionProps) {
           Sobre o {settings.company_name}
         </h2>
         <p className="mt-6 hyphens-auto whitespace-pre-line text-justify text-lg leading-relaxed text-inksoft">{settings.about_text}</p>
+        <Link href="/cultura" className="btn-secondary mt-8">
+          Conheça a nossa cultura
+          <Icon name="arrow" className="h-4 w-4" />
+        </Link>
       </div>
     </section>
   );

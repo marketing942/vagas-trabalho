@@ -46,6 +46,10 @@ const config: Config = {
         goldsoft: "rgb(var(--c-goldsoft) / <alpha-value>)",
         goldfaint: "rgb(var(--c-goldfaint) / <alpha-value>)",
         goldline: "rgb(var(--c-goldline) / <alpha-value>)",
+        good: "rgb(var(--c-good) / <alpha-value>)",
+        goodsoft: "rgb(var(--c-goodsoft) / <alpha-value>)",
+        bad: "rgb(var(--c-bad) / <alpha-value>)",
+        badsoft: "rgb(var(--c-badsoft) / <alpha-value>)",
         // Creme: fundos acolhedores (no lugar do branco frio / preto)
         cream: {
           50: "#fdfbf6",

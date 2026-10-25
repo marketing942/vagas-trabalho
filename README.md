@@ -155,6 +155,9 @@ Crie um arquivo `.env.local` (use `.env.example` como base):
   números, abra o projeto na Vercel → aba **Analytics** → **Enable**. Os cliques
   em "Candidatar-se", WhatsApp, LinkedIn e "Compartilhar" são enviados como
   eventos; a contagem de eventos depende do plano da Vercel.
+- **Página de cultura (`/cultura`):** os 10 mandamentos e as listas de quem é e de
+  quem não é bem-vindo ficam em `src/lib/cultura.ts`; a imagem do topo, em
+  `public/cultura/`.
 - **Textos editáveis:** em Admin → Configurações é possível editar "Por que
   trabalhar no CPPEM", "Como funciona" e "Perguntas frequentes". O texto da
   Política de Privacidade fica em `src/app/privacidade/page.tsx`; o e-mail de

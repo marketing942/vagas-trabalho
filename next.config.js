@@ -7,6 +7,7 @@ const nextConfig = {
   outputFileTracingIncludes: {
     "/opengraph-image": ["./public/logos/**/*"],
     "/carreiras/[slug]/opengraph-image": ["./public/logos/**/*"],
+    "/cultura/opengraph-image": ["./public/logos/**/*"],
   },
   async redirects() {
     return [
