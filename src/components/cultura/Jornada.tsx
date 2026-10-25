@@ -312,7 +312,7 @@ export default function Jornada({ items, highlights }: JornadaProps) {
               ref={(el) => {
                 alvos.current[i] = el;
               }}
-              className={`flex min-h-[38svh] flex-col justify-center py-6 transition-opacity duration-300 lg:min-h-[64vh] ${
+              className={`flex min-h-[30svh] flex-col justify-center py-5 transition-opacity duration-300 lg:min-h-[52vh] ${
                 ativo >= 1 && ativo !== i + 1 ? "opacity-30" : "opacity-100"
               }`}
             >
