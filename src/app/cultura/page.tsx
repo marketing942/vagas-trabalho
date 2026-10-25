@@ -32,6 +32,19 @@ export default async function CulturaPage() {
       <main id="conteudo" tabIndex={-1} className="outline-none">
         {/* ---------- Header: só tipografia, fundo limpo ---------- */}
         <section className="relative isolate overflow-hidden bg-brand-950 text-white" aria-labelledby="cultura-titulo">
+          {/* Foto da equipe, bem apagada: só uma textura de fundo */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/cultura/equipe-1280.webp"
+            srcSet="/cultura/equipe-1000.webp 1000w, /cultura/equipe-1280.webp 1280w"
+            sizes="100vw"
+            width={1280}
+            height={720}
+            alt=""
+            aria-hidden
+            fetchPriority="high"
+            className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover opacity-[0.07] grayscale"
+          />
           <div className="container-page flex min-h-[600px] flex-col justify-end pb-16 pt-24 sm:min-h-[680px] lg:min-h-[740px] lg:pb-24">
             <div className="animate-fade-up">
               <span className="font-eyebrow text-sm font-bold uppercase tracking-[0.22em] text-accent-300">Cultura CPPEM</span>
