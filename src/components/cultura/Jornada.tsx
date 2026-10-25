@@ -222,15 +222,15 @@ export default function Jornada({ items, highlights }: JornadaProps) {
 
       // Linha de leitura: onde a pessoa está lendo (meio da área visível).
       const vh = window.innerHeight;
-      const topoUtil = grande.matches ? 68 : painel.current.getBoundingClientRect().bottom;
-      const leitura = topoUtil + (vh - topoUtil) * 0.5;
+      const topoUtil = 68 + (grande.matches ? 0 : painel.current.offsetHeight);
+      const leitura = topoUtil + (vh - topoUtil) * (grande.matches ? 0.5 : 0.32);
 
       // Âncoras: o centro de cada mandamento, mais o topo; antes do primeiro, o pé da montanha.
       const centros = pontos.map((a) => {
         const r = a.getBoundingClientRect();
         return r.top + r.height / 2;
       });
-      const ancoras = [centros[0] - (centros[1] - centros[0]) * 0.5, ...centros];
+      const ancoras = [centros[0] - (centros[1] - centros[0]) * 0.25, ...centros];
 
       let p = ancoras.length - 1;
       for (let j = 0; j < ancoras.length - 1; j++) {
@@ -304,7 +304,7 @@ export default function Jornada({ items, highlights }: JornadaProps) {
 
       {/* Os mandamentos */}
       <div>
-        <ol className="pt-[18vh] lg:pt-[14vh]">
+        <ol className="pt-[6vh] lg:pt-[14vh]">
           {items.map((text, i) => (
             <li
               key={text}
@@ -312,7 +312,7 @@ export default function Jornada({ items, highlights }: JornadaProps) {
               ref={(el) => {
                 alvos.current[i] = el;
               }}
-              className={`flex min-h-[52vh] flex-col justify-center py-8 transition-opacity duration-300 lg:min-h-[64vh] ${
+              className={`flex min-h-[38svh] flex-col justify-center py-6 transition-opacity duration-300 lg:min-h-[64vh] ${
                 ativo >= 1 && ativo !== i + 1 ? "opacity-30" : "opacity-100"
               }`}
             >
@@ -331,7 +331,7 @@ export default function Jornada({ items, highlights }: JornadaProps) {
           ref={(el) => {
             alvos.current[items.length] = el;
           }}
-          className="flex min-h-[92svh] flex-col justify-center py-10"
+          className="flex min-h-[48svh] flex-col justify-center py-8 lg:min-h-[78svh]"
         >
           <span className="eyebrow">Você chegou</span>
           <h3 className="mt-4 text-6xl font-extrabold leading-none tracking-tight text-ink sm:text-8xl">
@@ -340,11 +340,7 @@ export default function Jornada({ items, highlights }: JornadaProps) {
           <p className="mt-8 max-w-xl text-xl leading-relaxed text-inksoft sm:text-2xl">
             É assim que a gente chega lá: um mandamento de cada vez, todos os dias.
           </p>
-          <div className="mt-8">
-            <a href="#perfil" className="btn-primary">
-              Isso é para mim?
-            </a>
-          </div>
+
         </div>
       </div>
     </div>
