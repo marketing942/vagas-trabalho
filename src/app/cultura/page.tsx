@@ -43,7 +43,7 @@ export default async function CulturaPage() {
             alt=""
             aria-hidden
             fetchPriority="high"
-            className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover opacity-[0.07] grayscale"
+            className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover opacity-[0.10] grayscale"
           />
           <div className="container-page flex min-h-[600px] flex-col justify-end pb-16 pt-24 sm:min-h-[680px] lg:min-h-[740px] lg:pb-24">
             <div className="animate-fade-up">
