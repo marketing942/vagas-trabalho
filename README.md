@@ -156,8 +156,10 @@ Crie um arquivo `.env.local` (use `.env.example` como base):
   em "Candidatar-se", WhatsApp, LinkedIn e "Compartilhar" são enviados como
   eventos; a contagem de eventos depende do plano da Vercel.
 - **Página de cultura (`/cultura`):** os 10 mandamentos e as listas de quem é e de
-  quem não é bem-vindo ficam em `src/lib/cultura.ts`; a imagem do topo, em
-  `public/cultura/`.
+  quem não é bem-vindo ficam em `src/lib/cultura.ts`. Os mandamentos aparecem como
+  uma subida: ao rolar a página, um ponto avança pela trilha de uma montanha (um
+  checkpoint por mandamento) até a bandeira TOPO. O desenho da montanha e da
+  trilha fica em `src/lib/cultura-trilha.ts`.
 - **Textos editáveis:** em Admin → Configurações é possível editar "Por que
   trabalhar no CPPEM", "Como funciona" e "Perguntas frequentes". O texto da
   Política de Privacidade fica em `src/app/privacidade/page.tsx`; o e-mail de

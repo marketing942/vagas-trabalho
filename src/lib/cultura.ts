@@ -36,3 +36,20 @@ export const NAO_BEM_VINDO: string[] = [
   "Gente que desiste fácil quando a dificuldade aperta",
   "Gente que esconde o erro e não se responsabiliza",
 ];
+
+/**
+ * Trecho de cada mandamento que ganha destaque na jornada da página (a subida até o topo)
+ * (mesma ordem de MANDAMENTOS; precisa existir dentro do texto do mandamento).
+ */
+export const DESTAQUES: string[] = [
+  "mente milionária",
+  "cliente",
+  "eficiência",
+  "hoje",
+  "Agilidade",
+  "cumpra metas",
+  "inove",
+  "sua",
+  "sincero e direto",
+  "tudo por escrito",
+];
