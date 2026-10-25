@@ -59,7 +59,8 @@ export default async function CulturaPage() {
                 </span>
               </h1>
               <p className="mt-7 max-w-2xl text-xl leading-snug text-brand-100 sm:text-2xl">
-                A forma como trabalhamos e como não trabalhamos.
+                A forma <span className="font-semibold text-emerald-300">como trabalhamos</span> e{" "}
+                <span className="font-semibold text-rose-300">como não trabalhamos</span>.
               </p>
               <div className="mt-9 flex flex-wrap gap-3">
                 <a href="#mandamentos" className="btn-primary">
@@ -73,23 +74,17 @@ export default async function CulturaPage() {
         </section>
 
         {/* ---------- O que é ---------- */}
-        <section className="py-16 sm:py-24" aria-labelledby="o-que-e">
+        <section className="py-12 sm:py-16" aria-label="O que é a nossa cultura">
           <div className="container-page max-w-4xl">
             <span className="eyebrow">O que é a nossa cultura?</span>
-            <h2 id="o-que-e" className="mt-5 text-4xl font-extrabold leading-[1.08] tracking-tight text-ink sm:text-6xl">
-              A forma{" "}
-              <span className="text-good">como trabalhamos</span> e{" "}
-              <span className="text-bad">como não trabalhamos</span>
-              , sem enrolação.
-            </h2>
-            <p className="mt-10 max-w-3xl border-l-4 border-accent-500 pl-6 text-xl leading-relaxed text-inksoft sm:text-2xl">
+            <p className="mt-6 max-w-3xl border-l-4 border-accent-500 pl-6 text-xl leading-relaxed text-inksoft sm:text-2xl">
               {CULTURA_DEFINICAO}
             </p>
           </div>
         </section>
 
         {/* ---------- Os 10 mandamentos ---------- */}
-        <section id="mandamentos" className="scroll-mt-20 bg-canvas2 pb-16 pt-16 sm:pb-24 sm:pt-24" aria-labelledby="mandamentos-titulo">
+        <section id="mandamentos" className="scroll-mt-20 bg-canvas2 pb-10 pt-14 sm:pb-14 sm:pt-20" aria-labelledby="mandamentos-titulo">
           <div className="container-page">
             <div className="mb-8 sm:mb-10">
               <span className="eyebrow">Do 01 ao 10</span>
@@ -102,7 +97,7 @@ export default async function CulturaPage() {
         </section>
 
         {/* ---------- Quem é / quem não é bem-vindo ---------- */}
-        <section id="perfil" className="scroll-mt-20 py-14 sm:py-20" aria-labelledby="perfil-titulo">
+        <section id="perfil" className="scroll-mt-20 py-12 sm:py-16" aria-labelledby="perfil-titulo">
           <div className="container-page">
             <div className="mx-auto mb-10 max-w-2xl text-center">
               <span className="eyebrow">O perfil de quem sobe com a gente</span>
