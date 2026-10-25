@@ -38,7 +38,7 @@ export const NAO_BEM_VINDO: string[] = [
 ];
 
 /**
- * Trecho de cada mandamento que ganha destaque na versão em manifesto da página
+ * Trecho de cada mandamento que ganha destaque na jornada da página (a subida até o topo)
  * (mesma ordem de MANDAMENTOS; precisa existir dentro do texto do mandamento).
  */
 export const DESTAQUES: string[] = [
