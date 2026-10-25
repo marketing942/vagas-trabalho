@@ -5,7 +5,6 @@ import Footer from "@/components/Footer";
 import Icon from "@/components/Icon";
 import ExitIntentPopup from "@/components/ExitIntentPopup";
 import Jornada from "@/components/cultura/Jornada";
-import AlignmentCheck from "@/components/cultura/AlignmentCheck";
 import { getSettings } from "@/lib/settings";
 import { SITE_NAME } from "@/lib/site";
 import { BEM_VINDO, CULTURA_DEFINICAO, DESTAQUES, MANDAMENTOS, NAO_BEM_VINDO } from "@/lib/cultura";
@@ -54,9 +53,6 @@ export default async function CulturaPage() {
                   Ver os 10 mandamentos
                   <Icon name="arrow" className="h-4 w-4 rotate-90" />
                 </a>
-                <a href="#alinhamento" className="btn-ghost">
-                  Isso é para mim?
-                </a>
               </div>
             </div>
           </div>
@@ -69,8 +65,8 @@ export default async function CulturaPage() {
             <span className="eyebrow">O que é a nossa cultura?</span>
             <h2 id="o-que-e" className="mt-5 text-4xl font-extrabold leading-[1.08] tracking-tight text-ink sm:text-6xl">
               A forma{" "}
-              <span className="text-good underline decoration-good/40 decoration-[5px] underline-offset-[8px]">como trabalhamos</span> e{" "}
-              <span className="text-bad underline decoration-bad/40 decoration-[5px] underline-offset-[8px]">como não trabalhamos</span>
+              <span className="text-good">como trabalhamos</span> e{" "}
+              <span className="text-bad">como não trabalhamos</span>
               , sem enrolação.
             </h2>
             <p className="mt-10 max-w-3xl border-l-4 border-accent-500 pl-6 text-xl leading-relaxed text-inksoft sm:text-2xl">
@@ -92,19 +88,45 @@ export default async function CulturaPage() {
           </div>
         </section>
 
-        {/* ---------- Isso é a sua cara? ---------- */}
-        <section id="alinhamento" className="scroll-mt-20 bg-brand-950 py-16 text-white sm:py-24" aria-labelledby="alinhamento-titulo">
+        {/* ---------- Quem é / quem não é bem-vindo ---------- */}
+        <section id="perfil" className="scroll-mt-20 py-14 sm:py-20" aria-labelledby="perfil-titulo">
           <div className="container-page">
-            <div className="mb-12 max-w-3xl">
-              <span className="font-eyebrow text-sm font-bold uppercase tracking-[0.22em] text-accent-300">Antes de se candidatar</span>
-              <h2 id="alinhamento-titulo" className="mt-4 text-4xl font-extrabold tracking-tight sm:text-6xl">
-                Isso é a sua cara?
+            <div className="mx-auto mb-10 max-w-2xl text-center">
+              <span className="eyebrow">O perfil de quem sobe com a gente</span>
+              <h2 id="perfil-titulo" className="mt-3 text-3xl font-extrabold text-ink sm:text-4xl">
+                Quem é bem-vindo(a) aqui, e quem não é
               </h2>
-              <p className="mt-5 text-xl leading-snug text-brand-100">
-                Nossa cultura funciona como um filtro. Marque o que descreve você hoje e veja, na hora, se combinamos.
-              </p>
             </div>
-            <AlignmentCheck bemVindo={BEM_VINDO} naoBemVindo={NAO_BEM_VINDO} />
+
+            <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-2">
+              <div className="card border-good/40 p-7">
+                <h3 className="inline-flex items-center gap-3 rounded-xl bg-goodsoft px-4 py-2 text-lg font-extrabold text-good">
+                  <Icon name="check" className="h-5 w-5" /> Quem é bem-vindo(a) aqui
+                </h3>
+                <ul className="mt-6 space-y-4">
+                  {BEM_VINDO.map((item) => (
+                    <li key={item} className="flex items-start gap-3 leading-snug text-ink">
+                      <Icon name="check" className="mt-0.5 h-5 w-5 shrink-0 text-good" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="card border-bad/40 p-7">
+                <h3 className="inline-flex items-center gap-3 rounded-xl bg-badsoft px-4 py-2 text-lg font-extrabold text-bad">
+                  <Icon name="close" className="h-5 w-5" /> Quem NÃO é bem-vindo(a) aqui
+                </h3>
+                <ul className="mt-6 space-y-4">
+                  {NAO_BEM_VINDO.map((item) => (
+                    <li key={item} className="flex items-start gap-3 leading-snug text-ink">
+                      <Icon name="close" className="mt-0.5 h-5 w-5 shrink-0 text-bad" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           </div>
         </section>
 
