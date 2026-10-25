@@ -17,6 +17,11 @@
   --c-goldsoft: 246 235 205;
   --c-goldfaint: 251 246 233;
   --c-goldline: 227 201 143;
+  /* positivo / negativo (ex.: "quem é bem-vindo" / "quem não é") */
+  --c-good: 4 120 87;
+  --c-goodsoft: 236 253 245;
+  --c-bad: 190 18 60;
+  --c-badsoft: 255 241 242;
 }
 html[data-theme="dark"] {
   color-scheme: dark;
@@ -32,6 +37,10 @@ html[data-theme="dark"] {
   --c-goldsoft: 65 69 91;
   --c-goldfaint: 28 40 82;
   --c-goldline: 110 94 62;
+  --c-good: 52 211 153;
+  --c-goodsoft: 16 58 72;
+  --c-bad: 251 113 133;
+  --c-badsoft: 72 30 56;
 }
 
 @layer base {

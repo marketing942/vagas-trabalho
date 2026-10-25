@@ -2,7 +2,8 @@ import type { SVGProps } from "react";
 
 export type IconName =
   | "cap" | "heart" | "users" | "star" | "pin" | "clock" | "search" | "arrow"
-  | "briefcase" | "book" | "chat" | "spark" | "building" | "check" | "calendar" | "sun";
+  | "briefcase" | "book" | "chat" | "spark" | "building" | "check" | "calendar" | "sun"
+  | "close" | "mountain" | "flag";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   cap: (<><path d="M22 10 12 5 2 10l10 5 10-5Z" /><path d="M6 12v5c0 1 2.7 3 6 3s6-2 6-3v-5" /><path d="M22 10v6" /></>),
@@ -20,6 +21,9 @@ const PATHS: Record<IconName, React.ReactNode> = {
   building: (<><path d="M4 21V5l8-2 8 2v16" /><path d="M9 21v-4h6v4M8 9h.01M12 9h.01M16 9h.01M8 13h.01M12 13h.01M16 13h.01" /></>),
   check: (<path d="m5 12.500 4.500 4.500L19 7.500" />),
   sun: (<><circle cx="12" cy="12" r="4" /><path d="M12 2.500v2.200M12 19.300v2.200M4.600 4.600l1.600 1.600M17.800 17.800l1.600 1.600M2.500 12h2.200M19.300 12h2.200M4.600 19.400l1.600-1.600M17.800 6.200l1.600-1.600" /></>),
+  close: (<path d="M6 6l12 12M18 6 6 18" />),
+  mountain: (<><path d="m3 20 6.500-11 4 6.500 2.500-4L21 20H3Z" /><path d="m9 9 1.800 2.800" /></>),
+  flag: (<><path d="M5 21V4" /><path d="M5 4h11l-2 4 2 4H5" /></>),
   calendar: (<><rect x="3.500" y="5" width="17" height="15.500" rx="2.500" /><path d="M8 3v4M16 3v4M3.500 10h17" /></>),
 };
 
