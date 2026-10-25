@@ -29,7 +29,7 @@ export default async function CulturaPage() {
     <>
       <Header formUrl={settings.form_url} />
       <main id="conteudo" tabIndex={-1} className="outline-none">
-        {/* ---------- Header: a subida até o cume ---------- */}
+        {/* ---------- Header: a subida até o topo ---------- */}
         <section className="relative isolate overflow-hidden bg-brand-950 text-white" aria-labelledby="cultura-titulo">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -47,16 +47,7 @@ export default async function CulturaPage() {
           <div className="absolute inset-x-0 top-0 -z-10 h-[430px] bg-gradient-to-t from-brand-950 via-brand-950/70 to-transparent md:inset-0 md:h-full" />
           <div className="absolute inset-x-0 top-0 -z-10 hidden bg-gradient-to-r from-brand-950/55 via-transparent to-transparent md:block md:inset-0 md:h-full" />
 
-          <div className="container-page flex min-h-[640px] flex-col justify-between pb-14 pt-8 sm:min-h-[700px] lg:min-h-[780px] sm:pb-20">
-            <div>
-              <Link
-                href="/carreiras"
-                className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-brand-950/40 px-4 py-1.5 text-sm text-white backdrop-blur transition-colors hover:bg-brand-950/60"
-              >
-                <Icon name="arrow" className="h-4 w-4 rotate-180" /> Voltar para as vagas
-              </Link>
-            </div>
-
+          <div className="container-page flex min-h-[640px] flex-col justify-end pb-14 pt-8 sm:min-h-[700px] lg:min-h-[780px] sm:pb-20">
             <div className="max-w-3xl animate-fade-up">
               <span className="inline-flex items-center gap-2 font-eyebrow text-sm font-bold uppercase tracking-[0.2em] text-accent-300">
                 <Icon name="mountain" className="h-5 w-5" /> Cultura CPPEM
@@ -68,7 +59,7 @@ export default async function CulturaPage() {
                 Nossa cultura
               </h1>
               <p className="mt-5 max-w-2xl text-xl leading-snug text-brand-50 sm:text-2xl">
-                Para chegar ao cume, é preciso saber como se caminha.
+                Para chegar ao topo, é preciso saber como se caminha.
               </p>
               <a href="#mandamentos" className="btn-primary mt-8">
                 Ver os 10 mandamentos
@@ -106,10 +97,10 @@ export default async function CulturaPage() {
               {/* a trilha */}
               <span
                 aria-hidden
-                className="absolute bottom-2 left-5 top-2 w-px -translate-x-1/2 bg-gradient-to-b from-goldline via-accent-500 to-accent-500"
+                className="absolute bottom-5 left-5 top-5 w-px -translate-x-1/2 bg-gradient-to-b from-goldline via-accent-500 to-accent-500"
               />
               {MANDAMENTOS.map((texto, i) => (
-                <li key={texto} className="relative flex items-start gap-5 pb-6">
+                <li key={texto} className="relative flex items-start gap-5 pb-6 last:pb-0">
                   <span
                     aria-hidden
                     className="relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-full border-2 border-accent-500 bg-surface font-display text-sm font-extrabold text-ink shadow-soft"
@@ -122,17 +113,6 @@ export default async function CulturaPage() {
                   </p>
                 </li>
               ))}
-              {/* o cume */}
-              <li className="relative flex items-center gap-5">
-                <span
-                  aria-hidden
-                  className="relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-full text-brand-950 shadow-gold"
-                  style={{ background: "linear-gradient(150deg, #f0dcb0, #c9ae7a 55%, #af9256)" }}
-                >
-                  <Icon name="flag" className="h-5 w-5" />
-                </span>
-                <p className="eyebrow">Cume</p>
-              </li>
             </ol>
           </div>
         </section>
