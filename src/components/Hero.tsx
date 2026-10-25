@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Icon, { type IconName } from "./Icon";
 
 interface HeroProps {
@@ -51,6 +52,9 @@ export default function Hero({ openJobsCount, areasCount, stats }: HeroProps) {
               Ver vagas abertas
               <Icon name="arrow" className="h-4 w-4" />
             </a>
+            <Link href="/cultura" className="btn-ghost">
+              Nossa cultura
+            </Link>
           </div>
 
           <div className="mt-10 flex flex-wrap items-center gap-x-10 gap-y-4 text-white">
