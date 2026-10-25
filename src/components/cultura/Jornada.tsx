@@ -341,7 +341,7 @@ export default function Jornada({ items, highlights }: JornadaProps) {
             É assim que a gente chega lá: um mandamento de cada vez, todos os dias.
           </p>
           <div className="mt-8">
-            <a href="#alinhamento" className="btn-primary">
+            <a href="#perfil" className="btn-primary">
               Isso é para mim?
             </a>
           </div>
