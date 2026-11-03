@@ -1,4 +1,4 @@
-import Icon from "./Icon";
+import SocialIcon from "./SocialIcon";
 import TrackedLink from "./TrackedLink";
 
 interface ConnectSectionProps {
@@ -20,8 +20,8 @@ export default function ConnectSection({ whatsappUrl, linkedinUrl }: ConnectSect
           {whatsappUrl && (
             <div className="card flex flex-col justify-between gap-6 p-7">
               <div className="flex items-start gap-4">
-                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-goldsoft text-goldink">
-                  <Icon name="chat" className="h-6 w-6" />
+                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#25D366] text-white">
+                  <SocialIcon name="whatsapp" className="h-7 w-7" />
                 </span>
                 <div>
                   <h3 className="text-xl font-bold text-ink">Receba as vagas em primeira mão</h3>

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
-import Icon from "./Icon";
+import SocialIcon from "./SocialIcon";
 
 interface ExitIntentPopupProps {
   /** Link do grupo de WhatsApp de vagas (configurado no admin). Sem link, nada é exibido. */
@@ -137,8 +137,8 @@ export default function ExitIntentPopup({ whatsappUrl }: ExitIntentPopupProps) {
           <span aria-hidden className="text-xl leading-none">×</span>
         </button>
 
-        <span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-goldsoft text-goldink">
-          <Icon name="chat" className="h-8 w-8" />
+        <span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-[#25D366] text-white">
+          <SocialIcon name="whatsapp" className="h-9 w-9" />
         </span>
 
         <h2 id="wa-popup-title" className="mt-5 text-2xl font-extrabold leading-tight text-ink">
