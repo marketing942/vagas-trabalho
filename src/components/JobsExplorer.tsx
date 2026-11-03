@@ -62,12 +62,14 @@ export default function JobsExplorer({
     filtersFromParams(initialParams, getOptions(jobs))
   );
 
-  // Se o link já chegou com filtros, leva a pessoa direto às vagas
+  // Se o link já chegou com filtros, leva a pessoa direto à lista de resultados
+  // (e não ao topo da seção, onde ficam os filtros, que no celular ocupam a tela).
   const arrivedFiltered = useRef(filtersQuery(filters) !== "");
+  const resultsRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (arrivedFiltered.current) {
-      document.getElementById("vagas")?.scrollIntoView();
-    }
+    if (!arrivedFiltered.current) return;
+    const id = requestAnimationFrame(() => resultsRef.current?.scrollIntoView());
+    return () => cancelAnimationFrame(id);
   }, []);
 
   // Reflete os filtros na URL sem recarregar a página nem poluir o histórico
@@ -139,24 +141,26 @@ export default function JobsExplorer({
             : `${filtered.length} ${filtered.length === 1 ? "vaga encontrada" : "vagas encontradas"}.`}
         </p>
 
-        {filtered.length === 0 ? (
-          <div className="card mt-10 p-10 text-center text-inksoft">
-            Nenhuma vaga encontrada com os filtros selecionados. Tente limpar a busca.
-          </div>
-        ) : (
-          <div className="mt-12 space-y-14">
-            <JobGroup
-              title="Vagas de Trabalho"
-              subtitle="Administrativo, comercial, marketing, tecnologia, pedagógico, serviços gerais e demais funções."
-              jobs={trabalho}
-            />
-            <JobGroup
-              title="Vagas de Professor"
-              subtitle="Professores, instrutores, tutores e mentores ligados diretamente à docência."
-              jobs={professor}
-            />
-          </div>
-        )}
+        <div ref={resultsRef} className="scroll-mt-24">
+          {filtered.length === 0 ? (
+            <div className="card mt-10 p-10 text-center text-inksoft">
+              Nenhuma vaga encontrada com os filtros selecionados. Tente limpar a busca.
+            </div>
+          ) : (
+            <div className="mt-12 space-y-14">
+              <JobGroup
+                title="Vagas de Trabalho"
+                subtitle="Administrativo, comercial, marketing, tecnologia, pedagógico, serviços gerais e demais funções."
+                jobs={trabalho}
+              />
+              <JobGroup
+                title="Vagas de Professor"
+                subtitle="Professores, instrutores, tutores e mentores ligados diretamente à docência."
+                jobs={professor}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );
