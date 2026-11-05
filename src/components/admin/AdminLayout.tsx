@@ -8,6 +8,8 @@ import Logo from "@/components/Logo";
 
 const NAV = [
   { href: "/admin/dashboard", label: "Dashboard", icon: "📊" },
+  { href: "/admin/candidatos", label: "Candidatos", icon: "👥" },
+  { href: "/admin/agenda", label: "Agenda", icon: "📅" },
   { href: "/admin/vagas", label: "Vagas", icon: "💼" },
   { href: "/admin/configuracoes", label: "Configurações", icon: "⚙️" },
 ];
@@ -16,9 +18,12 @@ const NAV = [
 export default function AdminLayout({
   children,
   title,
+  actions,
 }: {
   children: React.ReactNode;
   title: string;
+  /** Botões à direita do título */
+  actions?: React.ReactNode;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -97,11 +102,12 @@ export default function AdminLayout({
         </aside>
 
         {/* Conteúdo */}
-        <main className="flex-1">
-          <div className="border-b border-brand-100 bg-white px-6 py-5">
+        <main className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-100 bg-white px-6 py-5">
             <h1 className="text-xl font-bold text-brand-950">{title}</h1>
+            {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
           </div>
-          <div className="p-6">{children}</div>
+          <div className="min-w-0 p-4 sm:p-6">{children}</div>
         </main>
       </div>
     </div>

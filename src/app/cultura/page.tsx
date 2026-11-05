@@ -8,6 +8,7 @@ import Jornada from "@/components/cultura/Jornada";
 import { getSettings } from "@/lib/settings";
 import { SITE_NAME } from "@/lib/site";
 import { BEM_VINDO, CULTURA_DEFINICAO, DESTAQUES, MANDAMENTOS, NAO_BEM_VINDO } from "@/lib/cultura";
+import { applyTarget } from "@/lib/apply";
 
 export const revalidate = 300;
 
@@ -28,7 +29,7 @@ export default async function CulturaPage() {
 
   return (
     <>
-      <Header formUrl={settings.form_url} />
+      <Header apply={applyTarget(settings)} />
       <main id="conteudo" tabIndex={-1} className="outline-none">
         {/* ---------- Header: só tipografia, fundo limpo ---------- */}
         <section className="relative isolate overflow-hidden bg-brand-950 text-white" aria-labelledby="cultura-titulo">

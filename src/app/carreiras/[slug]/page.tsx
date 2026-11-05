@@ -9,6 +9,7 @@ import ExitIntentPopup from "@/components/ExitIntentPopup";
 import { getJobBySlug, getRelatedOpenJobs } from "@/lib/jobs";
 import { getSettings } from "@/lib/settings";
 import { SITE_NAME } from "@/lib/site";
+import { applyTarget } from "@/lib/apply";
 
 export const revalidate = 60;
 
@@ -49,14 +50,14 @@ export default async function JobPage({ params }: PageProps) {
 
   return (
     <>
-      <Header formUrl={settings.form_url} />
+      <Header apply={applyTarget(settings)} />
       <main id="conteudo" tabIndex={-1} className="outline-none">
         {closed ? (
           <ClosedJobNotice job={job} related={related} whatsappUrl={settings.whatsapp_group_url} />
         ) : (
           <>
             <JobPostingJsonLd job={job} settings={settings} />
-            <JobDetails job={job} formUrl={settings.form_url} />
+            <JobDetails job={job} apply={applyTarget(settings, job)} />
           </>
         )}
       </main>
