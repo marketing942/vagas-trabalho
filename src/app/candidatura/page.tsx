@@ -50,7 +50,7 @@ export default async function CandidaturaPage({
         <div className="container-page max-w-3xl pb-20 pt-8">
           {enabled ? (
             <ApplicationForm
-              jobs={jobs.map((j) => ({ id: j.id, title: j.title, slug: j.slug, category: j.category, hint: [j.department || j.discipline, j.unit || j.segment].filter(Boolean).join(" · ") }))}
+              jobs={jobs.map((j) => ({ id: j.id, title: j.title, slug: j.slug, category: j.category, hint: [j.department || j.discipline, j.unit || j.segment].filter(Boolean).join(" · "), screening: j.screening_questions ?? [] }))}
               preselectedId={preselected?.id}
               whatsappGroupUrl={settings.whatsapp_group_url}
             />

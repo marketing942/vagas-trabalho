@@ -11,6 +11,8 @@ import { Avatar } from "./charts";
 export interface PreviewApp
   extends Pick<Application, "id" | "candidate_id" | "jobs" | "job_id" | "job_title" | "pipeline" | "stage" | "status" | "ai_status" | "ai_score" | "interview_score" | "stage_changed_at"> {
   candidates: Pick<Candidate, "full_name" | "city" | "age_range" | "whatsapp"> | null;
+  culture?: number | null;
+  screening?: { question: string; ok: boolean; job: string }[] | null;
 }
 
 interface Extra {
@@ -124,6 +126,21 @@ export default function CandidatePreview({
             )}
           </div>
 
+          {(app.screening ?? []).some((x) => !x.ok) && (
+            <section aria-label="Perguntas eliminatórias" className="rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
+              <p className="font-bold">Não atende a perguntas eliminatórias</p>
+              <ul className="mt-1 list-disc pl-5 text-xs">
+                {(app.screening ?? [])
+                  .filter((x) => !x.ok)
+                  .map((x) => (
+                    <li key={x.question + x.job}>
+                      {x.question} <span className="opacity-70">({x.job})</span>
+                    </li>
+                  ))}
+              </ul>
+            </section>
+          )}
+
           <section aria-label="Avaliação da IA" className="rounded-2xl border border-brand-100 p-4">
             <div className="flex items-center justify-between gap-2">
               <h3 className="text-sm font-bold text-brand-950">Avaliação da IA</h3>
@@ -168,6 +185,11 @@ export default function CandidatePreview({
                   )}
                 </>
               )
+            )}
+            {app.culture != null && (
+              <p className="mt-3 border-t border-brand-100 pt-2 text-sm text-brand-800">
+                Questionário de cultura: <strong className="tabular-nums">{app.culture}</strong> / 100
+              </p>
             )}
             {iv != null && (
               <p className="mt-3 border-t border-brand-100 pt-2 text-sm text-brand-800">

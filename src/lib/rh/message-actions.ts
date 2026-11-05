@@ -14,5 +14,9 @@ export async function afterMessageSent(db: SupabaseClient, app: Pick<Application
     await logInterview(db, app.id, `Devolutiva enviada pelo WhatsApp (${template.label})`);
     return;
   }
+  if (template.key === "questionario") {
+    await db.from("application_events").insert({ application_id: app.id, kind: "questionario", actor: "admin", detail: "Questionário de cultura enviado pelo WhatsApp" });
+    return;
+  }
   await logInterview(db, app.id, `Mensagem enviada pelo WhatsApp: ${template.label}`);
 }

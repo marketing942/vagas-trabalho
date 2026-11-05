@@ -3,6 +3,7 @@ import { createServiceClient, HAS_SERVICE_ROLE } from "@/lib/supabase/service";
 import { evaluateApplication, HAS_AI } from "@/lib/rh/ai";
 import { jobsOf, TALENT_POOL } from "@/lib/rh/constants";
 import {
+  screeningKey,
   formatWhatsapp,
   onlyDigits,
   resumeSignatureOk,
@@ -11,7 +12,7 @@ import {
   type ApplicationFields,
 } from "@/lib/rh/validate";
 import { slugify } from "@/lib/slug";
-import type { Application, Job, JobRef, Pipeline } from "@/lib/types";
+import type { Application, Job, JobRef, Pipeline, ScreeningAnswer } from "@/lib/types";
 
 export const runtime = "nodejs";
 // A avaliação por IA roda depois da resposta, dentro desta mesma função.
@@ -91,6 +92,27 @@ export async function POST(req: NextRequest) {
   }
   if (!errors.vagas && jobs.length + (wantsPool ? 1 : 0) === 0) errors.vagas = "Essa vaga não está mais aberta. Escolha outra.";
 
+  // Perguntas eliminatórias das vagas escolhidas: todas precisam de resposta (não reprovam sozinhas)
+  let screenMap: Record<string, string> = {};
+  try {
+    screenMap = JSON.parse(str(form.get("eliminatorias")) || "{}") ?? {};
+  } catch {
+    screenMap = {};
+  }
+  const screeningByJob = new Map<string, ScreeningAnswer[]>();
+  for (const j of jobs) {
+    const list: ScreeningAnswer[] = [];
+    for (const q of j.screening_questions ?? []) {
+      const answer = screenMap[screeningKey(q.question)];
+      if (answer !== "sim" && answer !== "nao") {
+        errors.eliminatorias = "Responda as perguntas sobre a vaga.";
+        continue;
+      }
+      list.push({ job: j.title, question: q.question, answer, expected: q.expected, ok: answer === q.expected });
+    }
+    screeningByJob.set(j.id, list);
+  }
+
   if (Object.keys(errors).length) {
     return NextResponse.json({ ok: false, errors, message: "Confira os campos destacados." }, { status: 400 });
   }
@@ -156,7 +178,8 @@ export async function POST(req: NextRequest) {
       ...(wantsPool ? [{ pipeline: "trabalho" as const, ref: { id: null, title: TALENT_POOL } }] : []),
     ];
     const sameJob = (a: JobRef, b: JobRef) => (a.id && b.id ? a.id === b.id : a.title === b.title);
-    const { data: openApps } = await db.from("applications").select("id, pipeline, stage, jobs, job_id, job_title").eq("candidate_id", candidateId).eq("status", "em_processo");
+    const { data: openApps } = await db.from("applications").select("id, pipeline, stage, jobs, job_id, job_title, screening").eq("candidate_id", candidateId).eq("status", "em_processo");
+    const screeningOf = (refs: JobRef[]) => refs.flatMap((r) => (r.id ? screeningByJob.get(r.id) ?? [] : []));
 
     const added: string[] = [];
     const repeated: string[] = [];
@@ -164,11 +187,19 @@ export async function POST(req: NextRequest) {
     for (const pipeline of ["trabalho", "professor"] as Pipeline[]) {
       const refs = chosen.filter((c) => c.pipeline === pipeline).map((c) => c.ref);
       if (!refs.length) continue;
-      const current = (openApps ?? []).find((a) => a.pipeline === pipeline) as (Pick<Application, "id" | "stage" | "jobs" | "job_id" | "job_title"> & { pipeline: Pipeline }) | undefined;
+      const current = (openApps ?? []).find((a) => a.pipeline === pipeline) as (Pick<Application, "id" | "stage" | "jobs" | "job_id" | "job_title" | "screening"> & { pipeline: Pipeline }) | undefined;
       if (!current) {
         const { data, error } = await db
           .from("applications")
-          .insert({ candidate_id: candidateId, pipeline, job_id: refs[0].id, job_title: refs[0].title, jobs: refs, ai_status: wantAi ? "pendente" : "sem_ia" })
+          .insert({
+            candidate_id: candidateId,
+            pipeline,
+            job_id: refs[0].id,
+            job_title: refs[0].title,
+            jobs: refs,
+            ai_status: wantAi ? "pendente" : "sem_ia",
+            ...(screeningOf(refs).length ? { screening: screeningOf(refs) } : {}),
+          })
           .select("id")
           .single();
         if (error) throw error;
@@ -184,7 +215,11 @@ export async function POST(req: NextRequest) {
       const reevaluate = wantAi && ["novo", "visto", "avaliado_ia"].includes(current.stage);
       const { error } = await db
         .from("applications")
-        .update({ jobs: [...have, ...fresh], ...(reevaluate ? { ai_status: "pendente" } : {}) })
+        .update({
+          jobs: [...have, ...fresh],
+          ...(reevaluate ? { ai_status: "pendente" } : {}),
+          ...(screeningOf(fresh).length ? { screening: [...(current.screening ?? []), ...screeningOf(fresh)] } : {}),
+        })
         .eq("id", current.id);
       if (error) throw error;
       await db.from("application_events").insert({

@@ -25,6 +25,7 @@ export function renderMessage(text: string, ctx: MessageContext): string {
     nome: ctx.candidate.full_name,
     vagas: vagasText(ctx.app),
     link_agenda: `${ctx.origin}/agenda?c=${ctx.app.booking_token}`,
+    link_questionario: `${ctx.origin}/questionario?c=${ctx.app.booking_token}`,
     data_entrevista: when,
     local: ctx.location || "no CPPEM",
   };

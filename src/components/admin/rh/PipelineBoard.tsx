@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { fetchAll } from "@/lib/rh/fetch-all";
 import { AGE_OPTIONS, jobTitles, PIPELINE_LABEL, SOURCE_OPTIONS, stageDelay, STAGES } from "@/lib/rh/constants";
@@ -32,11 +33,15 @@ export type BoardApp = Pick<
   | "booking_token"
 > & {
   rec: string | null;
+  /** Nota do questionário de cultura (0 a 100) */
+  culture: number | null;
+  /** Respostas às perguntas eliminatórias */
+  screening: { question: string; ok: boolean; job: string }[] | null;
   candidates: Pick<Candidate, "full_name" | "city" | "email" | "whatsapp" | "age_range" | "sources" | "origin" | "resume_path" | "resume_name"> | null;
 };
 
 const COLUMNS =
-  "id,candidate_id,job_id,job_title,jobs,pipeline,stage,status,ai_status,ai_score,interview_score,stage_changed_at,created_at,booking_token,rec:ai_report->>recomendacao,candidates(full_name,city,email,whatsapp,age_range,sources,origin,resume_path,resume_name)";
+  "id,candidate_id,job_id,job_title,jobs,pipeline,stage,status,ai_status,ai_score,interview_score,stage_changed_at,created_at,booking_token,rec:ai_report->>recomendacao,culture:culture_quiz->score,screening,candidates(full_name,city,email,whatsapp,age_range,sources,origin,resume_path,resume_name)";
 const PAGE = 40;
 const DAY = 86_400_000;
 
@@ -57,6 +62,8 @@ interface Filters {
   parado: "" | "prazo" | "3" | "7" | "15" | "30";
   vagas: "" | "varias" | "uma";
   ia: "" | "erro" | "aguardando";
+  cultura: "" | "respondido" | "pendente" | "80" | "baixo";
+  eliminatorias: "" | "atende" | "nao_atende";
 }
 
 const EMPTY: Filters = {
@@ -74,6 +81,8 @@ const EMPTY: Filters = {
   parado: "",
   vagas: "",
   ia: "",
+  cultura: "",
+  eliminatorias: "",
 };
 
 const OPTS: { [K in keyof Filters]?: { label: string; options: [Filters[K], string][] } } = {
@@ -87,6 +96,8 @@ const OPTS: { [K in keyof Filters]?: { label: string; options: [Filters[K], stri
   periodo: { label: "Candidatura recebida", options: [["", "Qualquer data"], ["1", "Hoje"], ["7", "Últimos 7 dias"], ["30", "Últimos 30 dias"], ["90", "Últimos 90 dias"]] },
   parado: { label: "Parado na etapa", options: [["", "Qualquer tempo"], ["prazo", "Passou do prazo da etapa (atrasado)"], ["3", "Há mais de 3 dias"], ["7", "Há mais de 7 dias"], ["15", "Há mais de 15 dias"], ["30", "Há mais de 30 dias"]] },
   vagas: { label: "Quantidade de vagas", options: [["", "Qualquer"], ["varias", "Escolheu mais de uma vaga"], ["uma", "Uma vaga só"]] },
+  cultura: { label: "Questionário de cultura", options: [["", "Tanto faz"], ["respondido", "Respondeu"], ["pendente", "Ainda não respondeu"], ["80", "80 ou mais"], ["baixo", "Abaixo de 60"]] },
+  eliminatorias: { label: "Perguntas eliminatórias", options: [["", "Tanto faz"], ["atende", "Atende a todas"], ["nao_atende", "Não atende alguma"]] },
   ia: { label: "Avaliação da IA", options: [["", "Qualquer"], ["erro", "Deu erro (reavaliar na ficha)"], ["aguardando", "Aguardando / avaliando"]] },
 };
 
@@ -128,10 +139,17 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
   const [rejecting, setRejecting] = useState<BoardApp | null>(null);
   // Logo depois de reprovar: oferece a devolutiva pronta
   const [msg, setMsg] = useState<{ app: BoardApp; key: string; afterReject?: boolean } | null>(null);
+  // Finalistas escolhidos para comparar (2 a 4)
+  const [compare, setCompare] = useState<string[]>([]);
+  const toggleCompare = (id: string) => {
+    setMenuFor(null);
+    setCompare((list) => (list.includes(id) ? list.filter((x) => x !== id) : list.length >= 4 ? list : [...list, id]));
+  };
   // Prévia do candidato (painel lateral)
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [templates, setTemplates] = useState<MessageTemplate[]>([]);
   const origin = useOrigin();
+  const router = useRouter();
   const [toast, setToast] = useState("");
   const [now] = useState(() => Date.now());
   const [reloadKey, setReloadKey] = useState(0);
@@ -220,6 +238,13 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
       if (f.vagas === "varias" && titles.length < 2) return false;
       if (f.vagas === "uma" && titles.length !== 1) return false;
       if (f.ia === "erro" && a.ai_status !== "erro") return false;
+      if (f.cultura === "respondido" && a.culture == null) return false;
+      if (f.cultura === "pendente" && a.culture != null) return false;
+      if (f.cultura === "80" && !(a.culture != null && Number(a.culture) >= 80)) return false;
+      if (f.cultura === "baixo" && !(a.culture != null && Number(a.culture) < 60)) return false;
+      const miss = (a.screening ?? []).filter((x) => !x.ok);
+      if (f.eliminatorias === "atende" && (!a.screening?.length || miss.length)) return false;
+      if (f.eliminatorias === "nao_atende" && !miss.length) return false;
       if (f.ia === "aguardando" && !(a.ai_status === "pendente" || a.ai_status === "avaliando")) return false;
       return true;
     });
@@ -473,7 +498,7 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
                           setDragId(null);
                           setOver(null);
                         }}
-                        className={`group relative rounded-2xl border border-white bg-white p-3.5 shadow-[0_1px_2px_rgba(11,26,64,0.06)] transition-shadow hover:shadow-md ${dragId === a.id ? "opacity-50" : ""}`}
+                        className={`group relative rounded-2xl border border-white bg-white p-3.5 shadow-[0_1px_2px_rgba(11,26,64,0.06)] transition-shadow hover:shadow-md ${dragId === a.id ? "opacity-50" : ""} ${compare.includes(a.id) ? "ring-2 ring-accent-400" : ""}`}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <button
@@ -519,7 +544,18 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
                               {a.ai_status === "erro" ? "IA: erro na avaliação (reavalie na ficha)" : a.ai_status === "avaliando" || a.ai_status === "pendente" ? "IA avaliando…" : "Sem avaliação da IA"}
                             </p>
                           )}
+                          {a.culture != null && (
+                            <ScoreBar label="Cultura" value={Number(a.culture)} max={100} tone="bg-amber-500" title={`Questionário de cultura: ${a.culture} de 100`} />
+                          )}
                           {iv != null && <ScoreBar label="Entrev." value={iv} max={10} tone="bg-violet-500" title={`Nota da entrevista: ${iv.toLocaleString("pt-BR")} de 10`} />}
+                          {(a.screening ?? []).some((x) => !x.ok) && (
+                            <p
+                              className="rounded-md bg-rose-50 px-1.5 py-0.5 text-[11px] font-semibold text-rose-700"
+                              title={(a.screening ?? []).filter((x) => !x.ok).map((x) => `${x.question} (${x.job})`).join("\n")}
+                            >
+                              ⚠ Não atende: {(a.screening ?? []).filter((x) => !x.ok).length} pergunta(s) eliminatória(s)
+                            </p>
+                          )}
                         </div>
                         <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-brand-500">
                           {stageDelay(a, now).late ? (
@@ -566,6 +602,18 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
                                 ✕ Reprovar…
                               </button>
                             </li>
+                            <li role="separator" className="my-1 h-px bg-brand-100" />
+                            <li role="none">
+                              <button
+                                role="menuitem"
+                                type="button"
+                                disabled={!compare.includes(a.id) && compare.length >= 4}
+                                onClick={() => toggleCompare(a.id)}
+                                className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-sm text-brand-800 hover:bg-brand-50 disabled:opacity-40"
+                              >
+                                {compare.includes(a.id) ? "Tirar da comparação" : "Adicionar à comparação"}
+                              </button>
+                            </li>
                           </ul>
                         )}
                       </li>
@@ -581,6 +629,32 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
               </section>
             );
           })}
+        </div>
+      )}
+
+      {/* Comparação de finalistas */}
+      {compare.length > 0 && !dragId && (
+        <div className="fixed inset-x-0 bottom-0 z-30 flex justify-center p-4 lg:left-64" role="region" aria-label="Comparação">
+          <div className="flex flex-wrap items-center gap-3 rounded-full bg-brand-950 px-4 py-2.5 text-sm text-white shadow-2xl">
+            <span>
+              <strong>{compare.length}</strong> para comparar
+              <span className="ml-2 hidden text-brand-300 sm:inline">
+                {compare.map((id) => apps.find((x) => x.id === id)?.candidates?.full_name.split(" ")[0]).filter(Boolean).join(", ")}
+              </span>
+            </span>
+            <button
+              type="button"
+              disabled={compare.length < 2}
+              onClick={() => router.push(`/admin/candidatos/comparar?ids=${compare.join(",")}`)}
+              className="rounded-full bg-accent-400 px-4 py-1.5 font-bold text-brand-950 hover:bg-accent-300 disabled:opacity-50"
+              title={compare.length < 2 ? "Escolha pelo menos 2 pessoas" : undefined}
+            >
+              Comparar
+            </button>
+            <button type="button" onClick={() => setCompare([])} className="rounded-full px-2 py-1 text-brand-200 hover:text-white">
+              Limpar
+            </button>
+          </div>
         </div>
       )}
 
