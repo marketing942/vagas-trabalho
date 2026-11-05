@@ -156,6 +156,11 @@ export const DEFAULT_MESSAGE_TEMPLATES: MessageTemplate[] = [
     text: "Olá, {primeiro_nome}! Aqui é do RH do CPPEM. Gostamos do seu perfil para {vagas} e queremos conhecer você. Escolha o melhor dia e horário para a sua entrevista neste link: {link_agenda}",
   },
   {
+    key: "questionario",
+    label: "Questionário de cultura",
+    text: "Oi, {primeiro_nome}! Gostamos do seu perfil para {vagas}. Como próximo passo, responda este questionário rápido (uns 5 minutos) sobre situações do dia a dia no CPPEM: {link_questionario}",
+  },
+  {
     key: "lembrete",
     label: "Lembrete da entrevista",
     text: "Oi, {primeiro_nome}! Passando para lembrar da sua entrevista no CPPEM: {data_entrevista}, em {local}. Chegue com 10 minutos de antecedência. Qualquer imprevisto, é só responder aqui.",
@@ -183,6 +188,7 @@ export const MESSAGE_VARS: { key: string; hint: string }[] = [
   { key: "nome", hint: "Ana Paula Souza" },
   { key: "vagas", hint: "a vaga Vendedor Interno" },
   { key: "link_agenda", hint: "link pessoal de agendamento" },
+  { key: "link_questionario", hint: "link pessoal do questionário de cultura" },
   { key: "data_entrevista", hint: "quinta-feira, 12 de novembro, às 14:00" },
   { key: "local", hint: "endereço da entrevista" },
 ];

@@ -1,3 +1,4 @@
+import type { CultureQuizResult } from "@/lib/rh/culture-quiz";
 export type JobCategory = "trabalho" | "professor";
 export type JobStatus = "aberta" | "encerrada" | "pausada" | "rascunho";
 export type WorkType =
@@ -30,6 +31,8 @@ export interface Job {
   apply_url: string | null;
   // Vaga em destaque: aparece primeiro na listagem pública.
   featured: boolean;
+  // Perguntas eliminatórias (sim/não) mostradas no formulário de candidatura
+  screening_questions?: ScreeningQuestion[];
   created_at: string;
   updated_at: string;
 }
@@ -121,6 +124,23 @@ export interface InterviewScript {
   sections: { title: string; questions: InterviewQuestion[] }[];
 }
 
+/** Pergunta eliminatória de uma vaga (resposta sim/não). */
+export interface ScreeningQuestion {
+  id: string;
+  question: string;
+  /** Resposta que a vaga exige */
+  expected: "sim" | "nao";
+}
+
+/** Resposta do candidato a uma pergunta eliminatória. */
+export interface ScreeningAnswer {
+  job: string;
+  question: string;
+  answer: "sim" | "nao";
+  expected: "sim" | "nao";
+  ok: boolean;
+}
+
 /** Modelo de mensagem (WhatsApp) com variáveis como {primeiro_nome}. */
 export interface MessageTemplate {
   key: string;
@@ -203,6 +223,10 @@ export interface Application {
   /** Quando a devolutiva foi enviada a quem foi reprovado */
   feedback_sent_at: string | null;
   interview_ai: InterviewAi | null;
+  /** Questionário de cultura respondido pelo candidato */
+  culture_quiz: CultureQuizResult | null;
+  /** Respostas das perguntas eliminatórias (sim/não) das vagas escolhidas */
+  screening: ScreeningAnswer[] | null;
   rejection_reason: string | null;
   ai_status: AiStatus;
   ai_score: number | null;
@@ -226,7 +250,7 @@ export interface Application {
 export interface ApplicationEvent {
   id: string;
   application_id: string;
-  kind: "criada" | "etapa" | "status" | "avaliacao_ia" | "entrevista" | "nota" | "edicao";
+  kind: "criada" | "etapa" | "status" | "avaliacao_ia" | "entrevista" | "nota" | "edicao" | "questionario";
   from_stage: string | null;
   to_stage: string | null;
   detail: string | null;

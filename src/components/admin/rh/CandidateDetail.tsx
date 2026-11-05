@@ -17,6 +17,7 @@ import ActionMenu from "@/components/admin/ui/ActionMenu";
 import AiScorecard from "./AiScorecard";
 import { Avatar } from "./charts";
 import EditCandidateDialog from "./EditCandidateDialog";
+import CultureQuizCard from "./CultureQuizCard";
 import InterviewCopilot from "./InterviewCopilot";
 import InterviewGuide from "./InterviewGuide";
 import InterviewScorecard from "./InterviewScorecard";
@@ -442,7 +443,19 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
             </div>
 
             <div role="tabpanel" id={`painel-${activeTab}`} aria-labelledby={`aba-${activeTab}`} className="space-y-4">
-              {activeTab === "avaliacao" && <AiScorecard app={app} busy={evaluating} onEvaluate={evaluate} />}
+              {activeTab === "avaliacao" && (
+                <>
+                  <AiScorecard app={app} busy={evaluating} onEvaluate={evaluate} />
+                  <CultureQuizCard
+                    app={app}
+                    onSend={() => setMessage({ key: "questionario" })}
+                    onCopy={async () => {
+                      await navigator.clipboard.writeText(`${origin}/questionario?c=${app.booking_token}`).catch(() => null);
+                      say("Link do questionário copiado");
+                    }}
+                  />
+                </>
+              )}
               {activeTab === "entrevista" && (
                 <>
                   <InterviewGuide key={`roteiro-${app.id}`} app={app} standard={script} onSave={async (next) => {
@@ -552,6 +565,28 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
                   </dd>
                 </div>
               </dl>
+              {(app.screening ?? []).length > 0 && (
+                <div className="mt-3 rounded-2xl border border-brand-100 p-3">
+                  <p className="text-xs font-bold uppercase tracking-wide text-brand-500">Perguntas eliminatórias</p>
+                  <ul className="mt-1.5 space-y-1.5 text-sm">
+                    {(app.screening ?? []).map((x) => (
+                      <li key={x.job + x.question} className="flex gap-2">
+                        <span aria-hidden className={x.ok ? "text-emerald-600" : "text-rose-600"}>
+                          {x.ok ? "✓" : "✕"}
+                        </span>
+                        <span className="min-w-0">
+                          <span className="text-brand-900">{x.question}</span>{" "}
+                          <span className={`font-semibold ${x.ok ? "text-brand-700" : "text-rose-700"}`}>
+                            {x.answer === "sim" ? "Sim" : "Não"}
+                            {!x.ok && ` (a vaga pede ${x.expected === "sim" ? "Sim" : "Não"})`}
+                          </span>
+                          <span className="block text-xs text-brand-400">{x.job}</span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               {c.about && (
                 <div className="mt-3 rounded-2xl bg-brand-50/60 p-3">
                   <p className="text-xs font-bold uppercase tracking-wide text-brand-500">Sobre a pessoa</p>

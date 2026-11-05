@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/Icon";
 import JobPicker from "./JobPicker";
+import type { ScreeningQuestion } from "@/lib/types";
 import { trackEvent } from "@/lib/analytics";
 import { AGE_OPTIONS, RESUME_ACCEPT, SOURCE_OPTIONS, TALENT_POOL } from "@/lib/rh/constants";
 import {
+  screeningKey,
   ABOUT_MAX,
   ABOUT_MIN,
   formatWhatsapp,
@@ -22,6 +24,7 @@ interface JobOption {
   slug: string;
   category: "trabalho" | "professor";
   hint?: string;
+  screening?: ScreeningQuestion[];
 }
 
 interface Props {
@@ -32,7 +35,7 @@ interface Props {
 
 type Done = { nome: string; vagas: string[]; repetidas: string[] };
 
-const ORDER: (keyof FieldErrors)[] = ["vagas", "nome", "email", "whatsapp", "social", "idade", "cidade", "curriculo", "sobre", "origem", "consentimento"];
+const ORDER: (keyof FieldErrors)[] = ["vagas", "eliminatorias", "nome", "email", "whatsapp", "social", "idade", "cidade", "curriculo", "sobre", "origem", "consentimento"];
 
 /** Formulário de candidatura: as mesmas perguntas do formulário do Notion. */
 export default function ApplicationForm({ jobs, preselectedId, whatsappGroupUrl }: Props) {
@@ -55,6 +58,7 @@ export default function ApplicationForm({ jobs, preselectedId, whatsappGroupUrl 
   const [message, setMessage] = useState("");
   const [done, setDone] = useState<Done | null>(null);
   const [startedAt] = useState(() => Date.now());
+  const [screen, setScreen] = useState<Record<string, "sim" | "nao">>({});
   const formRef = useRef<HTMLFormElement>(null);
   const doneRef = useRef<HTMLHeadingElement>(null);
 
@@ -68,6 +72,10 @@ export default function ApplicationForm({ jobs, preselectedId, whatsappGroupUrl 
   const trabalho = jobs.filter((j) => j.category === "trabalho");
   const professor = jobs.filter((j) => j.category === "professor");
   const isTeacher = f.vagas.some((id) => professor.some((j) => j.id === id));
+  // Perguntas eliminatórias das vagas escolhidas (a mesma pergunta em duas vagas aparece uma vez)
+  const screeningQuestions = Array.from(
+    new Map(jobs.filter((j) => f.vagas.includes(j.id)).flatMap((j) => j.screening ?? []).map((q) => [screeningKey(q.question), q])).values()
+  );
 
   const set = <K extends keyof ApplicationFields>(key: K, value: ApplicationFields[K]) => {
     const next = { ...f, [key]: value };
@@ -95,7 +103,8 @@ export default function ApplicationForm({ jobs, preselectedId, whatsappGroupUrl 
     e.preventDefault();
     setTried(true);
     setMessage("");
-    const errs = { ...validateFields(f), ...(errors.curriculo ? { curriculo: errors.curriculo } : {}) };
+    const errs: FieldErrors = { ...validateFields(f), ...(errors.curriculo ? { curriculo: errors.curriculo } : {}) };
+    if (screeningQuestions.some((q) => !screen[screeningKey(q.question)])) errs.eliminatorias = "Responda as perguntas sobre a vaga.";
     setErrors(errs);
     if (Object.keys(errs).some((k) => errs[k as keyof FieldErrors])) {
       setMessage("Confira os campos destacados.");
@@ -109,6 +118,7 @@ export default function ApplicationForm({ jobs, preselectedId, whatsappGroupUrl 
     (["nome", "email", "whatsapp", "social", "idade", "cidade", "sobre"] as const).forEach((k) => body.append(k, f[k]));
     body.append("consentimento", f.consentimento ? "sim" : "");
     body.append("inicio", String(startedAt));
+    body.append("eliminatorias", JSON.stringify(screen));
     body.append("empresa", (formRef.current?.elements.namedItem("empresa") as HTMLInputElement | null)?.value ?? "");
     if (file) body.append("curriculo", file);
 
@@ -223,6 +233,39 @@ export default function ApplicationForm({ jobs, preselectedId, whatsappGroupUrl 
         />
         {err("vagas")}
       </div>
+
+      {screeningQuestions.length > 0 && (
+        <fieldset data-field="eliminatorias" className="card p-5 sm:p-7" aria-describedby={errors.eliminatorias ? "erro-eliminatorias" : undefined}>
+          <legend className="sr-only">Perguntas sobre a vaga</legend>
+          <p className="text-base font-bold text-ink">
+            Algumas perguntas sobre a vaga{req}
+          </p>
+          <ul className="mt-4 space-y-4">
+            {screeningQuestions.map((q) => {
+              const k = screeningKey(q.question);
+              return (
+                <li key={k}>
+                  <p className="text-sm font-semibold text-ink" id={`pe-${q.id}`}>
+                    {q.question}
+                  </p>
+                  <div className="mt-2 flex gap-2" role="radiogroup" aria-labelledby={`pe-${q.id}`}>
+                    {(["sim", "nao"] as const).map((v) => (
+                      <label
+                        key={v}
+                        className={`flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold ${screen[k] === v ? "border-accent-500 bg-goldfaint text-ink" : "border-line2 text-inksoft hover:border-goldline"}`}
+                      >
+                        <input type="radio" name={`pe-${q.id}`} checked={screen[k] === v} onChange={() => setScreen({ ...screen, [k]: v })} className="h-4 w-4 accent-[#8a7040]" />
+                        {v === "sim" ? "Sim" : "Não"}
+                      </label>
+                    ))}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+          {err("eliminatorias")}
+        </fieldset>
+      )}
 
       <div className="card space-y-5 p-5 sm:p-7">
         <div data-field="nome">

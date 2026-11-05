@@ -43,6 +43,7 @@ function emptyForm(): JobInput {
     benefits: "",
     apply_url: "",
     featured: false,
+    screening_questions: [],
   };
 }
 
@@ -72,6 +73,7 @@ export default function AdminJobForm({ job }: AdminJobFormProps) {
           benefits: job.benefits ?? "",
           apply_url: job.apply_url ?? "",
           featured: job.featured ?? false,
+          screening_questions: job.screening_questions ?? [],
         }
       : emptyForm()
   );
@@ -160,6 +162,11 @@ export default function AdminJobForm({ job }: AdminJobFormProps) {
       differentials: null,
       apply_url: form.apply_url?.trim() || null,
     };
+    // Perguntas eliminatórias: só vão para o banco se existirem (ou se a vaga já tinha),
+    // assim salvar continua funcionando antes da migração 0013
+    const questions = (form.screening_questions ?? []).map((q) => ({ ...q, question: q.question.trim() })).filter((q) => q.question);
+    if (questions.length || job?.screening_questions?.length) payload.screening_questions = questions;
+    else delete payload.screening_questions;
 
     let result;
     if (isEdit) {
@@ -446,6 +453,67 @@ export default function AdminJobForm({ job }: AdminJobFormProps) {
             placeholder="Deixe vazio para usar o formulário geral das configurações"
           />
         </div>
+      </fieldset>
+
+      {/* Perguntas eliminatórias */}
+      <fieldset className="card space-y-4 p-6">
+        <legend className="px-2 text-sm font-semibold text-brand-500">Perguntas eliminatórias (opcional)</legend>
+        <p className="text-sm text-brand-500">
+          Perguntas de sim ou não que aparecem no formulário quando a pessoa escolhe esta vaga (ex.: disponibilidade aos sábados, mora em
+          Caruaru, tem CNH). <strong>Não reprovam sozinhas</strong>: quem responder diferente do esperado aparece com um aviso no pipeline.
+        </p>
+        <ul className="space-y-2">
+          {(form.screening_questions ?? []).map((q, i) => (
+            <li key={q.id} className="flex flex-wrap items-center gap-2 rounded-xl border border-brand-100 p-2">
+              <input
+                aria-label={`Pergunta eliminatória ${i + 1}`}
+                className="input min-w-0 flex-1 !py-2"
+                value={q.question}
+                maxLength={160}
+                placeholder="Ex.: Você tem disponibilidade para trabalhar aos sábados?"
+                onChange={(e) => {
+                  const next = [...(form.screening_questions ?? [])];
+                  next[i] = { ...q, question: e.target.value };
+                  set("screening_questions", next);
+                }}
+              />
+              <label className="flex items-center gap-1.5 text-xs font-semibold text-brand-600">
+                Resposta esperada
+                <select
+                  className="input !w-auto !py-2"
+                  value={q.expected}
+                  onChange={(e) => {
+                    const next = [...(form.screening_questions ?? [])];
+                    next[i] = { ...q, expected: e.target.value as "sim" | "nao" };
+                    set("screening_questions", next);
+                  }}
+                >
+                  <option value="sim">Sim</option>
+                  <option value="nao">Não</option>
+                </select>
+              </label>
+              <button
+                type="button"
+                aria-label={`Remover pergunta ${i + 1}`}
+                onClick={() => set("screening_questions", (form.screening_questions ?? []).filter((_, k) => k !== i))}
+                className="rounded-lg px-2 py-1 text-sm text-rose-600 hover:bg-rose-50"
+              >
+                ✕
+              </button>
+            </li>
+          ))}
+        </ul>
+        {(form.screening_questions ?? []).length < 5 && (
+          <button
+            type="button"
+            onClick={() =>
+              set("screening_questions", [...(form.screening_questions ?? []), { id: `q${Date.now().toString(36)}`, question: "", expected: "sim" }])
+            }
+            className="btn-secondary !py-2"
+          >
+            + Adicionar pergunta
+          </button>
+        )}
       </fieldset>
 
       <div className="flex gap-3">

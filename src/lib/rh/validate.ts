@@ -14,7 +14,10 @@ export interface ApplicationFields {
   consentimento: boolean;
 }
 
-export type FieldErrors = Partial<Record<keyof ApplicationFields | "curriculo", string>>;
+export type FieldErrors = Partial<Record<keyof ApplicationFields | "curriculo" | "eliminatorias", string>>;
+
+/** Chave de uma pergunta eliminatória (a mesma pergunta em duas vagas é respondida uma vez só). */
+export const screeningKey = (question: string) => question.trim().toLowerCase().replace(/\s+/g, " ");
 
 export const ABOUT_MIN = 30;
 export const ABOUT_MAX = 5000;
