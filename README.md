@@ -203,7 +203,8 @@ Crie um arquivo `.env.local` (use `.env.example` como base):
 ### Como ligar (uma vez)
 
 1. Rode no SQL Editor do Supabase, nessa ordem, `supabase/migrations/0010_rh.sql`,
-   `0011_rh_status_vagas_roteiro.sql` e `0012_rh_mensagens_copiloto.sql`.
+   `0011_rh_status_vagas_roteiro.sql`, `0012_rh_mensagens_copiloto.sql` e
+   `0013_rh_cultura_eliminatorias.sql`.
 2. Na Vercel → **Settings → Environment Variables**, adicione:
    - `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project Settings → API → `service_role`);
    - `DEEPSEEK_API_KEY` (opcional, para o scorecard de IA; crie em platform.deepseek.com → API keys e coloque saldo).
@@ -278,6 +279,28 @@ contratado ou **Reabrir** um processo (volta para a etapa em que estava).
   e **sugere** as 5 notas com a evidência de cada uma, além de pontos a
   confirmar. Respostas sobre filhos ou família nunca entram nas notas. A equipe
   decide se usa as notas sugeridas.
+
+### Avaliação mais completa (fase 2)
+
+- **Questionário de cultura** (`/questionario?c=…`, link pessoal):
+  - 10 situações do dia a dia, uma por mandamento;
+  - nota de 0 a 100 e de 0 a 3 por mandamento, calculada no servidor (a pontuação
+    das alternativas nunca vai para o navegador);
+  - responde uma vez só;
+  - o envio é pelo modelo de mensagem "Questionário de cultura";
+  - o resultado aparece na ficha (aba Avaliação), no card ("Cultura") e nos filtros;
+  - **não é teste psicológico**: mostra como a pessoa diz que agiria, e vale
+    confirmar na entrevista. As situações ficam em `src/lib/rh/culture-quiz.ts`
+    e a pontuação em `culture-quiz-scores.ts`.
+- **Perguntas eliminatórias por vaga** (sim/não, até 5, no cadastro da vaga):
+  - aparecem no formulário para quem escolhe a vaga;
+  - quem responde diferente do esperado **não é reprovado automaticamente**:
+    o card ganha o aviso "Não atende" e aparece no filtro;
+  - a IA também recebe as respostas.
+- **Comparar finalistas**: no menu ⋯ do card, "Adicionar à comparação" (2 a 4
+  pessoas) e depois **Comparar**. A página mostra chance, triagem, cultura,
+  entrevista por critério, eliminatórias e pontos fortes e de atenção, com
+  o melhor de cada linha em verde e um **resumo comparativo da IA**.
 
 A pesquisa de mercado que orientou estas melhorias e as próximas fases está em
 [`docs/pesquisa-mercado-ats.md`](docs/pesquisa-mercado-ats.md).

@@ -23,7 +23,8 @@ const num = (v: number | null | undefined) => (v == null ? null : Number(v));
 
 /** Linha da tabela: rótulo + um valor por pessoa, com o maior destacado. */
 function MetricRow({ label, values, max, fmt = (v) => String(v) }: { label: string; values: (number | null)[]; max: number; fmt?: (v: number) => string }) {
-  const best = Math.max(...values.map((v) => (v == null ? -1 : v)));
+  // Só destaca quando há pelo menos 2 valores para comparar
+  const best = values.filter((v) => v != null).length >= 2 ? Math.max(...values.map((v) => (v == null ? -1 : v))) : -1;
   return (
     <tr className="border-t border-brand-50">
       <th scope="row" className="py-2.5 pr-3 text-left text-xs font-semibold text-brand-600">
