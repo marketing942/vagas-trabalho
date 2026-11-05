@@ -42,10 +42,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, message: "Envio inválido." }, { status: 400 });
   }
 
-  // Robôs: campo invisível preenchido ou envio rápido demais. Responde "ok" sem gravar nada.
-  const startedAt = Number(str(form.get("inicio")));
-  if (str(form.get("empresa")) || (startedAt && Date.now() - startedAt < 3000)) {
+  // Robôs: o campo invisível só é preenchido por robô. Responde "ok" sem gravar nada.
+  if (str(form.get("empresa"))) {
     return NextResponse.json({ ok: true, vagas: [], nome: "" });
+  }
+  // Envio rápido demais (menos de 3 s desde que a página abriu): pede para enviar de novo,
+  // em vez de descartar, para não perder a candidatura de quem usa preenchimento automático.
+  const startedAt = Number(str(form.get("inicio")));
+  if (startedAt && Date.now() - startedAt < 3000) {
+    return NextResponse.json({ ok: false, message: "Confira os seus dados e clique em Enviar candidatura de novo." }, { status: 400 });
   }
 
   const fields: ApplicationFields = {

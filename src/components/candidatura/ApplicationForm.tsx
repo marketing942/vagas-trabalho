@@ -326,7 +326,7 @@ export default function ApplicationForm({ jobs, preselectedId, whatsappGroupUrl 
           ) : (
             <label className="flex cursor-pointer flex-col items-center gap-1 rounded-2xl border-2 border-dashed border-line2 p-6 text-center transition-colors hover:border-goldline">
               <span className="text-sm font-semibold text-ink">Escolher arquivo</span>
-              <span className="text-xs text-inkmuted">PDF, Word ou imagem, até 10 MB</span>
+              <span className="text-xs text-inkmuted">PDF, Word ou imagem, até 4 MB</span>
               <input
                 type="file"
                 accept={RESUME_ACCEPT}

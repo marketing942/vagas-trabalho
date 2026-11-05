@@ -27,7 +27,8 @@ export const SOURCE_OPTIONS: string[] = [
 /** Opção de candidatura sem vaga específica (só no funil de Trabalho). */
 export const TALENT_POOL = "Banco de Talentos";
 
-export const RESUME_MAX_BYTES = 10 * 1024 * 1024;
+/** A Vercel recusa envios acima de 4,5 MB; 4 MB deixa folga para os outros campos. */
+export const RESUME_MAX_BYTES = 4 * 1024 * 1024;
 export const RESUME_TYPES: Record<string, string> = {
   "application/pdf": "PDF",
   "application/msword": "DOC",

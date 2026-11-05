@@ -55,7 +55,7 @@ export function validateFields(f: ApplicationFields): FieldErrors {
 }
 
 export function validateResumeMeta(size: number, type: string): string | null {
-  if (size > RESUME_MAX_BYTES) return "O currículo precisa ter até 10 MB.";
+  if (size > RESUME_MAX_BYTES) return "O currículo precisa ter até 4 MB. Se for foto, envie em PDF ou diminua a imagem.";
   if (!RESUME_TYPES[type]) return "Envie o currículo em PDF, Word (DOC/DOCX) ou imagem (JPG/PNG).";
   return null;
 }
