@@ -1,11 +1,13 @@
 # CPPEM Carreiras
 
-Sistema completo de **Vagas e Carreiras** do **CPPEM Colégio e Cursos**, com:
+Sistema de **Vagas, Carreiras e RH** do **CPPEM Colégio e Cursos**, com:
 
-- **Página pública** (`/carreiras`) — hero institucional, indicadores, busca e filtros, cards de vagas e página de detalhes com candidatura.
-- **Área administrativa** (`/admin`) — autenticada via Supabase Auth, para cadastrar, editar, encerrar, reabrir e excluir vagas, além de gerenciar as configurações do site.
+- **Página pública** (`/carreiras`) — hero institucional, indicadores, busca e filtros, cards de vagas e página de detalhes.
+- **Formulário de candidatura próprio** (`/candidatura`) — as mesmas perguntas do formulário do Notion, com envio de currículo. Ao enviar, a pessoa já fica inscrita no processo seletivo.
+- **Área de RH** (`/admin`) — pipeline de candidatos (funis de Trabalho e de Professores), ficha do candidato, scorecard de IA, scorecard da entrevista, agenda de entrevistas e painel de dados.
+- **Agendamento de entrevistas** (`/agenda`) — link que o RH envia para o candidato escolher dia e horário; a entrevista entra direto no calendário.
 
-> O sistema **não captura dados de candidatos**. Toda candidatura é direcionada para um **formulário externo do Notion** (link aberto em nova aba).
+> Enquanto o formulário próprio estiver **desligado** (padrão), os botões "Candidatar-se" continuam indo para o **formulário do Notion**. Ligue em **Admin → Configurações → Candidaturas pelo site** depois de seguir o passo a passo abaixo.
 
 ---
 
@@ -34,6 +36,12 @@ src/
     admin/vagas/nova/page.tsx     → nova vaga
     admin/vagas/[id]/editar       → editar vaga
     admin/configuracoes/page.tsx  → textos, indicadores, redes, formulário
+    admin/candidatos/             → pipeline, ficha do candidato, importar do Notion
+    admin/agenda/page.tsx         → calendário de entrevistas e disponibilidade
+    candidatura/page.tsx          → formulário de candidatura
+    agenda/page.tsx               → link de agendamento de entrevista
+    api/candidatura, api/agenda   → gravam candidaturas e entrevistas (servidor)
+    api/admin/avaliar             → (re)avalia uma candidatura com IA
   components/                     → JobCard, JobFilters, JobDetails, Hero,
                                     StatsSection, AboutSection, LinkedInCard,
                                     Footer, Header, Logo, JobsExplorer,
@@ -44,9 +52,10 @@ src/
     supabase/server.ts            → cliente server (cookies)
     types.ts, constants.ts        → tipos e opções (setores, unidades, etc.)
     jobs.ts, settings.ts          → acesso aos dados
+    rh/                           → etapas, IA, agenda, validação, importação
     slug.ts                       → geração de slug
   proxy.ts                        → protege rotas /admin
-supabase/migrations/           → schema, RLS, configurações e vagas (0001–0004)
+supabase/migrations/           → schema, RLS, configurações, vagas e RH (0001–0010)
 .env.example
 ```
 
@@ -103,6 +112,9 @@ supabase/migrations/           → schema, RLS, configurações e vagas (0001–
    - `0009_closed_jobs_and_content.sql` — libera a leitura pública de vagas
      **encerradas** (a página mostra "vaga encerrada" em vez de erro 404) e cria
      os textos editáveis das seções e o e-mail de privacidade.
+   - `0010_rh.sql` — sistema de RH: candidatos, candidaturas, histórico,
+     entrevistas, disponibilidade da agenda e o bucket **privado** `curriculos`
+     para os currículos.
 
    > Em uma instalação nova, rodar todos em ordem deixa o banco completo. As
    > migrations são idempotentes (podem ser executadas novamente sem duplicar).
@@ -121,13 +133,18 @@ supabase/migrations/           → schema, RLS, configurações e vagas (0001–
 
 ### Modelo de segurança (RLS)
 
-| Tabela          | Público (anônimo)            | Autenticado (admin) |
-| --------------- | ---------------------------- | ------------------- |
-| `jobs`          | lê apenas `status = 'aberta'` | CRUD completo       |
-| `site_settings` | leitura                      | leitura + edição    |
+| Tabela                                   | Público (anônimo)                       | Autenticado (admin) |
+| ---------------------------------------- | --------------------------------------- | ------------------- |
+| `jobs`                                   | lê vagas abertas e encerradas           | CRUD completo       |
+| `site_settings`                          | leitura                                 | leitura + edição    |
+| `candidates`, `applications`, `application_events`, `interviews` | **nada** (nem lê, nem grava) | CRUD completo       |
+| Storage `curriculos` (privado)           | **nada**                                | lê (links temporários), envia e apaga |
 
-A página pública usa apenas a **anon key**. Nenhuma chave sensível é exposta no
-client. A `service_role` **não é necessária** para o funcionamento padrão.
+O navegador usa apenas a **anon key**. O formulário de candidatura e o link de
+agendamento gravam pelo **servidor** (rotas `/api/candidatura` e `/api/agenda`)
+com a `service_role`, que nunca vai para o navegador. A reserva de horário é
+feita por uma função no banco (`book_interview`) que impede duas pessoas de
+pegarem o mesmo horário.
 
 ---
 
@@ -139,7 +156,9 @@ Crie um arquivo `.env.local` (use `.env.example` como base):
 | ------------------------------- | ----------- | ---------------------------------------------------- |
 | `NEXT_PUBLIC_SUPABASE_URL`      | ✅          | URL do projeto Supabase                              |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅          | Chave pública (anon) do Supabase                     |
-| `SUPABASE_SERVICE_ROLE_KEY`     | ❌          | Apenas server-side, se algum dia for necessário      |
+| `SUPABASE_SERVICE_ROLE_KEY`     | ✅ para o RH | Só no servidor. Necessária para o formulário de candidatura e o agendamento de entrevistas |
+| `DEEPSEEK_API_KEY`              | ❌          | Scorecard de IA (DeepSeek, modelo `deepseek-chat`). Sem ela, as candidaturas ficam aguardando avaliação |
+| `DEEPSEEK_MODEL`                | ❌          | Troca o modelo (ex.: `deepseek-reasoner`). Padrão: `deepseek-chat` |
 | `NEXT_PUBLIC_SITE_URL`          | ❌          | Endereço público (ex.: `https://vagas.cppem.com.br`) para sitemap, imagens de compartilhamento e dados de vaga. Sem ele, usa o domínio de produção da Vercel |
 
 ---
@@ -179,12 +198,86 @@ Crie um arquivo `.env.local` (use `.env.example` como base):
 
 ---
 
-## 📝 Formulário de candidatura (Notion)
+## 🧑‍💼 Sistema de RH
 
-- Os botões **"Candidatar-se agora"** abrem o formulário do Notion em nova aba
-  (URL configurável em **Admin → Configurações → Link do formulário**).
-- O sistema **não armazena** nome, e-mail, telefone, currículo ou qualquer dado
-  pessoal de candidatos.
+### Como ligar (uma vez)
+
+1. Rode `supabase/migrations/0010_rh.sql` no SQL Editor do Supabase.
+2. Na Vercel → **Settings → Environment Variables**, adicione:
+   - `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project Settings → API → `service_role`);
+   - `DEEPSEEK_API_KEY` (opcional, para o scorecard de IA; crie em platform.deepseek.com → API keys e coloque saldo).
+   Depois clique em **Redeploy**.
+3. Em **Admin → Configurações → Candidaturas pelo site**, confira a lista
+   (tudo com ✓), teste em `/candidatura?teste=1` e marque **Receber candidaturas
+   pelo formulário do site**. Salve.
+4. (Opcional) Em **Admin → Candidatos → Importar do Notion**, envie os CSVs
+   exportados do Notion (ATS e Candidatos a professores) para trazer o histórico.
+
+### Formulário de candidatura (`/candidatura`)
+
+As mesmas perguntas do formulário do Notion: vaga(s) (pode marcar mais de uma,
+incluindo **Banco de Talentos**), nome completo, e-mail, WhatsApp, Instagram ou
+LinkedIn, idade, cidade, currículo (opcional; PDF, Word ou imagem até 4 MB, limite de envio da Vercel),
+descrição sobre a pessoa e "como encontrou a vaga", além do aceite da Política
+de Privacidade. Só o currículo é opcional. Quem se candidata de novo com o mesmo
+WhatsApp ou e-mail não vira cadastro duplicado: os dados são atualizados e só as
+vagas novas viram candidaturas.
+
+### Pipeline (`/admin/candidatos`)
+
+- Dois funis: **Trabalho** (etapas do ATS do Notion: Não avaliado, Avaliado por
+  IA, Convite enviado, Entrevista agendada, Entrevista realizada, Onboarding,
+  Treinamento, Contratado, Possivelmente depois, Reprovado, Desligado) e
+  **Professores** (Não avaliado, Visto, Avaliado por IA, Convite enviado,
+  Entrevista/aula-teste agendada, Entrevista realizada, Contratado, Banco para o
+  próximo ano, Reprovado). As etapas ficam em `src/lib/rh/constants.ts`.
+- Arraste o card para mudar de etapa (ou use **Mover**). Ao reprovar, o sistema
+  pede o motivo (mesma lista do Notion).
+- Cada mudança fica registrada no **histórico** da ficha (quem fez e quando).
+
+### Scorecard de IA
+
+Cada candidatura nova é avaliada automaticamente pela IA da **DeepSeek** contra os requisitos e
+responsabilidades daquela vaga e contra a cultura (10 mandamentos): score de 0 a
+100, recomendação, critérios com evidências, pontos fortes, pontos de atenção,
+fit cultural e perguntas sugeridas para a entrevista. O servidor extrai o texto do
+currículo em PDF ou Word (.docx) e envia junto; currículo em imagem ou .doc antigo
+não é lido pela IA (a equipe vê o arquivo na ficha). Ela é instruída a **nunca** usar idade, gênero, raça,
+religião, deficiência, aparência ou origem como critério, e a tratar o texto do
+candidato como dado (não como instrução). A decisão é sempre da equipe. O código
+fica em `src/lib/rh/ai.ts`.
+
+### Scorecard da entrevista
+
+Os 5 critérios do Notion (Fit Cultural, Proatividade, Comunicação, Resiliência,
+Técnica), de 0 a 10, com a média calculada pelo banco igual à fórmula do Notion.
+
+### Agenda (`/admin/agenda` e `/agenda`)
+
+- **Link pessoal**: na ficha, "Enviar convite no WhatsApp" manda a mensagem com o
+  link do candidato. Ele escolhe um horário livre, pode remarcar ou cancelar pelo
+  mesmo link, e a candidatura vai para "Entrevista agendada".
+- **Link geral** (`/agenda`): qualquer pessoa informa nome e WhatsApp e escolhe o
+  horário; se já for candidata, a entrevista entra na candidatura dela.
+- Disponibilidade (dias, faixas de horário, duração, antecedência mínima, dias
+  bloqueados, local e orientações) em **Admin → Agenda**. Horários no fuso de
+  Caruaru.
+
+### Painel (`/admin/dashboard`)
+
+Vagas abertas, candidaturas no período (com variação), pessoas em processo,
+entrevistas dos próximos 7 dias, contratações, score médio da IA, candidaturas ao
+longo do tempo, por vaga, por etapa e por origem, maiores scores da IA, maior
+**chance de contratação** (estimativa que combina a etapa atual, o score da IA e
+a nota da entrevista) e próximas entrevistas. Filtros por funil e período.
+
+### Dados pessoais (LGPD)
+
+Os dados ficam no Supabase, acessíveis só para quem tem login no admin. Os
+currículos ficam em bucket privado e abrem por links temporários. "Excluir" na
+ficha apaga a pessoa, as candidaturas, o histórico, as entrevistas e o currículo.
+A Política de Privacidade (`/privacidade`) descreve a coleta, o uso de IA e o
+prazo de guarda (até 2 anos após o último envio).
 
 ---
 
@@ -203,7 +296,7 @@ Crie um arquivo `.env.local` (use `.env.example` como base):
 
 As vagas aparecem em dois blocos na página pública: **"Encontre sua vaga de
 Trabalho"** e **"Encontre sua vaga de Professor"**. Apenas vagas com status
-**Aberta** são exibidas publicamente.
+**Aberta** são exibidas publicamente e aparecem no formulário de candidatura.
 
 ---
 

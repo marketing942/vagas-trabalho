@@ -2,13 +2,14 @@ import Link from "next/link";
 import Logo from "./Logo";
 import ThemeToggle from "./ThemeToggle";
 import TrackedLink from "./TrackedLink";
+import type { ApplyTarget } from "@/lib/apply";
 
 interface HeaderProps {
-  formUrl: string;
+  apply: ApplyTarget;
 }
 
 /** Cabeçalho branco e limpo: as duas marcas, o link da cultura e o botão de candidatura. */
-export default function Header({ formUrl }: HeaderProps) {
+export default function Header({ apply }: HeaderProps) {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-surface/95 shadow-soft backdrop-blur">
       <div className="container-page flex h-[68px] items-center justify-between gap-4">
@@ -27,15 +28,14 @@ export default function Header({ formUrl }: HeaderProps) {
           </Link>
           <ThemeToggle />
           <TrackedLink
-            href={formUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={apply.href}
+            {...(apply.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
             event="candidatar"
             eventProps={{ local: "cabecalho" }}
             className="btn-primary whitespace-nowrap !px-4 !py-2.5 max-[400px]:!px-3 max-[400px]:!text-[13px] sm:!px-5"
           >
             Candidatar-se
-            <span className="sr-only"> (abre em nova aba)</span>
+            {apply.external && <span className="sr-only"> (abre em nova aba)</span>}
           </TrackedLink>
         </div>
       </div>

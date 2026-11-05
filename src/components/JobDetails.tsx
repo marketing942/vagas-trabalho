@@ -6,10 +6,11 @@ import Icon, { type IconName } from "./Icon";
 import ShareJob from "./ShareJob";
 import TrackedLink from "./TrackedLink";
 import PrivacyNote from "./PrivacyNote";
+import type { ApplyTarget } from "@/lib/apply";
 
 interface JobDetailsProps {
   job: Job;
-  formUrl: string;
+  apply: ApplyTarget;
 }
 
 function Section({
@@ -38,8 +39,8 @@ function Section({
 }
 
 /** Conteúdo da página de detalhes de uma vaga. */
-export default function JobDetails({ job, formUrl }: JobDetailsProps) {
-  const applyUrl = job.apply_url || formUrl;
+export default function JobDetails({ job, apply }: JobDetailsProps) {
+  const external = apply.external ? { target: "_blank", rel: "noopener noreferrer" } : {};
   const units = parseUnits(job.unit);
   const meta: { icon: IconName; label: string; value?: string | null }[] = ([
     { icon: "briefcase", label: "Tipo", value: categoryLabel(job.category) },
@@ -86,15 +87,14 @@ export default function JobDetails({ job, formUrl }: JobDetailsProps) {
             <p className="mt-4 max-w-2xl text-lg text-brand-100">{job.short_description}</p>
           )}
           <TrackedLink
-            href={applyUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={apply.href}
+            {...external}
             event="candidatar"
             eventProps={{ vaga: job.slug, local: "topo" }}
             className="btn-primary mt-7"
           >
             Candidatar-se agora
-            <span className="sr-only"> (abre em nova aba)</span>
+            {apply.external && <span className="sr-only"> (abre em nova aba)</span>}
             <Icon name="arrow" className="h-4 w-4" />
           </TrackedLink>
           <PrivacyNote className="mt-3 max-w-md text-xs text-brand-200" linkClassName="underline hover:text-white" />
@@ -133,18 +133,19 @@ export default function JobDetails({ job, formUrl }: JobDetailsProps) {
             </div>
 
             <TrackedLink
-              href={applyUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={apply.href}
+              {...external}
               event="candidatar"
               eventProps={{ vaga: job.slug, local: "lateral" }}
               className="btn-primary w-full"
             >
               Candidatar-se agora
-              <span className="sr-only"> (abre em nova aba)</span>
+              {apply.external && <span className="sr-only"> (abre em nova aba)</span>}
             </TrackedLink>
             <p className="text-center text-xs text-inkmuted">
-              Você será direcionado ao nosso formulário de candidatura.
+              {apply.external
+                ? "Você será direcionado ao nosso formulário de candidatura."
+                : "Formulário rápido, aqui mesmo no site."}
             </p>
             <PrivacyNote className="text-center text-xs text-inkmuted" linkClassName="underline hover:text-ink" />
           </div>

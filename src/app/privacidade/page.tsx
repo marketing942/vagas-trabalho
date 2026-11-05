@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Icon from "@/components/Icon";
 import { getSettings } from "@/lib/settings";
+import { applyTarget } from "@/lib/apply";
 
 export const revalidate = 300;
 
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 /** Data da última revisão do texto. Atualize ao alterar a política. */
-const UPDATED_AT = "23 de outubro de 2026";
+const UPDATED_AT = "4 de novembro de 2026";
 
 function H2({ id, children }: { id: string; children: React.ReactNode }) {
   return (
@@ -40,7 +41,7 @@ export default async function PrivacidadePage() {
 
   return (
     <>
-      <Header formUrl={settings.form_url} />
+      <Header apply={applyTarget(settings)} />
       <main id="conteudo" tabIndex={-1} className="outline-none">
         <div className="bg-gradient-to-br from-brand-900 via-brand-800 to-brand-700 py-12 text-white sm:py-16">
           <div className="container-page max-w-3xl">
@@ -60,10 +61,13 @@ export default async function PrivacidadePage() {
           <div className="card border-goldline bg-goldfaint p-6">
             <h2 className="text-lg font-extrabold text-ink">Resumo em poucas linhas</h2>
             <ul className="mt-3 list-disc space-y-2 pl-6 leading-relaxed text-inksoft marker:text-goldink">
-              <li>Este site apenas divulga vagas. Ele <strong>não guarda</strong> os dados da sua candidatura.</li>
               <li>
-                Ao clicar em “Candidatar-se”, você vai para um formulário externo, onde informa os seus dados. Nós os
-                usamos para o processo seletivo.
+                Quando você se candidata pelo site, guardamos os dados que você informa e o seu currículo para conduzir
+                o processo seletivo. Só a equipe de RH do CPPEM tem acesso.
+              </li>
+              <li>
+                Usamos inteligência artificial para ajudar na triagem inicial. Quem decide é sempre uma pessoa da nossa
+                equipe, e você pode pedir a revisão humana de qualquer avaliação.
               </li>
               <li>Medimos o uso do site de forma agregada, sem cookies e sem identificar você.</li>
               <li>Você pode pedir acesso, correção ou exclusão dos seus dados quando quiser.</li>
@@ -81,9 +85,19 @@ export default async function PrivacidadePage() {
           <H2 id="dados">2. Quais dados tratamos</H2>
           <h3 className="mt-5 text-lg font-bold text-ink">2.1 No formulário de candidatura</h3>
           <P>
-            Quando você clica em “Candidatar-se”, abre-se um formulário externo (hospedado no Notion). Lá você informa
-            os dados que escolher fornecer, como nome, telefone, e-mail, cidade, formação, experiência profissional,
-            currículo e respostas às perguntas do formulário.
+            Ao se candidatar pelo site, você informa: nome completo, e-mail, WhatsApp, link do Instagram ou LinkedIn,
+            faixa de idade, cidade onde mora, a vaga escolhida, uma descrição sobre você e a sua experiência, como
+            encontrou a vaga e, se quiser, o seu currículo. Registramos também a data do envio e o seu aceite desta
+            política.
+          </P>
+          <P>
+            Durante o processo, a nossa equipe acrescenta informações sobre a sua candidatura, como a etapa em que
+            você está, as notas da entrevista, anotações e o horário da entrevista que você escolher pelo nosso link de
+            agendamento.
+          </P>
+          <P>
+            Se uma vaga indicar um formulário externo (por exemplo, no Notion), os dados informados lá ficam guardados
+            nesse serviço e são usados da mesma forma descrita nesta política.
           </P>
           <P>
             Evite enviar dados pessoais sensíveis (por exemplo, sobre saúde, religião, opinião política ou origem racial
@@ -110,8 +124,8 @@ export default async function PrivacidadePage() {
 
           <h3 className="mt-5 text-lg font-bold text-ink">2.3 Links para outros serviços</h3>
           <P>
-            Ao clicar em links para o formulário, WhatsApp, LinkedIn ou redes sociais, você sai deste site. Esses
-            serviços têm as suas próprias políticas de privacidade.
+            Ao clicar em links para WhatsApp, LinkedIn, redes sociais ou formulários externos, você sai deste site.
+            Esses serviços têm as suas próprias políticas de privacidade.
           </P>
 
           <H2 id="finalidades">3. Para que usamos os dados e em que base legal</H2>
@@ -120,6 +134,16 @@ export default async function PrivacidadePage() {
               <strong>Conduzir o processo seletivo</strong> (analisar a candidatura, avaliar o perfil e entrar em
               contato com você). Base legal: procedimentos preliminares relacionados a contrato, a pedido do titular
               (art. 7º, V, da LGPD) e, quando for o caso, o seu consentimento (art. 7º, I).
+            </li>
+            <li>
+              <strong>Triagem com apoio de inteligência artificial:</strong> a IA compara o que você informou (e o seu
+              currículo, se enviar) com os requisitos da vaga e organiza os pontos fortes e as dúvidas para a nossa
+              equipe. Ela é instruída a não considerar idade, gênero, raça, religião, deficiência, aparência ou origem.
+              A IA não aprova nem reprova ninguém: a decisão é sempre de uma pessoa da equipe. Base legal: a mesma do
+              processo seletivo e o seu consentimento, dado ao enviar o formulário.
+            </li>
+            <li>
+              <strong>Agendar e realizar entrevistas</strong>, inclusive pelo link em que você escolhe dia e horário.
             </li>
             <li>
               <strong>Cumprir obrigações legais ou regulatórias.</strong> Base legal: art. 7º, II.
@@ -138,13 +162,22 @@ export default async function PrivacidadePage() {
               processo seletivo.
             </li>
             <li>
-              <strong>Notion:</strong> o formulário e as respostas ficam no ambiente do Notion, que atua como
-              fornecedor de tecnologia. Seus servidores podem estar fora do Brasil; nesse caso, a transferência
-              internacional segue o art. 33 da LGPD.
+              <strong>Hospedagem e banco de dados:</strong> a Vercel hospeda o site e mede os acessos; o Supabase
+              guarda as vagas, as candidaturas e os currículos, em área privada.
             </li>
             <li>
-              <strong>Hospedagem do site:</strong> a Vercel hospeda o site e mede os acessos, e o Supabase guarda as
-              informações das vagas. O Supabase não armazena dados de candidatos.
+              <strong>Inteligência artificial:</strong> a DeepSeek recebe os dados da candidatura e o texto do
+              currículo apenas para gerar a avaliação de triagem, como fornecedora de tecnologia. Os servidores
+              dela ficam fora do Brasil (transferência internacional, art. 33 da LGPD); enviamos só o necessário
+              para a avaliação.
+            </li>
+            <li>
+              <strong>Notion:</strong> candidaturas feitas antes do formulário do site, ou por formulários externos,
+              ficam no Notion.
+            </li>
+            <li>
+              Esses fornecedores podem manter servidores fora do Brasil; nesse caso, a transferência internacional
+              segue o art. 33 da LGPD.
             </li>
             <li>
               <strong>Autoridades:</strong> quando houver obrigação legal ou ordem de autoridade competente.
@@ -153,15 +186,17 @@ export default async function PrivacidadePage() {
 
           <H2 id="retencao">5. Por quanto tempo guardamos</H2>
           <P>
-            Guardamos os dados pelo tempo necessário ao processo seletivo e ao cumprimento de obrigações legais. Depois
-            disso, eles são excluídos ou anonimizados, salvo se a lei exigir que sejam mantidos. Você pode pedir a
-            exclusão a qualquer momento, como explicado no item 7.
+            Guardamos os dados da candidatura por até 2 anos depois do seu último envio, para considerar você em
+            outras vagas e no Banco de Talentos. Depois disso, eles são excluídos ou anonimizados, salvo se a lei
+            exigir que sejam mantidos. Se você for contratado(a), os dados passam a seguir as regras da relação de
+            trabalho. Você pode pedir a exclusão a qualquer momento, como explicado no item 7.
           </P>
 
           <H2 id="seguranca">6. Como protegemos os dados</H2>
           <P>
-            Adotamos medidas técnicas e organizacionais razoáveis: conexão segura (HTTPS), acesso restrito por login e
-            uso de fornecedores reconhecidos. Nenhum sistema é totalmente imune a falhas; se ocorrer um incidente que
+            Adotamos medidas técnicas e organizacionais razoáveis: conexão segura (HTTPS), acesso restrito por login
+            da equipe de RH, regras de acesso no banco de dados que impedem visitantes de ler candidaturas, currículos
+            em área privada (abertos só por links temporários) e uso de fornecedores reconhecidos. Nenhum sistema é totalmente imune a falhas; se ocorrer um incidente que
             possa causar risco relevante, comunicaremos você e a Autoridade Nacional de Proteção de Dados (ANPD), como
             manda a lei.
           </P>
@@ -176,7 +211,11 @@ export default async function PrivacidadePage() {
             <li>eliminação dos dados tratados com base no seu consentimento;</li>
             <li>informação sobre com quem compartilhamos os seus dados;</li>
             <li>informação sobre a possibilidade de não consentir e as consequências disso;</li>
-            <li>revogação do consentimento.</li>
+            <li>revogação do consentimento;</li>
+            <li>
+              revisão, por uma pessoa da nossa equipe, de avaliações feitas com apoio de inteligência artificial (art.
+              20 da LGPD).
+            </li>
           </UL>
           <P>
             Para exercer qualquer desses direitos,{" "}

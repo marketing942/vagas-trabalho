@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ContentListEditor from "@/components/admin/ContentListEditor";
+import RhSetupCard from "@/components/admin/rh/RhSetupCard";
 import { createClient } from "@/lib/supabase/client";
 import { DEFAULT_FAQ_ITEMS, DEFAULT_PROCESS_STEPS, DEFAULT_WHY_ITEMS } from "@/lib/content-defaults";
 import type { SiteSettings } from "@/lib/types";
@@ -98,6 +99,16 @@ export default function ConfiguracoesPage() {
             >
               {message}
             </p>
+          )}
+
+          {/* Candidaturas pelo site (só aparece depois da migração 0010) */}
+          {"applications_enabled" in settings && (
+            <RhSetupCard
+              enabled={!!settings.applications_enabled}
+              autoAi={settings.ai_auto_evaluate ?? true}
+              onEnabled={(v) => set("applications_enabled", v)}
+              onAutoAi={(v) => set("ai_auto_evaluate", v)}
+            />
           )}
 
           {/* Setores e Unidades */}
@@ -212,7 +223,7 @@ export default function ConfiguracoesPage() {
 
           {/* Formulário Notion */}
           <Card title="Formulário de candidatura (Notion)">
-            <Field label="Link do formulário (usado nos botões 'Candidatar-se')">
+            <Field label="Link do formulário do Notion (usado enquanto as candidaturas pelo site estiverem desligadas)">
               <input
                 className="input"
                 value={settings.form_url ?? ""}

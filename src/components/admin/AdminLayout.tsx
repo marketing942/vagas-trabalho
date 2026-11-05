@@ -6,19 +6,33 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Logo from "@/components/Logo";
 
+const svg = (d: React.ReactNode) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]" aria-hidden>
+    {d}
+  </svg>
+);
+
 const NAV = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-  { href: "/admin/vagas", label: "Vagas", icon: "💼" },
-  { href: "/admin/configuracoes", label: "Configurações", icon: "⚙️" },
+  { href: "/admin/dashboard", label: "Dashboard", icon: svg(<><rect x="3.5" y="3.5" width="7" height="8" rx="2" /><rect x="13.5" y="3.5" width="7" height="5" rx="2" /><rect x="13.5" y="11.5" width="7" height="9" rx="2" /><rect x="3.5" y="14.5" width="7" height="6" rx="2" /></>) },
+  { href: "/admin/candidatos", label: "Candidatos", icon: svg(<><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20v-1a5 5 0 0 1 5-5h3a5 5 0 0 1 5 5v1" /><path d="M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20v-1a5 5 0 0 0-3.5-4.8" /></>) },
+  { href: "/admin/agenda", label: "Agenda", icon: svg(<><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" /><path d="M8 3v4M16 3v4M3.5 10h17" /></>) },
+  { href: "/admin/vagas", label: "Vagas", icon: svg(<><rect x="3" y="7.5" width="18" height="12" rx="2.5" /><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5M3 13h18" /></>) },
+  { href: "/admin/configuracoes", label: "Configurações", icon: svg(<><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" /></>) },
 ];
 
 /** Layout base da área administrativa com navegação lateral. */
 export default function AdminLayout({
   children,
   title,
+  subtitle,
+  actions,
 }: {
   children: React.ReactNode;
   title: string;
+  /** Linha de contexto abaixo do título */
+  subtitle?: string;
+  /** Botões à direita do título */
+  actions?: React.ReactNode;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -32,7 +46,7 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-brand-50">
+    <div className="min-h-screen bg-[#f4f6fb]">
       {/* Topbar mobile */}
       <div className="flex items-center justify-between border-b border-brand-100 bg-white px-4 py-3 lg:hidden">
         <span className="font-bold text-brand-950">CPPEM Admin</span>
@@ -65,13 +79,14 @@ export default function AdminLayout({
                   key={item.href}
                   href={item.href}
                   onClick={() => setOpen(false)}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                  aria-current={active ? "page" : undefined}
+                  className={`relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
                     active
-                      ? "bg-white/10 text-white"
+                      ? "bg-white/10 text-white before:absolute before:-left-3 before:top-2 before:h-[calc(100%-16px)] before:w-1 before:rounded-r-full before:bg-accent-400"
                       : "text-brand-200 hover:bg-white/5 hover:text-white"
                   }`}
                 >
-                  <span aria-hidden>{item.icon}</span>
+                  {item.icon}
                   {item.label}
                 </Link>
               );
@@ -80,9 +95,9 @@ export default function AdminLayout({
           <div className="mt-6 px-3">
             <button
               onClick={signOut}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-brand-200 transition-colors hover:bg-white/5 hover:text-white"
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-brand-200 transition-colors hover:bg-white/5 hover:text-white"
             >
-              <span aria-hidden>↩</span> Sair
+              {svg(<><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" /><path d="m10 17-5-5 5-5M5 12h11" /></>)} Sair
             </button>
           </div>
           <div className="mt-6 px-6">
@@ -97,11 +112,15 @@ export default function AdminLayout({
         </aside>
 
         {/* Conteúdo */}
-        <main className="flex-1">
-          <div className="border-b border-brand-100 bg-white px-6 py-5">
-            <h1 className="text-xl font-bold text-brand-950">{title}</h1>
+        <main className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-100 bg-white px-4 py-5 sm:px-6">
+            <div className="min-w-0">
+              <h1 className="text-xl font-extrabold tracking-tight text-brand-950 sm:text-2xl">{title}</h1>
+              {subtitle && <p className="mt-0.5 text-sm text-brand-500">{subtitle}</p>}
+            </div>
+            {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
           </div>
-          <div className="p-6">{children}</div>
+          <div className="min-w-0 p-4 sm:p-6">{children}</div>
         </main>
       </div>
     </div>

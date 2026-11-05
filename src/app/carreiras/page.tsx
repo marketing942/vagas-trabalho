@@ -18,6 +18,7 @@ import {
   cleanItems,
 } from "@/lib/content-defaults";
 import type { RawParams } from "@/lib/filter-url";
+import { applyTarget } from "@/lib/apply";
 
 export const revalidate = 60;
 
@@ -46,7 +47,7 @@ export default async function CarreirasPage({ searchParams }: PageProps) {
 
   return (
     <>
-      <Header formUrl={settings.form_url} />
+      <Header apply={applyTarget(settings)} />
       <main id="conteudo" tabIndex={-1} className="outline-none">
         <Hero
           openJobsCount={jobs.length}

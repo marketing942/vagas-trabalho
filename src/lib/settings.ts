@@ -33,6 +33,9 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   why_items: null,
   process_steps: null,
   faq_items: null,
+  applications_enabled: false,
+  ai_auto_evaluate: true,
+  agenda_config: null,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 };

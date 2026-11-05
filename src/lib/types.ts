@@ -74,6 +74,142 @@ export interface SiteSettings {
   why_items: ContentItem[] | null;
   process_steps: ContentItem[] | null;
   faq_items: ContentItem[] | null;
+  /** Formulário próprio ligado: os botões "Candidatar-se" abrem /candidatura em vez do Notion. */
+  applications_enabled: boolean;
+  /** Avaliar automaticamente com IA cada candidatura nova. */
+  ai_auto_evaluate: boolean;
+  /** Disponibilidade para entrevistas (link de agendamento). */
+  agenda_config: AgendaConfig | null;
   created_at: string;
   updated_at: string;
+}
+
+/* ---------------------------------------------------------------
+ * RH: candidatos, candidaturas, entrevistas
+ * ------------------------------------------------------------- */
+
+export type Pipeline = "trabalho" | "professor";
+
+export type Stage =
+  | "novo"
+  | "visto"
+  | "avaliado_ia"
+  | "convite"
+  | "entrevista"
+  | "entrevistado"
+  | "onboarding"
+  | "treinamento"
+  | "contratado"
+  | "depois"
+  | "proximo_ano"
+  | "reprovado"
+  | "desligado";
+
+export type AiStatus = "pendente" | "avaliando" | "concluida" | "erro" | "sem_ia";
+
+export interface Candidate {
+  id: string;
+  full_name: string;
+  email: string | null;
+  whatsapp: string;
+  whatsapp_digits: string;
+  social_url: string | null;
+  age_range: string | null;
+  city: string | null;
+  about: string | null;
+  sources: string[];
+  resume_path: string | null;
+  resume_name: string | null;
+  origin: "site" | "notion" | "admin" | "agenda";
+  external_ref: string | null;
+  consent_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Um critério avaliado pela IA. */
+export interface AiCriterion {
+  criterio: string;
+  nota: number; // 0 a 10
+  evidencia: string;
+}
+
+/** Scorecard gerado pela IA (perfil x requisitos da vaga). */
+export interface AiReport {
+  score: number; // 0 a 100
+  recomendacao: "avancar" | "talvez" | "nao_avancar";
+  resumo: string;
+  criterios: AiCriterion[];
+  pontos_fortes: string[];
+  pontos_de_atencao: string[];
+  fit_cultural: { nota: number; comentario: string };
+  perguntas_entrevista: string[];
+  curriculo_lido: boolean;
+}
+
+export interface Application {
+  id: string;
+  candidate_id: string;
+  job_id: string | null;
+  job_title: string;
+  pipeline: Pipeline;
+  stage: Stage;
+  rejection_reason: string | null;
+  ai_status: AiStatus;
+  ai_score: number | null;
+  ai_report: AiReport | null;
+  ai_model: string | null;
+  ai_evaluated_at: string | null;
+  ai_error: string | null;
+  score_fit: number | null;
+  score_proatividade: number | null;
+  score_comunicacao: number | null;
+  score_resiliencia: number | null;
+  score_tecnica: number | null;
+  interview_score: number | null;
+  notes: string | null;
+  booking_token: string;
+  stage_changed_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ApplicationEvent {
+  id: string;
+  application_id: string;
+  kind: "criada" | "etapa" | "avaliacao_ia" | "entrevista" | "nota" | "edicao";
+  from_stage: string | null;
+  to_stage: string | null;
+  detail: string | null;
+  actor: "admin" | "sistema" | "candidato" | "ia";
+  created_at: string;
+}
+
+export type InterviewStatus = "agendada" | "realizada" | "faltou" | "cancelada";
+
+export interface Interview {
+  id: string;
+  candidate_id: string;
+  application_id: string | null;
+  starts_at: string;
+  ends_at: string;
+  status: InterviewStatus;
+  location: string | null;
+  notes: string | null;
+  created_via: "admin" | "link";
+  created_at: string;
+  updated_at: string;
+}
+
+/** Disponibilidade da agenda. Horários no fuso de Caruaru (UTC-3). */
+export interface AgendaConfig {
+  slot_minutes: number;
+  min_notice_hours: number;
+  horizon_days: number;
+  /** Dia da semana (1 = segunda ... 6 = sábado, 0 = domingo) -> faixas ["08:30","11:30"] */
+  weekly: Record<string, [string, string][]>;
+  /** Datas sem entrevista (feriados etc.), formato AAAA-MM-DD */
+  blocked_dates: string[];
+  location: string;
+  instructions: string;
 }
