@@ -4,15 +4,10 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { at } from "@/lib/rh/agenda";
 import { whatsappLink } from "@/lib/rh/constants";
+import { useOrigin } from "@/lib/use-origin";
 import { formatDateTime, formatLongDay, formatTime } from "@/lib/rh/format";
+import { INTERVIEW_STATUS as STATUS, setInterviewStatus } from "@/lib/rh/interview-actions";
 import type { AgendaConfig, Application, Candidate, Interview, InterviewStatus } from "@/lib/types";
-
-const STATUS: Record<InterviewStatus, { label: string; tone: string }> = {
-  agendada: { label: "Agendada", tone: "bg-violet-100 text-violet-800" },
-  realizada: { label: "Realizada", tone: "bg-emerald-100 text-emerald-800" },
-  faltou: { label: "Não compareceu", tone: "bg-rose-100 text-rose-800" },
-  cancelada: { label: "Cancelada", tone: "bg-brand-100 text-brand-600" },
-};
 
 /** Entrevistas da candidatura: convite com link de agendamento, marcação manual e resultado. */
 export default function InterviewsBox({
@@ -38,7 +33,7 @@ export default function InterviewsBox({
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const link = typeof window === "undefined" ? "" : `${window.location.origin}/agenda?c=${app.booking_token}`;
+  const link = `${useOrigin()}/agenda?c=${app.booking_token}`;
   const firstName = candidate.full_name.split(" ")[0];
   const invite = `Olá, ${firstName}! Aqui é do RH do CPPEM. Gostamos do seu perfil para a vaga ${app.job_title} e queremos conhecer você. Escolha o melhor dia e horário para a sua entrevista neste link: ${link}`;
   const mine = interviews.filter((i) => i.application_id === app.id || (!i.application_id && i.candidate_id === candidate.id));
@@ -84,9 +79,7 @@ export default function InterviewsBox({
   }
 
   async function setStatus(i: Interview, status: InterviewStatus) {
-    await db().from("interviews").update({ status }).eq("id", i.id);
-    if (status === "realizada") await advance("entrevistado", ["novo", "visto", "avaliado_ia", "convite", "entrevista"]);
-    await log(`Entrevista de ${formatDateTime(i.starts_at)}: ${STATUS[status].label.toLowerCase()}`);
+    await setInterviewStatus(db(), i, status);
     onChanged();
   }
 
