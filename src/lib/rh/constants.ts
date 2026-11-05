@@ -88,10 +88,11 @@ export const PIPELINE_LABEL: Record<Pipeline, string> = {
 };
 
 export function stageDef(pipeline: Pipeline, stage: string): StageDef {
+  const other: Pipeline = pipeline === "trabalho" ? "professor" : "trabalho";
   return (
     STAGES[pipeline].find((s) => s.key === stage) ??
-    STAGES.trabalho.find((s) => s.key === stage) ??
-    STAGES.trabalho[0]
+    STAGES[other].find((s) => s.key === stage) ??
+    STAGES[pipeline][0]
   );
 }
 
