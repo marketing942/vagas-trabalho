@@ -125,6 +125,7 @@ export default function DashboardPage() {
   const [apps, setApps] = useState<DashApp[]>([]);
   const [interviews, setInterviews] = useState<DashInterview[]>([]);
   const [past, setPast] = useState<PastInterview[]>([]);
+  const [lgpd, setLgpd] = useState(0);
   const [loading, setLoading] = useState(true);
   const [rhReady, setRhReady] = useState(true);
   const [funil, setFunil] = useState<Funil>("todos");
@@ -164,6 +165,14 @@ export default function DashboardPage() {
       setRhReady(!a.error);
       setInterviews((i.data as unknown as DashInterview[]) ?? []);
       setPast((p.data as unknown as PastInterview[]) ?? []);
+      // LGPD: quantos passaram do prazo de guarda (sem a migração 0014, fica 0)
+      db.from("rh_settings")
+        .select("retention_months")
+        .eq("id", 1)
+        .maybeSingle()
+        .then(({ data: s, error }) =>
+          error ? null : db.rpc("rh_retention_candidates", { p_months: Number(s?.retention_months ?? 24) }).then(({ data: r }) => setLgpd(Array.isArray(r) ? r.length : 0))
+        );
       setLoading(false);
     });
   }, []);
@@ -295,6 +304,7 @@ export default function DashboardPage() {
             apps={apps.filter((a) => funil === "todos" || a.pipeline === funil)}
             past={past.filter((i) => funil === "todos" || !i.application_id || apps.find((a) => a.id === i.application_id)?.pipeline === funil)}
             now={now}
+            lgpd={lgpd}
           />
 
           {/* Indicadores */}

@@ -32,7 +32,7 @@ const DAY = 86_400_000;
  * Central de pendências: o que precisa de alguém agora.
  * Atrasados por etapa, entrevistas sem resultado, reprovados recentes sem devolutiva e erros da IA.
  */
-export default function PendingPanel({ apps, past, now }: { apps: PendingApp[]; past: PastInterview[]; now: number }) {
+export default function PendingPanel({ apps, past, now, lgpd = 0 }: { apps: PendingApp[]; past: PastInterview[]; now: number; lgpd?: number }) {
   const ficha = (cid: string, aid?: string | null) => `/admin/candidatos/${cid}${aid ? `?c=${aid}` : ""}`;
   const name = (a: { candidates: { full_name: string } | null }) => a.candidates?.full_name ?? "Sem nome";
 
@@ -59,7 +59,7 @@ export default function PendingPanel({ apps, past, now }: { apps: PendingApp[]; 
     { title: "Sem devolutiva", hint: "reprovados nos últimos 30 dias", items: noFeedback, tone: "bg-rose-100 text-rose-800" },
     { title: "Erro na avaliação da IA", hint: "não receberam score", items: aiError, tone: "bg-brand-100 text-brand-700" },
   ];
-  const total = groups.reduce((n, g) => n + g.items.length, 0);
+  const total = groups.reduce((n, g) => n + g.items.length, 0) + (lgpd ? 1 : 0);
 
   return (
     <Panel
@@ -100,6 +100,17 @@ export default function PendingPanel({ apps, past, now }: { apps: PendingApp[]; 
             </section>
           ))}
         </div>
+      )}
+      {lgpd > 0 && (
+        <Link
+          href="/admin/configuracoes/lgpd"
+          className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3 text-sm hover:bg-brand-50"
+        >
+          <span className="text-brand-800">
+            <strong>LGPD:</strong> {lgpd} cadastro{lgpd === 1 ? "" : "s"} passaram do prazo de guarda dos dados.
+          </span>
+          <span className="shrink-0 font-semibold text-brand-700">Revisar →</span>
+        </Link>
       )}
     </Panel>
   );

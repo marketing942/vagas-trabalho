@@ -7,10 +7,10 @@ import { AI_MODEL, HAS_AI } from "@/lib/rh/ai";
 export async function GET() {
   const db = await adminClient();
   if (!db) return NextResponse.json({ error: "Faça login novamente." }, { status: 401 });
-  // 0010 (tabelas do RH) e 0011 (resultado, várias vagas, roteiro e motivos)
+  // Confere colunas das migrações 0010 a 0014 (a última de cada uma)
   const [{ error }, { error: e11 }] = await Promise.all([
     db.from("applications").select("id, status, jobs, culture_quiz", { head: true, count: "exact" }).limit(1),
-    db.from("rh_settings").select("id, message_templates").limit(1),
+    db.from("rh_settings").select("id, message_templates, retention_months").limit(1),
   ]);
   return NextResponse.json({ serviceRole: HAS_SERVICE_ROLE, ai: HAS_AI, aiModel: AI_MODEL, migration: !error && !e11 });
 }

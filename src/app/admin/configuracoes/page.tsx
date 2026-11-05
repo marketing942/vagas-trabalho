@@ -124,6 +124,17 @@ export default function ConfiguracoesPage() {
             <span aria-hidden className="text-brand-400">→</span>
           </Link>
 
+          <Link
+            href="/admin/configuracoes/lgpd"
+            className="card flex items-center justify-between gap-4 p-5 transition-shadow hover:shadow-md"
+          >
+            <span>
+              <span className="block font-bold text-brand-950">Privacidade (LGPD)</span>
+              <span className="mt-0.5 block text-sm text-brand-500">Prazo de guarda dos dados e cadastros para anonimizar ou excluir</span>
+            </span>
+            <span aria-hidden className="text-brand-400">→</span>
+          </Link>
+
           {/* Setores e Unidades */}
           <Card title="Setores e unidades">
             <p className="text-sm text-brand-500">
