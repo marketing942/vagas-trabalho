@@ -5,7 +5,7 @@
  */
 import { TALENT_POOL } from "./constants";
 import { formatWhatsapp, onlyDigits } from "./validate";
-import type { Pipeline, Stage } from "@/lib/types";
+import type { AppStatus, Pipeline, Stage } from "@/lib/types";
 
 /** Lê CSV (aspas, quebras de linha dentro de campos, BOM). */
 export function parseCsv(text: string): Record<string, string>[] {
@@ -73,11 +73,19 @@ export function detectPipeline(rows: Record<string, string>[]): Pipeline | null 
   return "trabalho";
 }
 
-/** Status do Notion -> etapa (e motivo de reprovação). */
-export function mapStatus(status: string, pipeline: Pipeline): { stage: Stage; reason: string | null } {
+/** Status do Notion -> etapa, resultado (contratado/reprovado/desligado) e motivo. */
+export function mapStatus(status: string, pipeline: Pipeline): { stage: Stage; status: AppStatus; reason: string | null } {
   const s = status.trim();
+  const open = (stage: Stage) => ({ stage, status: "em_processo" as const, reason: null });
   const reprovado = /^Reprovado\s*(?:-|\()\s*(.*?)\)?\s*$/i.exec(s);
-  if (reprovado) return { stage: "reprovado", reason: reprovado[1] || "Sem motivo" };
+  // No Notion não fica guardado em que etapa a pessoa estava: usa a mais provável
+  if (reprovado || s === "Reprovado") {
+    const reason = reprovado?.[1] || "Sem motivo";
+    const stage: Stage = /entrevista|compareceu|aula/i.test(reason) ? "entrevista" : /onboarding/i.test(reason) ? "onboarding" : /treinamento/i.test(reason) ? "treinamento" : "avaliado_ia";
+    return { stage, status: "reprovado", reason };
+  }
+  if (s === "Contratado") return { stage: pipeline === "professor" ? "entrevistado" : "treinamento", status: "contratado", reason: null };
+  if (s === "Demitido") return { stage: pipeline === "professor" ? "entrevistado" : "treinamento", status: "desligado", reason: null };
   const map: Record<string, Stage> = {
     "Não avaliado": "novo",
     Visto: "visto",
@@ -85,13 +93,9 @@ export function mapStatus(status: string, pipeline: Pipeline): { stage: Stage; r
     "Convite Enviado": "convite",
     "Reunião agendada": "entrevista",
     "Possivelmente Depois": "depois",
-    Contratado: "contratado",
-    Demitido: "desligado",
-    Reprovado: "reprovado",
   };
-  if (s === "Reprovado") return { stage: "reprovado", reason: "Sem motivo" };
-  if (/^20\d\d$/.test(s)) return { stage: pipeline === "professor" ? "proximo_ano" : "depois", reason: null };
-  return { stage: map[s] ?? "novo", reason: null };
+  if (/^20\d\d$/.test(s)) return open(pipeline === "professor" ? "proximo_ano" : "depois");
+  return open(map[s] ?? "novo");
 }
 
 const MONTHS = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
@@ -155,6 +159,7 @@ const score10 = (v: string) => {
 export interface ImportApplication {
   vaga: string;
   stage: Stage;
+  status: AppStatus;
   reason: string | null;
   ai_score: number | null;
   scores: { score_fit: number | null; score_proatividade: number | null; score_comunicacao: number | null; score_resiliencia: number | null; score_tecnica: number | null };
@@ -211,11 +216,12 @@ export function buildPeople(rows: Record<string, string>[], pipeline: Pipeline):
       created_at: prev?.created_at ?? at,
       applications: prev?.applications ?? [],
     };
-    const { stage, reason } = mapStatus(r[COL.status] ?? "", pipeline);
+    const { stage, status, reason } = mapStatus(r[COL.status] ?? "", pipeline);
     const aiRaw = (r[COL.score] ?? "").trim();
     const app = (vaga: string): ImportApplication => ({
       vaga,
       stage,
+      status,
       reason,
       ai_score: aiRaw ? Math.max(0, Math.min(100, Math.round(Number(aiRaw.replace(",", "."))) || 0)) : null,
       scores: {
@@ -238,8 +244,8 @@ export function buildPeople(rows: Record<string, string>[], pipeline: Pipeline):
       // não apaga um "Reprovado" ou "2027" dado antes); notas vêm de qualquer um dos envios.
       const old = person.applications[i];
       const next = app(v);
-      const untouched = (s: Stage) => s === "novo" || s === "visto";
-      const keepOld = untouched(next.stage) && !untouched(old.stage);
+      const untouched = (x: ImportApplication) => x.status === "em_processo" && (x.stage === "novo" || x.stage === "visto");
+      const keepOld = untouched(next) && !untouched(old);
       const base = keepOld ? old : next;
       const other = keepOld ? next : old;
       person.applications[i] = {
@@ -254,4 +260,38 @@ export function buildPeople(rows: Record<string, string>[], pipeline: Pipeline):
     people.set(key, person);
   }
   return [...people.values()];
+}
+
+const RANK: Record<Stage, number> = { novo: 0, visto: 1, avaliado_ia: 2, depois: 2, proximo_ano: 2, convite: 3, entrevista: 4, entrevistado: 5, onboarding: 6, treinamento: 7 };
+
+export interface ImportProcess extends Omit<ImportApplication, "vaga"> {
+  vagas: string[];
+}
+
+/**
+ * Um card por pessoa e funil: as vagas em aberto viram UM card com todas elas
+ * (na etapa mais avançada); cada vaga já finalizada (contratado, reprovado,
+ * desligado) fica como um resultado separado, para a análise de Finalizados.
+ */
+export function groupProcesses(apps: ImportApplication[]): ImportProcess[] {
+  const open = apps.filter((a) => a.status === "em_processo");
+  const closed = apps.filter((a) => a.status !== "em_processo").map(({ vaga, ...rest }) => ({ ...rest, vagas: [vaga] }));
+  if (!open.length) return closed;
+  const lead = [...open].sort((a, b) => RANK[b.stage] - RANK[a.stage] || (b.ai_score ?? -1) - (a.ai_score ?? -1))[0];
+  const scores = Object.fromEntries(
+    (Object.keys(lead.scores) as (keyof ImportApplication["scores"])[]).map((k) => [k, lead.scores[k] ?? open.map((a) => a.scores[k]).find((v) => v != null) ?? null])
+  ) as ImportApplication["scores"];
+  const sorted = [...open].sort((a, b) => a.created_at.localeCompare(b.created_at));
+  return [
+    {
+      stage: lead.stage,
+      status: "em_processo",
+      reason: null,
+      ai_score: open.reduce<number | null>((m, a) => (a.ai_score != null && (m == null || a.ai_score > m) ? a.ai_score : m), null),
+      scores,
+      created_at: sorted[0].created_at,
+      vagas: Array.from(new Set(sorted.map((a) => a.vaga))),
+    },
+    ...closed,
+  ];
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { stageLabel } from "@/lib/rh/constants";
+import { STATUS, stageLabel } from "@/lib/rh/constants";
 import { formatDateTime } from "@/lib/rh/format";
 import type { ApplicationEvent, Pipeline } from "@/lib/types";
 
@@ -13,10 +13,16 @@ const ACTOR: Record<ApplicationEvent["actor"], string> = {
 
 /** Histórico da candidatura (mais recente primeiro). */
 export default function Timeline({ events, pipeline }: { events: ApplicationEvent[]; pipeline: Pipeline }) {
+  // Registros antigos podem ter "contratado/reprovado" como etapa: mostra o nome certo
+  const label = (v: string | null) => (v && v in STATUS ? STATUS[v as keyof typeof STATUS].label : stageLabel(pipeline, v ?? ""));
   const text = (e: ApplicationEvent) => {
     switch (e.kind) {
       case "etapa":
-        return `Etapa: ${stageLabel(pipeline, e.from_stage ?? "")} → ${stageLabel(pipeline, e.to_stage ?? "")}${e.detail ? ` (${e.detail})` : ""}`;
+        return `Etapa: ${label(e.from_stage)} → ${label(e.to_stage)}${e.detail ? ` (${e.detail})` : ""}`;
+      case "status":
+        return e.to_stage === "em_processo"
+          ? `Processo reaberto (estava ${label(e.from_stage).toLowerCase()})`
+          : `Resultado: ${label(e.to_stage)}${e.detail ? ` · motivo: ${e.detail}` : ""}`;
       case "avaliacao_ia":
         return `Avaliação da IA: ${e.detail ?? ""}`;
       case "nota":

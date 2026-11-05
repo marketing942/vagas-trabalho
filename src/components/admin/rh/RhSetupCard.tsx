@@ -56,7 +56,7 @@ export default function RhSetupCard({
           <li className="text-brand-500">Conferindo a configuração do servidor...</li>
         ) : (
           <>
-            {item(status.migration, "Banco de dados pronto (migração 0010)", "Rode o arquivo supabase/migrations/0010_rh.sql no SQL Editor do Supabase.")}
+            {item(status.migration, "Banco de dados pronto (migrações 0010 e 0011)", "Rode no SQL Editor do Supabase os arquivos supabase/migrations/0010_rh.sql e 0011_rh_status_vagas_roteiro.sql (nessa ordem).")}
             {item(
               status.serviceRole,
               "Chave do servidor do Supabase",

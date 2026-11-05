@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ContentListEditor from "@/components/admin/ContentListEditor";
@@ -110,6 +111,18 @@ export default function ConfiguracoesPage() {
               onAutoAi={(v) => set("ai_auto_evaluate", v)}
             />
           )}
+
+          {/* Configurações do RH (página própria) */}
+          <Link
+            href="/admin/configuracoes/rh"
+            className="card flex items-center justify-between gap-4 p-5 transition-shadow hover:shadow-md"
+          >
+            <span>
+              <span className="block font-bold text-brand-950">Configurações do RH</span>
+              <span className="mt-0.5 block text-sm text-brand-500">Motivos de reprovação e roteiro padrão de entrevista</span>
+            </span>
+            <span aria-hidden className="text-brand-400">→</span>
+          </Link>
 
           {/* Setores e Unidades */}
           <Card title="Setores e unidades">

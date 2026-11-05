@@ -1,4 +1,4 @@
-import type { AgendaConfig, Pipeline, Stage } from "@/lib/types";
+import type { AgendaConfig, Application, AppStatus, InterviewScript, JobRef, Pipeline, Stage } from "@/lib/types";
 
 /* ---------------------------------------------------------------
  * Perguntas do formulário (as mesmas do formulário do Notion)
@@ -65,10 +65,7 @@ export const STAGES: Record<Pipeline, StageDef[]> = {
     S("entrevistado", "Entrevista realizada", "bg-fuchsia-500", 0.55),
     S("onboarding", "Onboarding", "bg-amber-500", 0.75),
     S("treinamento", "Treinamento", "bg-orange-500", 0.85),
-    S("contratado", "Contratado", "bg-emerald-500", 1, true),
     S("depois", "Possivelmente depois", "bg-yellow-500", 0.15, true),
-    S("reprovado", "Reprovado", "bg-rose-500", 0, true),
-    S("desligado", "Desligado", "bg-zinc-500", 0, true),
   ],
   professor: [
     S("novo", "Não avaliado", "bg-slate-400", 0),
@@ -77,9 +74,7 @@ export const STAGES: Record<Pipeline, StageDef[]> = {
     S("convite", "Convite enviado", "bg-indigo-500", 0.25),
     S("entrevista", "Entrevista / aula-teste agendada", "bg-violet-500", 0.45),
     S("entrevistado", "Entrevista realizada", "bg-fuchsia-500", 0.65),
-    S("contratado", "Contratado", "bg-emerald-500", 1, true),
     S("proximo_ano", "Banco para o próximo ano", "bg-yellow-500", 0.2, true),
-    S("reprovado", "Reprovado", "bg-rose-500", 0, true),
   ],
 };
 
@@ -99,31 +94,71 @@ export function stageDef(pipeline: Pipeline, stage: string): StageDef {
 
 export const stageLabel = (pipeline: Pipeline, stage: string) => stageDef(pipeline, stage).label;
 
-/** Etapas em que a pessoa ainda está no processo (nem contratada, nem reprovada). */
-export const ACTIVE_STAGES: Stage[] = ["novo", "visto", "avaliado_ia", "convite", "entrevista", "entrevistado", "onboarding", "treinamento"];
-export const isActive = (stage: string) => (ACTIVE_STAGES as string[]).includes(stage);
+/** Resultado da candidatura: fica fora das etapas, como "ganho" e "perdido" num CRM. */
+export const STATUS: Record<AppStatus, { label: string; tone: string; dot: string }> = {
+  em_processo: { label: "Em processo", tone: "bg-brand-50 text-brand-700 ring-brand-100", dot: "bg-brand-400" },
+  contratado: { label: "Contratado", tone: "bg-emerald-50 text-emerald-800 ring-emerald-200", dot: "bg-emerald-500" },
+  reprovado: { label: "Reprovado", tone: "bg-rose-50 text-rose-800 ring-rose-200", dot: "bg-rose-500" },
+  desligado: { label: "Desligado", tone: "bg-zinc-100 text-zinc-700 ring-zinc-200", dot: "bg-zinc-500" },
+};
 
-/** Motivos de reprovação (os mesmos do Notion). */
-export const REJECTION_REASONS: Record<Pipeline, string[]> = {
-  trabalho: [
-    "Sem motivo",
-    "Na avaliação de perfil",
-    "Não compareceu na entrevista",
-    "Na entrevista (scorecard)",
-    "Localização",
-    "Falta de resposta",
-    "No onboarding",
-    "No treinamento",
-    "Pertence ao funil de professores",
-  ],
-  professor: [
-    "Sem motivo",
-    "Na avaliação de perfil",
-    "Não compareceu na entrevista",
-    "Na entrevista / aula-teste",
-    "Localização",
-    "Falta de resposta",
-    "Pertence ao funil de trabalho",
+/** Ainda no processo seletivo (nem contratado, nem reprovado, nem desligado). */
+export const isOpen = (app: Pick<Application, "status">) => app.status === "em_processo";
+
+/** Vagas do card (com fallback para a vaga principal em dados antigos). */
+export function jobsOf(app: Pick<Application, "jobs" | "job_id" | "job_title">): JobRef[] {
+  return Array.isArray(app.jobs) && app.jobs.length ? app.jobs : [{ id: app.job_id, title: app.job_title }];
+}
+export const jobTitles = (app: Pick<Application, "jobs" | "job_id" | "job_title">) => jobsOf(app).map((j) => j.title);
+
+/** Motivos de reprovação padrão (o RH edita a lista em Configurações). */
+export const DEFAULT_REJECTION_REASONS = [
+  "Na avaliação de perfil",
+  "Não compareceu na entrevista",
+  "Na entrevista (scorecard)",
+  "Na aula-teste",
+  "Localização",
+  "Falta de resposta",
+  "Desistiu do processo",
+  "No onboarding",
+  "No treinamento",
+  "Pertence ao outro funil",
+  "Outro motivo",
+];
+
+/** Roteiro de entrevista padrão do CPPEM (o RH edita em Configurações). */
+export const DEFAULT_INTERVIEW_SCRIPT: InterviewScript = {
+  sections: [
+    {
+      title: "Apresentação",
+      questions: [
+        { q: "Como é a sua rotina do início ao fim do dia?", hint: "Demonstra proatividade" },
+        { q: "Quais os seus princípios de vida?", hint: "Demonstra fit cultural" },
+        { q: "Descreva o ambiente de trabalho em que você seria mais produtivo e feliz", hint: "Demonstra fit cultural" },
+        { q: "Como você se deslocaria até aqui todos os dias?", hint: "Demonstra disponibilidade" },
+        { q: "Você tem filhos?", hint: "Demonstra responsabilidade e prioridades" },
+      ],
+    },
+    {
+      title: "Competências técnicas",
+      questions: [
+        { q: "Qual é a sua experiência na área?", hint: "Demonstra competência técnica" },
+        { q: "Qual foi o seu último emprego e por que saiu de lá?", hint: "Demonstra respeito e perfil profissional" },
+      ],
+    },
+    {
+      title: "Competências comportamentais",
+      questions: [
+        { q: "Qual foi o melhor líder que você já teve? O que aprendeu com ele?", hint: "Demonstra respeito e o que desperta admiração ou detração" },
+        { q: "Você se considera um líder?", hint: "" },
+        { q: "Qual foi o maior desafio que você já enfrentou na vida?", hint: "Demonstra resiliência ou fraqueza" },
+        { q: "O que faria você deixar o emprego imediatamente?", hint: "Demonstra instabilidades emocionais" },
+        { q: "O que você considera sua maior qualidade?", hint: "Demonstra resiliência ou fraqueza · Demonstra humildade" },
+        { q: "O que você considera que mais tem que melhorar?", hint: "Demonstra humildade" },
+        { q: "Qual sua principal motivação?", hint: "Demonstra visão de futuro" },
+        { q: "Onde você se vê nos próximos anos?", hint: "Demonstra visão de futuro" },
+      ],
+    },
   ],
 };
 

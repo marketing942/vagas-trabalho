@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { at } from "@/lib/rh/agenda";
-import { whatsappLink } from "@/lib/rh/constants";
+import { jobTitles, whatsappLink } from "@/lib/rh/constants";
 import { useOrigin } from "@/lib/use-origin";
 import { formatDateTime, formatLongDay, formatTime } from "@/lib/rh/format";
 import { INTERVIEW_STATUS as STATUS, setInterviewStatus } from "@/lib/rh/interview-actions";
@@ -23,7 +23,7 @@ export default function InterviewsBox({
   interviews: Interview[];
   config: AgendaConfig;
   onChanged: () => void;
-  onReject: (reason: string) => void;
+  onReject: () => void;
 }) {
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
@@ -35,7 +35,9 @@ export default function InterviewsBox({
 
   const link = `${useOrigin()}/agenda?c=${app.booking_token}`;
   const firstName = candidate.full_name.split(" ")[0];
-  const invite = `Olá, ${firstName}! Aqui é do RH do CPPEM. Gostamos do seu perfil para a vaga ${app.job_title} e queremos conhecer você. Escolha o melhor dia e horário para a sua entrevista neste link: ${link}`;
+  const titles = jobTitles(app);
+  const vagas = titles.length > 1 ? `as vagas ${titles.slice(0, -1).join(", ")} e ${titles[titles.length - 1]}` : `a vaga ${titles[0]}`;
+  const invite = `Olá, ${firstName}! Aqui é do RH do CPPEM. Gostamos do seu perfil para ${vagas} e queremos conhecer você. Escolha o melhor dia e horário para a sua entrevista neste link: ${link}`;
   const mine = interviews.filter((i) => i.application_id === app.id || (!i.application_id && i.candidate_id === candidate.id));
 
   const db = () => createClient();
@@ -164,8 +166,8 @@ export default function InterviewsBox({
                   </button>
                 </div>
               )}
-              {i.status === "faltou" && app.stage !== "reprovado" && (
-                <button type="button" onClick={() => onReject("Não compareceu na entrevista")} className="mt-2 text-xs font-semibold text-rose-700 underline">
+              {i.status === "faltou" && app.status === "em_processo" && (
+                <button type="button" onClick={() => onReject()} className="mt-2 text-xs font-semibold text-rose-700 underline">
                   Reprovar por não comparecimento
                 </button>
               )}

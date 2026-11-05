@@ -99,11 +99,33 @@ export type Stage =
   | "entrevistado"
   | "onboarding"
   | "treinamento"
-  | "contratado"
   | "depois"
-  | "proximo_ano"
-  | "reprovado"
-  | "desligado";
+  | "proximo_ano";
+
+/** Resultado da candidatura (como "ganho" e "perdido" num CRM). */
+export type AppStatus = "em_processo" | "contratado" | "reprovado" | "desligado";
+
+/** Uma vaga do card (id vazio = Banco de Talentos ou vaga que não está mais no site). */
+export interface JobRef {
+  id: string | null;
+  title: string;
+}
+
+/** Roteiro de entrevista. No card, cada pergunta também guarda a resposta. */
+export interface InterviewQuestion {
+  q: string;
+  hint?: string;
+  answer?: string;
+}
+export interface InterviewScript {
+  sections: { title: string; questions: InterviewQuestion[] }[];
+}
+
+/** Configurações privadas do RH (tabela rh_settings, só o admin lê). */
+export interface RhSettings {
+  rejection_reasons: string[];
+  interview_script: InterviewScript;
+}
 
 export type AiStatus = "pendente" | "avaliando" | "concluida" | "erro" | "sem_ia";
 
@@ -143,6 +165,8 @@ export interface AiReport {
   pontos_fortes: string[];
   pontos_de_atencao: string[];
   fit_cultural: { nota: number; comentario: string };
+  /** Aderência a cada vaga escolhida (quando a pessoa marcou mais de uma) */
+  vagas?: { vaga: string; score: number; comentario: string }[];
   perguntas_entrevista: string[];
   curriculo_lido: boolean;
 }
@@ -154,6 +178,11 @@ export interface Application {
   job_title: string;
   pipeline: Pipeline;
   stage: Stage;
+  status: AppStatus;
+  closed_at: string | null;
+  /** Todas as vagas do card (a primeira é a principal: job_id / job_title) */
+  jobs: JobRef[];
+  interview_answers: InterviewScript | null;
   rejection_reason: string | null;
   ai_status: AiStatus;
   ai_score: number | null;
@@ -177,7 +206,7 @@ export interface Application {
 export interface ApplicationEvent {
   id: string;
   application_id: string;
-  kind: "criada" | "etapa" | "avaliacao_ia" | "entrevista" | "nota" | "edicao";
+  kind: "criada" | "etapa" | "status" | "avaliacao_ia" | "entrevista" | "nota" | "edicao";
   from_stage: string | null;
   to_stage: string | null;
   detail: string | null;

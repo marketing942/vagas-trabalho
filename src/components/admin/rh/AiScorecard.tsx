@@ -71,8 +71,28 @@ export default function AiScorecard({
             </div>
           </div>
 
+          {r.vagas && r.vagas.length > 1 && (
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-wide text-brand-500">Aderência a cada vaga escolhida</h4>
+              <ul className="mt-2 space-y-2.5">
+                {[...r.vagas].sort((x, y) => y.score - x.score).map((v) => (
+                  <li key={v.vaga} title={v.comentario}>
+                    <div className="flex items-baseline justify-between gap-3 text-sm">
+                      <span className="font-medium text-brand-900">{v.vaga}</span>
+                      <span className="font-bold tabular-nums text-brand-950">{v.score}</span>
+                    </div>
+                    <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-brand-100" aria-hidden>
+                      <div className="h-full rounded-full bg-brand-500" style={{ width: `${v.score}%` }} />
+                    </div>
+                    {v.comentario && <p className="mt-1 text-xs text-brand-600">{v.comentario}</p>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wide text-brand-500">Critérios da vaga</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wide text-brand-500">{r.vagas && r.vagas.length > 1 ? "Critérios (vaga mais aderente)" : "Critérios da vaga"}</h4>
             <ul className="mt-2 space-y-3">
               {r.criterios.map((c) => (
                 <li key={c.criterio}>

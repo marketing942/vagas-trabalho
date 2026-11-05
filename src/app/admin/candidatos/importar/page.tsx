@@ -5,8 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { createClient } from "@/lib/supabase/client";
 import { fetchAll } from "@/lib/rh/fetch-all";
-import { PIPELINE_LABEL, stageDef, TALENT_POOL } from "@/lib/rh/constants";
-import { buildPeople, detectPipeline, matchJob, parseCsv, type ImportPerson } from "@/lib/rh/notion-import";
+import { PIPELINE_LABEL, stageDef, STATUS, TALENT_POOL } from "@/lib/rh/constants";
+import { buildPeople, detectPipeline, groupProcesses, matchJob, parseCsv, type ImportPerson } from "@/lib/rh/notion-import";
 import type { Job, Pipeline } from "@/lib/types";
 
 type JobLite = Pick<Job, "id" | "title" | "category" | "status">;
@@ -46,7 +46,10 @@ export default function ImportarPage() {
   }, [people]);
   const stageCount = useMemo(() => {
     const c = new Map<string, number>();
-    people.forEach((p) => p.applications.forEach((a) => c.set(a.stage, (c.get(a.stage) ?? 0) + 1)));
+    people.forEach((p) => p.applications.forEach((a) => {
+      const k = a.status === "em_processo" ? a.stage : a.status;
+      c.set(k, (c.get(k) ?? 0) + 1);
+    }));
     return [...c.entries()].sort((a, b) => b[1] - a[1]);
   }, [people]);
 
@@ -127,24 +130,32 @@ export default function ImportarPage() {
       (data ?? []).forEach((c) => idOf.set(c.external_ref.slice(`notion:${pipeline}:`.length), c.id));
     }
 
-    // Candidaturas: pula as que a pessoa já tem (mesma vaga) e junta vagas do Notion que caíram na mesma vaga do site
+    // Um card por pessoa e funil (todas as vagas em aberto juntas). Pula o que a pessoa já tem:
+    // card em aberto neste funil, ou o mesmo resultado para a mesma vaga.
     setProgress("Conferindo candidaturas existentes...");
     const ids = [...new Set(idOf.values())];
     const have = new Set<string>();
     for (let i = 0; i < ids.length; i += 200) {
-      const { data } = await db.from("applications").select("candidate_id,job_id,job_title").in("candidate_id", ids.slice(i, i + 200));
-      (data ?? []).forEach((a) => have.add(`${a.candidate_id}|${a.job_id ?? a.job_title}`));
+      const { data } = await db.from("applications").select("candidate_id,pipeline,status,job_title").in("candidate_id", ids.slice(i, i + 200));
+      (data ?? []).forEach((a) => {
+        if (a.pipeline !== pipeline) return;
+        have.add(a.status === "em_processo" ? `${a.candidate_id}|aberto` : `${a.candidate_id}|${a.status}|${a.job_title}`);
+      });
     }
     const jobById = new Map(jobs.map((j) => [j.id, j]));
+    const jobRef = (vaga: string) => {
+      const id = mapping[vaga] || null;
+      return { id, title: id ? jobById.get(id)!.title : vaga };
+    };
     const rowsToInsert: Record<string, unknown>[] = [];
     let skipped = 0;
     for (const p of people) {
       const candidateId = idOf.get(p.key);
       if (!candidateId) continue;
-      for (const a of p.applications) {
-        const jobId = mapping[a.vaga] || null;
-        const title = jobId ? jobById.get(jobId)!.title : a.vaga === TALENT_POOL ? TALENT_POOL : a.vaga;
-        const k = `${candidateId}|${jobId ?? title}`;
+      for (const proc of groupProcesses(p.applications)) {
+        // Vagas do Notion que caíram na mesma vaga do site viram uma só
+        const refs = proc.vagas.map(jobRef).filter((r, i, all) => all.findIndex((x) => (x.id ?? x.title) === (r.id ?? r.title)) === i);
+        const k = proc.status === "em_processo" ? `${candidateId}|aberto` : `${candidateId}|${proc.status}|${refs[0].title}`;
         if (have.has(k)) {
           skipped++;
           continue;
@@ -152,16 +163,19 @@ export default function ImportarPage() {
         have.add(k);
         rowsToInsert.push({
           candidate_id: candidateId,
-          job_id: jobId,
-          job_title: title,
+          job_id: refs[0].id,
+          job_title: refs[0].title,
+          jobs: refs,
           pipeline,
-          stage: a.stage,
-          rejection_reason: a.reason,
+          stage: proc.stage,
+          status: proc.status,
+          rejection_reason: proc.reason,
           ai_status: "sem_ia",
-          ai_score: a.ai_score,
-          ...a.scores,
-          created_at: a.created_at,
-          stage_changed_at: a.created_at,
+          ai_score: proc.ai_score,
+          ...proc.scores,
+          created_at: proc.created_at,
+          stage_changed_at: proc.created_at,
+          closed_at: proc.status === "em_processo" ? null : proc.created_at,
         });
       }
     }
@@ -231,7 +245,7 @@ export default function ImportarPage() {
                 </label>
               </div>
               <p className="mt-3 text-xs text-brand-500">
-                Etapas: {stageCount.map(([s, n]) => `${stageDef(pipeline, s).label} (${n})`).join(" · ")}
+                Etapas: {stageCount.map(([s, n]) => `${s in STATUS ? STATUS[s as keyof typeof STATUS].label : stageDef(pipeline, s).label} (${n})`).join(" · ")}
               </p>
             </div>
 

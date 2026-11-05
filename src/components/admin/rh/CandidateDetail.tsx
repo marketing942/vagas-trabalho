@@ -5,11 +5,14 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { agendaConfig } from "@/lib/rh/agenda";
-import { PIPELINE_LABEL, STAGES, stageDef, whatsappLink, type InterviewCriterionKey } from "@/lib/rh/constants";
+import { jobTitles, PIPELINE_LABEL, STAGES, stageDef, STATUS, whatsappLink, type InterviewCriterionKey } from "@/lib/rh/constants";
 import { formatDate, hireChance, since, socialHref } from "@/lib/rh/format";
-import type { AgendaConfig, Application, ApplicationEvent, Candidate, Interview, Stage } from "@/lib/types";
+import { loadRhSettings } from "@/lib/rh/rh-settings";
+import { setAppStatus } from "@/lib/rh/status-actions";
+import type { AgendaConfig, Application, ApplicationEvent, AppStatus, Candidate, Interview, InterviewScript, Stage } from "@/lib/types";
 import AiScorecard from "./AiScorecard";
 import EditCandidateDialog from "./EditCandidateDialog";
+import InterviewGuide from "./InterviewGuide";
 import InterviewScorecard from "./InterviewScorecard";
 import InterviewsBox from "./InterviewsBox";
 import RejectDialog from "./RejectDialog";
@@ -23,6 +26,7 @@ interface Data {
   events: ApplicationEvent[];
   interviews: Interview[];
   config: AgendaConfig;
+  script: InterviewScript;
 }
 
 /** Ficha completa do candidato. */
@@ -49,12 +53,13 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
       if (!candidate) return setMissing(true);
       const { data: apps } = await db.from("applications").select("*").eq("candidate_id", id).order("created_at", { ascending: false });
       const ids = (apps ?? []).map((a) => a.id);
-      const [{ data: events }, { data: interviews }, { data: settings }] = await Promise.all([
+      const [{ data: events }, { data: interviews }, { data: settings }, rh] = await Promise.all([
         ids.length
           ? db.from("application_events").select("*").in("application_id", ids).order("created_at", { ascending: false })
           : Promise.resolve({ data: [] }),
         db.from("interviews").select("*").eq("candidate_id", id).order("starts_at", { ascending: false }),
         db.from("site_settings").select("agenda_config").limit(1).maybeSingle(),
+        loadRhSettings(db),
       ]);
       if (!alive) return;
       setData({
@@ -63,6 +68,7 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
         events: (events as ApplicationEvent[]) ?? [],
         interviews: (interviews as Interview[]) ?? [],
         config: agendaConfig(settings?.agenda_config),
+        script: rh.interview_script,
       });
     })();
     return () => {
@@ -81,24 +87,49 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
     );
   if (!data) return <p className="text-brand-500">Carregando...</p>;
 
-  const { candidate: c, apps, events, interviews, config } = data;
-  const app = apps.find((a) => a.id === selected) ?? apps[0];
+  const { candidate: c, apps, events, interviews, config, script } = data;
+  // Abre no card em processo (ou no escolhido pelo link)
+  const app = apps.find((a) => a.id === selected) ?? apps.find((a) => a.status === "em_processo") ?? apps[0];
   const db = () => createClient();
   const say = (m: string) => {
     setFlash(m);
     setTimeout(() => setFlash(""), 2500);
   };
 
-  async function changeStage(stage: Stage, reason?: string) {
+  async function changeStage(stage: Stage) {
     if (!app || stage === app.stage) return;
-    if (stage === "reprovado" && !reason) return setRejecting(true);
-    const { error } = await db()
-      .from("applications")
-      .update({ stage, rejection_reason: stage === "reprovado" ? reason : null })
-      .eq("id", app.id);
+    const { error } = await db().from("applications").update({ stage }).eq("id", app.id);
     if (error) return say("Não foi possível mudar a etapa.");
     say("Etapa atualizada");
     refresh();
+  }
+
+  async function changeStatus(status: AppStatus, reason?: string) {
+    if (!app) return;
+    if (status === "reprovado" && !reason) return setRejecting(true);
+    const ask = {
+      contratado: `Marcar ${c.full_name} como contratado(a)?`,
+      desligado: `Marcar ${c.full_name} como desligado(a)?`,
+      em_processo: `Reabrir o processo de ${c.full_name}? O card volta para o pipeline.`,
+      reprovado: "",
+    }[status];
+    if (ask && !confirm(ask)) return;
+    const err = await setAppStatus(db(), app.id, status, reason);
+    if (err) return say(err);
+    say(status === "em_processo" ? "Processo reaberto" : `Resultado: ${STATUS[status].label}`);
+    refresh();
+  }
+
+  async function saveScript(next: InterviewScript) {
+    if (!app) return false;
+    const { error } = await db().from("applications").update({ interview_answers: next }).eq("id", app.id);
+    if (error) {
+      say("Não foi possível salvar o roteiro.");
+      return false;
+    }
+    const n = next.sections.reduce((k, sct) => k + sct.questions.filter((q) => q.answer?.trim()).length, 0);
+    await db().from("application_events").insert({ application_id: app.id, kind: "entrevista", actor: "admin", detail: `Roteiro da entrevista salvo (${n} resposta${n === 1 ? "" : "s"})` });
+    return true;
   }
 
   async function evaluate() {
@@ -206,8 +237,12 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
                   }}
                   className={`rounded-xl border px-3 py-2 text-left text-sm ${a.id === app?.id ? "border-brand-900 bg-brand-900 text-white" : "border-brand-200 bg-white text-brand-800 hover:bg-brand-50"}`}
                 >
-                  <span className="block font-semibold">{a.job_title}</span>
-                  <span className="text-xs opacity-80">{stageDef(a.pipeline, a.stage).label}</span>
+                  <span className="block font-semibold">
+                    {PIPELINE_LABEL[a.pipeline]} · {jobTitles(a).length > 1 ? `${jobTitles(a).length} vagas` : jobTitles(a)[0]}
+                  </span>
+                  <span className="text-xs opacity-80">
+                    {a.status === "em_processo" ? stageDef(a.pipeline, a.stage).label : `${STATUS[a.status].label} em ${formatDate(a.closed_at ?? a.stage_changed_at)}`}
+                  </span>
                 </button>
               ))}
             </div>
@@ -217,37 +252,80 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
             <p className="card p-5 text-brand-600">Esta pessoa não tem candidaturas.</p>
           ) : (
             <>
-              <section className="card p-5" aria-label="Etapa">
-                <div className="flex flex-wrap items-end justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-wide text-brand-500">
-                      {PIPELINE_LABEL[app.pipeline]} · {app.job_title}
+              <section className="card p-5" aria-label="Etapa e resultado">
+                <p className="text-xs font-bold uppercase tracking-wide text-brand-500">{PIPELINE_LABEL[app.pipeline]} · vagas escolhidas</p>
+                <ul className="mt-2 flex flex-wrap gap-1.5">
+                  {jobTitles(app).map((t) => (
+                    <li key={t} className="rounded-lg bg-brand-50 px-2.5 py-1 text-sm font-semibold text-brand-800 ring-1 ring-brand-100">
+                      {t}
+                    </li>
+                  ))}
+                </ul>
+
+                {app.status !== "em_processo" && (
+                  <div className={`mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3 ring-1 ${STATUS[app.status].tone}`}>
+                    <p className="text-sm">
+                      <strong>{STATUS[app.status].label}</strong> em {formatDate(app.closed_at ?? app.stage_changed_at)}
+                      {app.status === "reprovado" && <> · motivo: {app.rejection_reason || "sem motivo"}</>} · estava em “{stageDef(app.pipeline, app.stage).label}”
                     </p>
-                    <label className="mt-2 block text-sm font-medium text-brand-800" htmlFor="etapa">
-                      Etapa
+                    <div className="flex gap-2">
+                      {app.status === "contratado" && (
+                        <button type="button" onClick={() => changeStatus("desligado")} className="rounded-lg border border-current/20 bg-white px-3 py-1.5 text-xs font-semibold">
+                          Desligar
+                        </button>
+                      )}
+                      {app.status !== "desligado" && (
+                        <button type="button" onClick={() => changeStatus("em_processo")} className="rounded-lg border border-current/20 bg-white px-3 py-1.5 text-xs font-semibold">
+                          Reabrir processo
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-brand-800" htmlFor="etapa">
+                      Etapa do processo
                     </label>
-                    <select id="etapa" value={app.stage} onChange={(e) => changeStage(e.target.value as Stage)} className="input mt-1 !w-72">
-                      {STAGES[app.pipeline].map((s) => (
-                        <option key={s.key} value={s.key}>
-                          {s.label}
+                    <select
+                      id="etapa"
+                      value={app.stage}
+                      disabled={app.status !== "em_processo"}
+                      onChange={(e) => changeStage(e.target.value as Stage)}
+                      className="input mt-1 !w-72 disabled:opacity-60"
+                    >
+                      {STAGES[app.pipeline].map((st) => (
+                        <option key={st.key} value={st.key}>
+                          {st.label}
                         </option>
                       ))}
                     </select>
                     <p className="mt-1.5 text-xs text-brand-500">
                       Nesta etapa {since(app.stage_changed_at)} · candidatura em {formatDate(app.created_at)}
-                      {app.stage === "reprovado" && app.rejection_reason && <> · Motivo: {app.rejection_reason}</>}
                     </p>
                   </div>
-                  {chance != null && (
-                    <div className="text-right" title="Estimativa do sistema: combina a etapa atual, o score da IA e a nota da entrevista.">
-                      <p className="text-xs font-bold uppercase tracking-wide text-brand-500">Chance de contratação</p>
-                      <p className="text-3xl font-black tabular-nums text-brand-900">{chance}%</p>
+                  {app.status === "em_processo" && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      {chance != null && (
+                        <div className="mr-3 text-right" title="Estimativa do sistema: combina a etapa atual, o score da IA e a nota da entrevista.">
+                          <p className="text-xs font-bold uppercase tracking-wide text-brand-500">Chance</p>
+                          <p className="text-2xl font-black tabular-nums text-brand-900">{chance}%</p>
+                        </div>
+                      )}
+                      <button type="button" onClick={() => changeStatus("contratado")} className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
+                        ✓ Contratar
+                      </button>
+                      <button type="button" onClick={() => changeStatus("reprovado")} className="rounded-xl border border-rose-200 px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50">
+                        ✕ Reprovar
+                      </button>
                     </div>
                   )}
                 </div>
               </section>
 
               <AiScorecard app={app} busy={evaluating} onEvaluate={evaluate} />
+              <InterviewGuide key={`roteiro-${app.id}`} app={app} standard={script} onSave={saveScript} />
               <InterviewScorecard key={app.id} app={app} onSave={saveScores} />
 
               <section className="card p-5" aria-labelledby="notas">
@@ -336,7 +414,7 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
               interviews={interviews}
               config={config}
               onChanged={refresh}
-              onReject={(reason) => changeStage("reprovado", reason)}
+              onReject={() => setRejecting(true)}
             />
           )}
           {app && <Timeline events={appEvents} pipeline={app.pipeline} />}
@@ -356,12 +434,11 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
       )}
       {rejecting && app && (
         <RejectDialog
-          pipeline={app.pipeline}
           name={c.full_name}
           onCancel={() => setRejecting(false)}
           onConfirm={(reason) => {
             setRejecting(false);
-            changeStage("reprovado", reason);
+            changeStatus("reprovado", reason);
           }}
         />
       )}
