@@ -247,8 +247,7 @@ create table if not exists public.rh_settings (
         { "q": "Como é a sua rotina do início ao fim do dia?", "hint": "Demonstra proatividade" },
         { "q": "Quais os seus princípios de vida?", "hint": "Demonstra fit cultural" },
         { "q": "Descreva o ambiente de trabalho em que você seria mais produtivo e feliz", "hint": "Demonstra fit cultural" },
-        { "q": "Como você se deslocaria até aqui todos os dias?", "hint": "Demonstra disponibilidade" },
-        { "q": "Você tem filhos?", "hint": "Demonstra responsabilidade e prioridades" }
+        { "q": "Como você se deslocaria até aqui todos os dias?", "hint": "Demonstra disponibilidade" }
       ] },
       { "title": "Competências técnicas", "questions": [
         { "q": "Qual é a sua experiência na área?", "hint": "Demonstra competência técnica" },
