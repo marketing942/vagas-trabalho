@@ -157,7 +157,8 @@ Crie um arquivo `.env.local` (use `.env.example` como base):
 | `NEXT_PUBLIC_SUPABASE_URL`      | ✅          | URL do projeto Supabase                              |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅          | Chave pública (anon) do Supabase                     |
 | `SUPABASE_SERVICE_ROLE_KEY`     | ✅ para o RH | Só no servidor. Necessária para o formulário de candidatura e o agendamento de entrevistas |
-| `ANTHROPIC_API_KEY`             | ❌          | Scorecard de IA (modelo `claude-opus-5-5`). Sem ela, as candidaturas ficam aguardando avaliação |
+| `DEEPSEEK_API_KEY`              | ❌          | Scorecard de IA (DeepSeek, modelo `deepseek-chat`). Sem ela, as candidaturas ficam aguardando avaliação |
+| `DEEPSEEK_MODEL`                | ❌          | Troca o modelo (ex.: `deepseek-reasoner`). Padrão: `deepseek-chat` |
 | `NEXT_PUBLIC_SITE_URL`          | ❌          | Endereço público (ex.: `https://vagas.cppem.com.br`) para sitemap, imagens de compartilhamento e dados de vaga. Sem ele, usa o domínio de produção da Vercel |
 
 ---
@@ -204,7 +205,7 @@ Crie um arquivo `.env.local` (use `.env.example` como base):
 1. Rode `supabase/migrations/0010_rh.sql` no SQL Editor do Supabase.
 2. Na Vercel → **Settings → Environment Variables**, adicione:
    - `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project Settings → API → `service_role`);
-   - `ANTHROPIC_API_KEY` (opcional, para o scorecard de IA).
+   - `DEEPSEEK_API_KEY` (opcional, para o scorecard de IA; crie em platform.deepseek.com → API keys e coloque saldo).
    Depois clique em **Redeploy**.
 3. Em **Admin → Configurações → Candidaturas pelo site**, confira a lista
    (tudo com ✓), teste em `/candidatura?teste=1` e marque **Receber candidaturas
@@ -236,11 +237,12 @@ vagas novas viram candidaturas.
 
 ### Scorecard de IA
 
-Cada candidatura nova é avaliada automaticamente contra os requisitos e
+Cada candidatura nova é avaliada automaticamente pela IA da **DeepSeek** contra os requisitos e
 responsabilidades daquela vaga e contra a cultura (10 mandamentos): score de 0 a
 100, recomendação, critérios com evidências, pontos fortes, pontos de atenção,
-fit cultural e perguntas sugeridas para a entrevista. A IA lê o currículo em PDF
-ou imagem (Word não). Ela é instruída a **nunca** usar idade, gênero, raça,
+fit cultural e perguntas sugeridas para a entrevista. O servidor extrai o texto do
+currículo em PDF ou Word (.docx) e envia junto; currículo em imagem ou .doc antigo
+não é lido pela IA (a equipe vê o arquivo na ficha). Ela é instruída a **nunca** usar idade, gênero, raça,
 religião, deficiência, aparência ou origem como critério, e a tratar o texto do
 candidato como dado (não como instrução). A decisão é sempre da equipe. O código
 fica em `src/lib/rh/ai.ts`.

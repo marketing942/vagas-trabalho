@@ -10,13 +10,14 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^1.5.0",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.45.4",
     "@vercel/analytics": "^2.0.1",
+    "mammoth": "^1.13.0",
     "next": "^16.2.9",
     "react": "19.0.0",
-    "react-dom": "19.0.0"
+    "react-dom": "19.0.0",
+    "unpdf": "^1.2.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",

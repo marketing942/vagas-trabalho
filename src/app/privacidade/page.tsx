@@ -166,8 +166,10 @@ export default async function PrivacidadePage() {
               guarda as vagas, as candidaturas e os currículos, em área privada.
             </li>
             <li>
-              <strong>Inteligência artificial:</strong> a Anthropic (Claude) recebe os dados da candidatura e o
-              currículo apenas para gerar a avaliação de triagem, como fornecedora de tecnologia.
+              <strong>Inteligência artificial:</strong> a DeepSeek recebe os dados da candidatura e o texto do
+              currículo apenas para gerar a avaliação de triagem, como fornecedora de tecnologia. Os servidores
+              dela ficam fora do Brasil (transferência internacional, art. 33 da LGPD); enviamos só o necessário
+              para a avaliação.
             </li>
             <li>
               <strong>Notion:</strong> candidaturas feitas antes do formulário do site, ou por formulários externos,

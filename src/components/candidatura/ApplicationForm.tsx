@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/Icon";
+import JobPicker from "./JobPicker";
 import { trackEvent } from "@/lib/analytics";
 import { AGE_OPTIONS, RESUME_ACCEPT, SOURCE_OPTIONS, TALENT_POOL } from "@/lib/rh/constants";
 import {
@@ -20,6 +21,7 @@ interface JobOption {
   title: string;
   slug: string;
   category: "trabalho" | "professor";
+  hint?: string;
 }
 
 interface Props {
@@ -187,21 +189,6 @@ export default function ApplicationForm({ jobs, preselectedId, whatsappGroupUrl 
   const aria = (k: keyof FieldErrors) => ({ "aria-invalid": !!errors[k] || undefined, "aria-describedby": errors[k] ? `erro-${k}` : undefined });
   const req = <span className="text-bad" aria-hidden> *</span>;
 
-  const jobBox = (id: string, title: string) => {
-    const on = f.vagas.includes(id);
-    return (
-      <label
-        key={id}
-        className={`flex cursor-pointer items-center gap-3 rounded-2xl border p-3.5 text-sm font-semibold transition-colors ${
-          on ? "border-accent-500 bg-goldfaint text-ink" : "border-line2 bg-surface text-inksoft hover:border-goldline"
-        }`}
-      >
-        <input type="checkbox" checked={on} onChange={() => toggle("vagas", id)} className="h-4 w-4 accent-[#8a7040]" />
-        {title}
-      </label>
-    );
-  };
-
   return (
     <form ref={formRef} onSubmit={submit} noValidate className="space-y-6">
       <p className="text-sm text-inkmuted">
@@ -215,30 +202,27 @@ export default function ApplicationForm({ jobs, preselectedId, whatsappGroupUrl 
         </label>
       </div>
 
-      <fieldset data-field="vagas" className="card p-5 sm:p-7" {...aria("vagas")}>
-        <legend className="sr-only">Vagas</legend>
+      <div data-field="vagas" className="card p-5 sm:p-7">
         <p className="text-base font-bold text-ink" id="rotulo-vagas">
           Qual vaga você quer se candidatar?{req}
         </p>
-        <p className="mt-1 text-sm text-inkmuted">Pode marcar mais de uma.</p>
-        {jobs.length === 0 && <p className="mt-4 text-sm text-inksoft">Não há vagas abertas agora. Você pode entrar no Banco de Talentos.</p>}
-        {trabalho.length + 1 > 0 && (
-          <div className="mt-5">
-            <p className="eyebrow !text-xs">Trabalho</p>
-            <div className="mt-2 grid gap-2 sm:grid-cols-2">
-              {trabalho.map((j) => jobBox(j.id, j.title))}
-              {jobBox("banco", `${TALENT_POOL} (sem vaga específica)`)}
-            </div>
-          </div>
-        )}
-        {professor.length > 0 && (
-          <div className="mt-5">
-            <p className="eyebrow !text-xs">Professores</p>
-            <div className="mt-2 grid gap-2 sm:grid-cols-2">{professor.map((j) => jobBox(j.id, j.title))}</div>
-          </div>
-        )}
+        <p className="mt-1 text-sm text-inkmuted" id="dica-vagas">
+          {jobs.length === 0 ? "Não há vagas abertas agora. Você pode entrar no Banco de Talentos." : "Toque para ver as vagas ou digite para buscar. Pode marcar mais de uma."}
+        </p>
+        <JobPicker
+          labelledBy="rotulo-vagas"
+          describedBy={errors.vagas ? "dica-vagas erro-vagas" : "dica-vagas"}
+          invalid={!!errors.vagas}
+          value={f.vagas}
+          onChange={(v) => set("vagas", v)}
+          options={[
+            ...trabalho.map((j) => ({ id: j.id, title: j.title, group: "Trabalho", hint: j.hint })),
+            { id: "banco", title: TALENT_POOL, group: "Trabalho", hint: "Sem vaga específica: entra no nosso banco para próximas vagas" },
+            ...professor.map((j) => ({ id: j.id, title: j.title, group: "Professores", hint: j.hint })),
+          ]}
+        />
         {err("vagas")}
-      </fieldset>
+      </div>
 
       <div className="card space-y-5 p-5 sm:p-7">
         <div data-field="nome">

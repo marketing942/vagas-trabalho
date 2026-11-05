@@ -65,7 +65,7 @@ export default function RhSetupCard({
             {item(
               status.ai,
               `Inteligência artificial (${status.aiModel})`,
-              "Opcional. Na Vercel, adicione ANTHROPIC_API_KEY (console.anthropic.com → API Keys) e faça um novo deploy. Sem ela, as candidaturas chegam e ficam aguardando avaliação."
+              "Opcional. Na Vercel, adicione DEEPSEEK_API_KEY (platform.deepseek.com → API keys, com saldo na conta) e faça um novo deploy. Sem ela, as candidaturas chegam e ficam aguardando avaliação."
             )}
           </>
         )}

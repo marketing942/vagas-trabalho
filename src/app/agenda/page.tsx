@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import Logo from "@/components/Logo";
+import ThemeToggle from "@/components/ThemeToggle";
 import BookingClient from "@/components/agenda/BookingClient";
 import { getSettings } from "@/lib/settings";
 import { getOpenJobs } from "@/lib/jobs";
-import { applyTarget } from "@/lib/apply";
 import { availableDays } from "@/lib/rh/agenda";
 import { bookingContext } from "@/lib/rh/booking";
 import { createServiceClient, HAS_SERVICE_ROLE } from "@/lib/supabase/service";
@@ -25,7 +24,17 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
 
   return (
     <>
-      <Header apply={applyTarget(settings)} />
+      {/* Página de foco: sem menu nem links para fora, só as marcas */}
+      <header className="border-b border-line bg-surface">
+        <div className="container-page flex h-[64px] max-w-3xl items-center justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <Logo variant="cppem" className="-my-1 h-11 sm:h-14" />
+            <span className="h-8 w-px bg-line" aria-hidden />
+            <Logo variant="colegio" className="-my-1 h-11 sm:h-14" />
+          </div>
+          <ThemeToggle />
+        </div>
+      </header>
       <main id="conteudo" tabIndex={-1} className="outline-none">
         <div className="bg-gradient-to-br from-brand-900 via-brand-800 to-brand-700 py-10 text-white sm:py-14">
           <div className="container-page max-w-3xl">
@@ -56,7 +65,9 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
           )}
         </div>
       </main>
-      <Footer settings={settings} />
+      <footer className="border-t border-line py-6 text-center text-xs text-inkmuted">
+        Dúvidas sobre a entrevista? Fale com o RH do CPPEM pelo WhatsApp que entrou em contato com você.
+      </footer>
     </>
   );
 }
