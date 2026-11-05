@@ -189,10 +189,8 @@ export async function evaluateApplication(db: SupabaseClient, applicationId: str
     return { ok: false, error: message };
   };
 
-  if (!HAS_AI) {
-    await db.from("applications").update({ ai_status: "sem_ia" }).eq("id", applicationId);
-    return { ok: false, error: "ANTHROPIC_API_KEY não configurada" };
-  }
+  // Sem a chave, nada muda: a candidatura continua pendente até a IA ser configurada
+  if (!HAS_AI) return { ok: false, error: "A IA ainda não foi configurada no servidor (ANTHROPIC_API_KEY)." };
 
   const { data: app, error } = await db.from("applications").select("*").eq("id", applicationId).maybeSingle();
   if (error || !app) return { ok: false, error: "Candidatura não encontrada" };

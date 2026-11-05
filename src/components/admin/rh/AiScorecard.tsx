@@ -46,7 +46,14 @@ export default function AiScorecard({
         <div className="mt-3 rounded-xl bg-brand-50 p-4 text-sm text-brand-700">
           {app.ai_status === "avaliando" && !stuck && <p>A IA está avaliando esta candidatura. Atualize em alguns segundos.</p>}
           {(app.ai_status === "pendente" || stuck) && <p>Esta candidatura ainda não foi avaliada pela IA.</p>}
-          {app.ai_status === "sem_ia" && <p>Avaliação por IA desligada ou chave da IA não configurada no servidor.</p>}
+          {app.ai_status === "sem_ia" &&
+            (app.ai_score != null ? (
+              <p>
+                Score importado do Notion: <strong>{app.ai_score}</strong>. Avalie com a IA para ver o scorecard completo.
+              </p>
+            ) : (
+              <p>Esta candidatura ainda não foi avaliada pela IA.</p>
+            ))}
           {app.ai_status === "erro" && <p className="text-rose-700">Não foi possível avaliar: {app.ai_error}</p>}
           <div className="mt-3">{button("Avaliar com IA")}</div>
         </div>

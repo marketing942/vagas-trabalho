@@ -141,7 +141,9 @@ export async function POST(req: NextRequest) {
 
     // Uma candidatura por vaga escolhida (pula as que a pessoa já tinha)
     const { data: settings } = await db.from("site_settings").select("ai_auto_evaluate").limit(1).maybeSingle();
-    const autoAi = HAS_AI && (settings?.ai_auto_evaluate ?? true);
+    // Avaliação ligada: fica "pendente" mesmo sem a chave da IA, para ser avaliada quando ela for configurada
+    const wantAi = settings?.ai_auto_evaluate ?? true;
+    const autoAi = wantAi && HAS_AI;
     const { data: previous } = await db.from("applications").select("job_id, job_title").eq("candidate_id", candidateId);
     const already = new Set((previous ?? []).map((a) => a.job_id ?? `pool:${a.job_title}`));
 
@@ -156,7 +158,7 @@ export async function POST(req: NextRequest) {
     if (fresh.length) {
       const { data, error } = await db
         .from("applications")
-        .insert(fresh.map((r) => ({ ...r, candidate_id: candidateId, ai_status: autoAi ? "pendente" : "sem_ia" })))
+        .insert(fresh.map((r) => ({ ...r, candidate_id: candidateId, ai_status: wantAi ? "pendente" : "sem_ia" })))
         .select("id");
       if (error) throw error;
       created = data ?? [];

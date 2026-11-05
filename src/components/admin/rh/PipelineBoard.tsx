@@ -78,7 +78,8 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
     return list;
   }, [apps, search, job, minScore, sort]);
 
-  const pending = apps.filter((a) => a.ai_status === "pendente" || a.ai_status === "erro" || a.ai_status === "sem_ia");
+  // Novas candidaturas ainda sem avaliação (as importadas do Notion ficam de fora: avalie uma a uma, se quiser)
+  const pending = apps.filter((a) => a.ai_status === "pendente" || a.ai_status === "erro");
 
   async function move(app: BoardApp, stage: Stage, reason?: string) {
     setMenuFor(null);
