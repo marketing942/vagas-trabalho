@@ -203,7 +203,6 @@ export const DEFAULT_INTERVIEW_SCRIPT: InterviewScript = {
         { q: "Quais os seus princípios de vida?", hint: "Demonstra fit cultural" },
         { q: "Descreva o ambiente de trabalho em que você seria mais produtivo e feliz", hint: "Demonstra fit cultural" },
         { q: "Como você se deslocaria até aqui todos os dias?", hint: "Demonstra disponibilidade" },
-        { q: "Você tem filhos?", hint: "Demonstra responsabilidade e prioridades" },
       ],
     },
     {
