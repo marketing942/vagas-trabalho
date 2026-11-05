@@ -10,12 +10,31 @@ import { fetchAll } from "@/lib/rh/fetch-all";
 import { jobTitles, PIPELINE_LABEL, stageDef, STATUS } from "@/lib/rh/constants";
 import { formatDate } from "@/lib/rh/format";
 import { setAppStatus } from "@/lib/rh/status-actions";
-import type { AppStatus, Application, Pipeline } from "@/lib/types";
+import { feedbackKey } from "@/lib/rh/messages";
+import { loadRhSettings } from "@/lib/rh/rh-settings";
+import { useOrigin } from "@/lib/use-origin";
+import MessageDialog from "@/components/admin/rh/MessageDialog";
+import type { AppStatus, Application, MessageTemplate, Pipeline } from "@/lib/types";
 
 type Row = Pick<
   Application,
-  "id" | "candidate_id" | "job_id" | "job_title" | "jobs" | "pipeline" | "stage" | "status" | "rejection_reason" | "ai_score" | "interview_score" | "created_at" | "closed_at" | "stage_changed_at"
-> & { candidates: { full_name: string; city: string | null } | null };
+  | "id"
+  | "candidate_id"
+  | "job_id"
+  | "job_title"
+  | "jobs"
+  | "pipeline"
+  | "stage"
+  | "status"
+  | "rejection_reason"
+  | "ai_score"
+  | "interview_score"
+  | "created_at"
+  | "closed_at"
+  | "stage_changed_at"
+  | "feedback_sent_at"
+  | "booking_token"
+> & { candidates: { full_name: string; city: string | null; whatsapp: string } | null };
 
 type Tab = "contratado" | "reprovado" | "desligado" | "todos";
 type Funil = "todos" | Pipeline;
@@ -45,14 +64,21 @@ export default function FinalizadosPage() {
   const [now] = useState(() => Date.now());
   const [reload, setReload] = useState(0);
   const [flash, setFlash] = useState("");
+  const [devolutiva, setDevolutiva] = useState<"" | "sem" | "enviada">("");
+  const [templates, setTemplates] = useState<MessageTemplate[]>([]);
+  // Envio de devolutivas: uma pessoa ou a fila de quem ainda não recebeu
+  const [queue, setQueue] = useState<Row[] | null>(null);
+  const [qi, setQi] = useState(0);
+  const origin = useOrigin();
 
   useEffect(() => {
     let alive = true;
     const db = createClient();
+    loadRhSettings(db).then((s) => alive && setTemplates(s.message_templates));
     fetchAll<Row>((from, to) =>
       db
         .from("applications")
-        .select("id,candidate_id,job_id,job_title,jobs,pipeline,stage,status,rejection_reason,ai_score,interview_score,created_at,closed_at,stage_changed_at,candidates(full_name,city)")
+        .select("id,candidate_id,job_id,job_title,jobs,pipeline,stage,status,rejection_reason,ai_score,interview_score,created_at,closed_at,stage_changed_at,feedback_sent_at,booking_token,candidates(full_name,city,whatsapp)")
         .neq("status", "em_processo")
         .order("closed_at", { ascending: false, nullsFirst: false })
         .range(from, to)
@@ -112,9 +138,11 @@ export default function FinalizadosPage() {
         (tab === "todos" || r.status === tab) &&
         (!term || (r.candidates?.full_name ?? "").toLocaleLowerCase("pt-BR").includes(term)) &&
         (!job || jobTitles(r).includes(job)) &&
-        (!reason || r.rejection_reason === reason)
+        (!reason || r.rejection_reason === reason) &&
+        (!devolutiva || (r.status === "reprovado" && (devolutiva === "sem" ? !r.feedback_sent_at : !!r.feedback_sent_at)))
     );
-  }, [scoped, tab, search, job, reason]);
+  }, [scoped, tab, search, job, reason, devolutiva]);
+  const pendingFeedback = scoped.filter((r) => r.status === "reprovado" && !r.feedback_sent_at && r.candidates?.whatsapp);
 
   async function change(r: Row, status: AppStatus) {
     const name = r.candidates?.full_name ?? "esta pessoa";
@@ -198,6 +226,25 @@ export default function FinalizadosPage() {
             </Panel>
           </div>
 
+          {pendingFeedback.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-[22px] border border-amber-200 bg-amber-50 px-5 py-4">
+              <p className="text-sm text-amber-900">
+                <strong>{pendingFeedback.length}</strong> reprovado{pendingFeedback.length === 1 ? "" : "s"} no período ainda sem devolutiva. Dar retorno é parte de uma boa
+                experiência do candidato.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setQi(0);
+                  setQueue(pendingFeedback);
+                }}
+                className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+              >
+                Enviar devolutivas ({pendingFeedback.length})
+              </button>
+            </div>
+          )}
+
           <Panel title="Pessoas" subtitle={`${list.length} de ${scoped.length} no período`}>
             <div className="mb-4 flex flex-wrap items-center gap-2.5">
               <div className="inline-flex flex-wrap rounded-full border border-brand-100 bg-brand-50/60 p-1" role="tablist" aria-label="Resultado">
@@ -220,6 +267,13 @@ export default function FinalizadosPage() {
                   <option key={j}>{j}</option>
                 ))}
               </select>
+              {(tab === "reprovado" || tab === "todos") && (
+                <select aria-label="Devolutiva" value={devolutiva} onChange={(e) => setDevolutiva(e.target.value as typeof devolutiva)} className="input !w-auto !py-2">
+                  <option value="">Devolutiva: todas</option>
+                  <option value="sem">Sem devolutiva</option>
+                  <option value="enviada">Devolutiva enviada</option>
+                </select>
+              )}
               {(tab === "reprovado" || tab === "todos") && (
                 <select aria-label="Motivo" value={reason} onChange={(e) => setReason(e.target.value)} className="input !w-auto max-w-[16rem] !py-2">
                   <option value="">Todos os motivos</option>
@@ -270,7 +324,14 @@ export default function FinalizadosPage() {
                               <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} aria-hidden />
                               {st.label}
                             </span>
-                            {r.status === "reprovado" && <p className="mt-1 text-xs text-brand-600">{r.rejection_reason || "Sem motivo"}</p>}
+                            {r.status === "reprovado" && (
+                              <>
+                                <p className="mt-1 text-xs text-brand-600">{r.rejection_reason || "Sem motivo"}</p>
+                                <p className={`mt-0.5 text-[11px] font-semibold ${r.feedback_sent_at ? "text-emerald-700" : "text-amber-700"}`}>
+                                  {r.feedback_sent_at ? `✓ Devolutiva em ${formatDate(r.feedback_sent_at)}` : "Sem devolutiva"}
+                                </p>
+                              </>
+                            )}
                           </td>
                           <td className="px-2 py-3 text-xs text-brand-700">{stageDef(r.pipeline, r.stage).label}</td>
                           <td className="px-2 py-3">
@@ -296,6 +357,18 @@ export default function FinalizadosPage() {
                                   Desligar
                                 </button>
                               )}
+                              {r.status === "reprovado" && !r.feedback_sent_at && r.candidates?.whatsapp && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setQi(0);
+                                    setQueue([r]);
+                                  }}
+                                  className="rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-emerald-700"
+                                >
+                                  Devolutiva
+                                </button>
+                              )}
                               {r.status !== "desligado" && (
                                 <button type="button" onClick={() => change(r, "em_processo")} className="rounded-lg border border-brand-200 px-2.5 py-1 text-xs font-semibold text-brand-700 hover:bg-brand-50">
                                   Reabrir
@@ -315,6 +388,35 @@ export default function FinalizadosPage() {
             )}
           </Panel>
         </div>
+      )}
+
+      {queue && queue[qi] && queue[qi].candidates && (
+        <MessageDialog
+          key={queue[qi].id}
+          target={{ candidate: { full_name: queue[qi].candidates!.full_name, whatsapp: queue[qi].candidates!.whatsapp }, app: queue[qi], origin }}
+          templates={templates}
+          initialKey={feedbackKey(queue[qi].stage)}
+          title={`Devolutiva para ${queue[qi].candidates!.full_name}`}
+          subtitle={`${queue[qi].rejection_reason || "Sem motivo"} · reprovado(a) em ${formatDate(queue[qi].closed_at ?? queue[qi].stage_changed_at)}`}
+          progress={queue.length > 1 ? `${qi + 1} de ${queue.length}` : undefined}
+          skipLabel={queue.length > 1 && qi < queue.length - 1 ? "Pular" : "Fechar"}
+          onClose={() => {
+            if (qi < queue.length - 1) setQi(qi + 1);
+            else {
+              setQueue(null);
+              setReload((n) => n + 1);
+            }
+          }}
+          onSent={() => {
+            if (qi < queue.length - 1) setQi(qi + 1);
+            else {
+              setQueue(null);
+              setFlash("Devolutivas registradas");
+              setTimeout(() => setFlash(""), 3000);
+              setReload((n) => n + 1);
+            }
+          }}
+        />
       )}
     </AdminLayout>
   );

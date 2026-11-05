@@ -1,13 +1,17 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { fetchAll } from "@/lib/rh/fetch-all";
-import { AGE_OPTIONS, jobTitles, PIPELINE_LABEL, SOURCE_OPTIONS, STAGES } from "@/lib/rh/constants";
+import { AGE_OPTIONS, jobTitles, PIPELINE_LABEL, SOURCE_OPTIONS, stageDelay, STAGES } from "@/lib/rh/constants";
+import { feedbackKey } from "@/lib/rh/messages";
+import { loadRhSettings } from "@/lib/rh/rh-settings";
+import { useOrigin } from "@/lib/use-origin";
 import { formatDate, formatTime, hireChance, since } from "@/lib/rh/format";
 import { setAppStatus } from "@/lib/rh/status-actions";
-import type { AppStatus, Application, Candidate, Pipeline, Stage } from "@/lib/types";
+import type { AppStatus, Application, Candidate, MessageTemplate, Pipeline, Stage } from "@/lib/types";
+import CandidatePreview from "./CandidatePreview";
+import MessageDialog from "./MessageDialog";
 import RejectDialog from "./RejectDialog";
 
 export type BoardApp = Pick<
@@ -25,13 +29,14 @@ export type BoardApp = Pick<
   | "interview_score"
   | "stage_changed_at"
   | "created_at"
+  | "booking_token"
 > & {
   rec: string | null;
   candidates: Pick<Candidate, "full_name" | "city" | "email" | "whatsapp" | "age_range" | "sources" | "origin" | "resume_path" | "resume_name"> | null;
 };
 
 const COLUMNS =
-  "id,candidate_id,job_id,job_title,jobs,pipeline,stage,status,ai_status,ai_score,interview_score,stage_changed_at,created_at,rec:ai_report->>recomendacao,candidates(full_name,city,email,whatsapp,age_range,sources,origin,resume_path,resume_name)";
+  "id,candidate_id,job_id,job_title,jobs,pipeline,stage,status,ai_status,ai_score,interview_score,stage_changed_at,created_at,booking_token,rec:ai_report->>recomendacao,candidates(full_name,city,email,whatsapp,age_range,sources,origin,resume_path,resume_name)";
 const PAGE = 40;
 const DAY = 86_400_000;
 
@@ -49,7 +54,7 @@ interface Filters {
   canal: "" | "site" | "notion" | "admin" | "agenda";
   curriculo: "" | "com" | "sem";
   periodo: "" | "1" | "7" | "30" | "90";
-  parado: "" | "3" | "7" | "15" | "30";
+  parado: "" | "prazo" | "3" | "7" | "15" | "30";
   vagas: "" | "varias" | "uma";
   ia: "" | "erro" | "aguardando";
 }
@@ -80,7 +85,7 @@ const OPTS: { [K in keyof Filters]?: { label: string; options: [Filters[K], stri
   canal: { label: "Entrou por", options: [["", "Qualquer canal"], ["site", "Formulário do site"], ["notion", "Importado do Notion"], ["agenda", "Link de agendamento"], ["admin", "Cadastro manual"]] },
   curriculo: { label: "Currículo", options: [["", "Tanto faz"], ["com", "Com currículo"], ["sem", "Sem currículo"]] },
   periodo: { label: "Candidatura recebida", options: [["", "Qualquer data"], ["1", "Hoje"], ["7", "Últimos 7 dias"], ["30", "Últimos 30 dias"], ["90", "Últimos 90 dias"]] },
-  parado: { label: "Parado na etapa", options: [["", "Qualquer tempo"], ["3", "Há mais de 3 dias"], ["7", "Há mais de 7 dias"], ["15", "Há mais de 15 dias"], ["30", "Há mais de 30 dias"]] },
+  parado: { label: "Parado na etapa", options: [["", "Qualquer tempo"], ["prazo", "Passou do prazo da etapa (atrasado)"], ["3", "Há mais de 3 dias"], ["7", "Há mais de 7 dias"], ["15", "Há mais de 15 dias"], ["30", "Há mais de 30 dias"]] },
   vagas: { label: "Quantidade de vagas", options: [["", "Qualquer"], ["varias", "Escolheu mais de uma vaga"], ["uma", "Uma vaga só"]] },
   ia: { label: "Avaliação da IA", options: [["", "Qualquer"], ["erro", "Deu erro (reavaliar na ficha)"], ["aguardando", "Aguardando / avaliando"]] },
 };
@@ -121,6 +126,12 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
   const [over, setOver] = useState<string | null>(null);
   const [menuFor, setMenuFor] = useState<string | null>(null);
   const [rejecting, setRejecting] = useState<BoardApp | null>(null);
+  // Logo depois de reprovar: oferece a devolutiva pronta
+  const [msg, setMsg] = useState<{ app: BoardApp; key: string; afterReject?: boolean } | null>(null);
+  // Prévia do candidato (painel lateral)
+  const [previewId, setPreviewId] = useState<string | null>(null);
+  const [templates, setTemplates] = useState<MessageTemplate[]>([]);
+  const origin = useOrigin();
   const [toast, setToast] = useState("");
   const [now] = useState(() => Date.now());
   const [reloadKey, setReloadKey] = useState(0);
@@ -129,6 +140,7 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
   useEffect(() => {
     let alive = true;
     const db = createClient();
+    loadRhSettings(db).then((s) => alive && setTemplates(s.message_templates));
     Promise.all([
       fetchAll<BoardApp>((from, to) =>
         db.from("applications").select(COLUMNS).eq("pipeline", pipeline).eq("status", "em_processo").order("created_at", { ascending: false }).range(from, to)
@@ -203,7 +215,8 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
       if (f.curriculo === "com" && !(c?.resume_path || c?.resume_name)) return false;
       if (f.curriculo === "sem" && (c?.resume_path || c?.resume_name)) return false;
       if (f.periodo && now - new Date(a.created_at).getTime() > Number(f.periodo) * DAY) return false;
-      if (f.parado && now - new Date(a.stage_changed_at).getTime() < Number(f.parado) * DAY) return false;
+      if (f.parado === "prazo" && !stageDelay(a, now).late) return false;
+      if (f.parado && f.parado !== "prazo" && now - new Date(a.stage_changed_at).getTime() < Number(f.parado) * DAY) return false;
       if (f.vagas === "varias" && titles.length < 2) return false;
       if (f.vagas === "uma" && titles.length !== 1) return false;
       if (f.ia === "erro" && a.ai_status !== "erro") return false;
@@ -261,6 +274,8 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
       return say(err);
     }
     say(status === "contratado" ? `${app.candidates?.full_name ?? "Candidato"} contratado(a) 🎉` : `${app.candidates?.full_name ?? "Candidato"} reprovado(a): ${reason}`);
+    setPreviewId(null);
+    if (status === "reprovado" && app.candidates?.whatsapp && templates.length) setMsg({ app, key: feedbackKey(app.stage), afterReject: true });
   }
 
   function dropTo(target: string) {
@@ -461,9 +476,14 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
                         className={`group relative rounded-2xl border border-white bg-white p-3.5 shadow-[0_1px_2px_rgba(11,26,64,0.06)] transition-shadow hover:shadow-md ${dragId === a.id ? "opacity-50" : ""}`}
                       >
                         <div className="flex items-start justify-between gap-2">
-                          <Link href={`/admin/candidatos/${a.candidate_id}?c=${a.id}`} className="min-w-0 font-semibold leading-snug text-brand-950 hover:underline">
+                          <button
+                            type="button"
+                            onClick={() => setPreviewId(a.id)}
+                            title="Ver prévia"
+                            className="min-w-0 text-left font-semibold leading-snug text-brand-950 hover:underline"
+                          >
                             {a.candidates?.full_name ?? "Sem nome"}
-                          </Link>
+                          </button>
                           <button
                             type="button"
                             aria-haspopup="menu"
@@ -502,7 +522,13 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
                           {iv != null && <ScoreBar label="Entrev." value={iv} max={10} tone="bg-violet-500" title={`Nota da entrevista: ${iv.toLocaleString("pt-BR")} de 10`} />}
                         </div>
                         <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-brand-500">
-                          <span>{since(a.stage_changed_at, now)} nesta etapa</span>
+                          {stageDelay(a, now).late ? (
+                            <span className="rounded-md bg-amber-100 px-1.5 py-0.5 font-semibold text-amber-800" title={`O prazo desta etapa é de ${stageDelay(a, now).sla} dia(s)`}>
+                              ⚠ Atrasado · {since(a.stage_changed_at, now).replace("há ", "")}
+                            </span>
+                          ) : (
+                            <span>{since(a.stage_changed_at, now)} nesta etapa</span>
+                          )}
                           {a.candidates?.city && <span>· {a.candidates.city}</span>}
                           {when && (
                             <span className="rounded-md bg-violet-50 px-1.5 py-0.5 font-semibold text-violet-700">
@@ -578,6 +604,45 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
         </div>
       )}
 
+      {previewId &&
+        (() => {
+          const pa = apps.find((x) => x.id === previewId);
+          if (!pa) return null;
+          return (
+            <CandidatePreview
+              key={pa.id}
+              app={pa}
+              interviewAt={booked.get(pa.id)}
+              now={now}
+              onClose={() => setPreviewId(null)}
+              onMove={(stage) => move(pa, stage)}
+              onHire={() => close(pa, "contratado")}
+              onReject={() => close(pa, "reprovado")}
+              onMessage={() => pa.candidates?.whatsapp && setMsg({ app: pa, key: booked.has(pa.id) ? "lembrete" : "convite" })}
+            />
+          );
+        })()}
+      {msg && msg.app.candidates && (
+        <MessageDialog
+          target={{
+            candidate: { full_name: msg.app.candidates.full_name, whatsapp: msg.app.candidates.whatsapp },
+            app: msg.app,
+            origin,
+            interviewAt: booked.get(msg.app.id),
+          }}
+          templates={templates}
+          initialKey={msg.key}
+          title={msg.afterReject ? `Enviar a devolutiva para ${msg.app.candidates.full_name.split(" ")[0]}?` : undefined}
+          subtitle={msg.afterReject ? "Dar retorno a quem participou faz diferença. Ajuste o texto se quiser." : undefined}
+          skipLabel={msg.afterReject ? "Agora não" : "Cancelar"}
+          onClose={() => setMsg(null)}
+          onSent={(k) => {
+            setMsg(null);
+            say(k.startsWith("devolutiva") ? "Devolutiva registrada" : "Mensagem registrada no histórico");
+            if (k === "convite") setReloadKey((n) => n + 1);
+          }}
+        />
+      )}
       {rejecting && (
         <RejectDialog
           name={rejecting.candidates?.full_name ?? ""}

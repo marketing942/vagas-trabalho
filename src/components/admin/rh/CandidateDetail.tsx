@@ -7,18 +7,21 @@ import { createClient } from "@/lib/supabase/client";
 import { agendaConfig } from "@/lib/rh/agenda";
 import { jobTitles, PIPELINE_LABEL, STAGES, stageDef, STATUS, whatsappLink, type InterviewCriterionKey } from "@/lib/rh/constants";
 import { formatDate, hireChance, since, socialHref } from "@/lib/rh/format";
-import { advanceStage, inviteText, logInterview } from "@/lib/rh/interview-flow";
+import { logInterview } from "@/lib/rh/interview-flow";
+import { feedbackKey } from "@/lib/rh/messages";
 import { loadRhSettings } from "@/lib/rh/rh-settings";
 import { setAppStatus } from "@/lib/rh/status-actions";
 import { useOrigin } from "@/lib/use-origin";
-import type { AgendaConfig, Application, ApplicationEvent, AppStatus, Candidate, Interview, InterviewScript, Stage } from "@/lib/types";
+import type { AgendaConfig, Application, ApplicationEvent, AppStatus, Candidate, Interview, InterviewScript, MessageTemplate, Stage } from "@/lib/types";
 import ActionMenu from "@/components/admin/ui/ActionMenu";
 import AiScorecard from "./AiScorecard";
 import { Avatar } from "./charts";
 import EditCandidateDialog from "./EditCandidateDialog";
+import InterviewCopilot from "./InterviewCopilot";
 import InterviewGuide from "./InterviewGuide";
 import InterviewScorecard from "./InterviewScorecard";
 import InterviewsBox from "./InterviewsBox";
+import MessageDialog from "./MessageDialog";
 import RejectDialog from "./RejectDialog";
 import ScheduleDialog from "./ScheduleDialog";
 import Timeline from "./Timeline";
@@ -39,6 +42,7 @@ interface Data {
   interviews: Interview[];
   config: AgendaConfig;
   script: InterviewScript;
+  templates: MessageTemplate[];
 }
 
 const btn = "inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition-colors";
@@ -58,12 +62,16 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
   const [tab, setTab] = useState<Tab | null>(null);
   const [editing, setEditing] = useState(false);
   const [scheduling, setScheduling] = useState(false);
+  // Mensagem pelo WhatsApp: qual modelo abrir (e se é a devolutiva logo após reprovar)
+  const [message, setMessage] = useState<{ key: string; afterReject?: boolean } | null>(null);
   const [rejecting, setRejecting] = useState(false);
   const [evaluating, setEvaluating] = useState(false);
   const [notes, setNotes] = useState<string | null>(null);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [flash, setFlash] = useState("");
   const [reload, setReload] = useState(0);
+  // Recarrega o scorecard quando as notas vêm do copiloto
+  const [scoreKey, setScoreKey] = useState(0);
 
   const refresh = useCallback(() => setReload((n) => n + 1), []);
 
@@ -92,6 +100,7 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
         interviews: (interviews as Interview[]) ?? [],
         config: agendaConfig(settings?.agenda_config),
         script: rh.interview_script,
+        templates: rh.message_templates,
       });
     })();
     return () => {
@@ -110,7 +119,7 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
     );
   if (!data) return <p className="text-brand-500">Carregando...</p>;
 
-  const { candidate: c, apps, events, interviews, config, script } = data;
+  const { candidate: c, apps, events, interviews, config, script, templates } = data;
   // Abre no card em processo (ou no escolhido pelo link)
   const app = apps.find((a) => a.id === selected) ?? apps.find((a) => a.status === "em_processo") ?? apps[0];
   // Na etapa de entrevista, a ficha já abre na aba Entrevista
@@ -143,14 +152,8 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
     const err = await setAppStatus(db(), app.id, status, reason);
     if (err) return say(err);
     say(status === "em_processo" ? "Processo reaberto" : `Resultado: ${STATUS[status].label}`);
-    refresh();
-  }
-
-  async function sendInvite() {
-    if (!app) return;
-    window.open(whatsappLink(c.whatsapp, inviteText(c, app, bookingLink)), "_blank", "noopener");
-    await advanceStage(db(), app, "convite", ["novo", "visto", "avaliado_ia"]);
-    await logInterview(db(), app.id, "Convite para agendar a entrevista enviado pelo WhatsApp");
+    // Reprovou: já oferece a devolutiva pronta (pode deixar para depois)
+    if (status === "reprovado") setMessage({ key: feedbackKey(app.stage), afterReject: true });
     refresh();
   }
 
@@ -224,6 +227,20 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
   const flow = app ? STAGES[app.pipeline].filter((s) => !s.side) : [];
   const sideStages = app ? STAGES[app.pipeline].filter((s) => s.side) : [];
   const currentIdx = app ? flow.findIndex((s) => s.key === app.stage) : -1;
+  const nextInterview = app
+    ? interviews
+        .filter((i) => i.status === "agendada" && (i.application_id === app.id || !i.application_id) && new Date(i.starts_at).getTime() > Date.parse(new Date().toISOString()))
+        .sort((a, b) => a.starts_at.localeCompare(b.starts_at))[0]
+    : undefined;
+  const defaultKey = !app
+    ? "convite"
+    : app.status === "reprovado"
+      ? feedbackKey(app.stage)
+      : app.status === "contratado"
+        ? "aprovado"
+        : nextInterview
+          ? "lembrete"
+          : "convite";
   const meta = [c.city, c.age_range, `${ORIGIN[c.origin]} · desde ${formatDate(c.created_at)}`].filter(Boolean).join(" · ");
 
   return (
@@ -247,7 +264,7 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
               className={`${btn} bg-emerald-600 text-white hover:bg-emerald-700`}
               items={[
                 { label: "Abrir conversa", hint: c.whatsapp, onSelect: () => window.open(whatsappLink(c.whatsapp), "_blank", "noopener") },
-                { label: "Enviar convite para agendar", hint: "Mensagem pronta com o link pessoal de agendamento", onSelect: sendInvite, hidden: !open },
+                { label: "Enviar mensagem pronta", hint: "Convite, lembrete, aprovação ou devolutiva", onSelect: () => setMessage({ key: defaultKey }), hidden: !app },
                 { label: "Copiar link de agendamento", hint: "Para mandar por outro canal", onSelect: copyLink, hidden: !open },
               ]}
             />
@@ -369,8 +386,16 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
                 <p className="text-sm">
                   <strong>{STATUS[app.status].label}</strong> em {formatDate(app.closed_at ?? app.stage_changed_at)}
                   {app.status === "reprovado" && <> · motivo: {app.rejection_reason || "sem motivo"}</>} · estava em “{stageDef(app.pipeline, app.stage).label}”
+                  {app.status === "reprovado" && (
+                    <> · {app.feedback_sent_at ? `devolutiva enviada em ${formatDate(app.feedback_sent_at)}` : <strong>sem devolutiva</strong>}</>
+                  )}
                 </p>
                 <div className="flex gap-2">
+                  {app.status === "reprovado" && !app.feedback_sent_at && (
+                    <button type="button" onClick={() => setMessage({ key: feedbackKey(app.stage) })} className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700">
+                      Enviar devolutiva
+                    </button>
+                  )}
                   {app.status === "contratado" && (
                     <button type="button" onClick={() => changeStatus("desligado")} className="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold ring-1 ring-current/20">
                       Desligar
@@ -420,8 +445,32 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
               {activeTab === "avaliacao" && <AiScorecard app={app} busy={evaluating} onEvaluate={evaluate} />}
               {activeTab === "entrevista" && (
                 <>
-                  <InterviewScorecard key={app.id} app={app} onSave={saveScores} />
-                  <InterviewGuide key={`roteiro-${app.id}`} app={app} standard={script} onSave={saveScript} />
+                  <InterviewGuide key={`roteiro-${app.id}`} app={app} standard={script} onSave={async (next) => {
+                    const ok = await saveScript(next);
+                    if (ok) refresh();
+                    return ok;
+                  }} />
+                  <InterviewCopilot
+                    app={app}
+                    onAnalyzed={() => {
+                      say("Análise da entrevista pronta");
+                      refresh();
+                    }}
+                    onApply={async (scores) => {
+                      const ok = await saveScores(scores);
+                      if (ok) {
+                        setScoreKey((k) => k + 1);
+                        say("Notas sugeridas aplicadas. Ajuste se precisar.");
+                      }
+                      return ok;
+                    }}
+                  />
+                  {/* Depois de usar as notas do copiloto, o scorecard recarrega quando os dados novos chegam */}
+                  <InterviewScorecard
+                    key={`${app.id}-${scoreKey ? [app.score_fit, app.score_proatividade, app.score_comunicacao, app.score_resiliencia, app.score_tecnica].join(",") : ""}`}
+                    app={app}
+                    onSave={saveScores}
+                  />
                 </>
               )}
               {activeTab === "historico" && (
@@ -542,6 +591,22 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
           onDone={() => {
             setScheduling(false);
             say("Entrevista marcada");
+            refresh();
+          }}
+        />
+      )}
+      {message && app && (
+        <MessageDialog
+          target={{ candidate: c, app, origin, interviewAt: nextInterview?.starts_at, location: nextInterview?.location ?? config.location }}
+          templates={templates}
+          initialKey={message.key}
+          title={message.afterReject ? `Enviar a devolutiva para ${c.full_name.split(" ")[0]}?` : undefined}
+          subtitle={message.afterReject ? "Dar retorno a quem participou faz diferença. Ajuste o texto se quiser." : undefined}
+          skipLabel={message.afterReject ? "Agora não" : "Cancelar"}
+          onClose={() => setMessage(null)}
+          onSent={(k) => {
+            setMessage(null);
+            say(k.startsWith("devolutiva") ? "Devolutiva registrada" : "Mensagem registrada no histórico");
             refresh();
           }}
         />

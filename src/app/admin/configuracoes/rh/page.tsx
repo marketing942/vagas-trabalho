@@ -5,9 +5,9 @@ import { useEffect, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Panel } from "@/components/admin/rh/charts";
 import { createClient } from "@/lib/supabase/client";
-import { cleanScript, loadRhSettings } from "@/lib/rh/rh-settings";
-import { DEFAULT_INTERVIEW_SCRIPT, DEFAULT_REJECTION_REASONS } from "@/lib/rh/constants";
-import type { InterviewScript } from "@/lib/types";
+import { cleanScript, cleanTemplates, loadRhSettings } from "@/lib/rh/rh-settings";
+import { DEFAULT_INTERVIEW_SCRIPT, DEFAULT_MESSAGE_TEMPLATES, DEFAULT_REJECTION_REASONS, MESSAGE_VARS } from "@/lib/rh/constants";
+import type { InterviewScript, MessageTemplate } from "@/lib/types";
 
 const move = <T,>(list: T[], i: number, d: number) => {
   const j = i + d;
@@ -23,6 +23,7 @@ const iconBtn = "grid h-8 w-8 shrink-0 place-items-center rounded-lg text-brand-
 export default function RhConfigPage() {
   const [reasons, setReasons] = useState<string[] | null>(null);
   const [script, setScript] = useState<InterviewScript | null>(null);
+  const [templates, setTemplates] = useState<MessageTemplate[] | null>(null);
   const [usage, setUsage] = useState<Map<string, number>>(new Map());
   const [ready, setReady] = useState(true);
   const [newReason, setNewReason] = useState("");
@@ -35,6 +36,7 @@ export default function RhConfigPage() {
     Promise.all([loadRhSettings(db), db.from("applications").select("rejection_reason").eq("status", "reprovado")]).then(([s, { data }]) => {
       setReasons(s.rejection_reasons);
       setScript(s.interview_script);
+      setTemplates(s.message_templates);
       setReady(s.ready);
       const m = new Map<string, number>();
       (data ?? []).forEach((r) => r.rejection_reason && m.set(r.rejection_reason, (m.get(r.rejection_reason) ?? 0) + 1));
@@ -72,9 +74,9 @@ export default function RhConfigPage() {
     setSaving(true);
     const { error } = await createClient()
       .from("rh_settings")
-      .upsert({ id: 1, rejection_reasons: cleanReasons, interview_script: cleaned });
+      .upsert({ id: 1, rejection_reasons: cleanReasons, interview_script: cleaned, message_templates: cleanTemplates(templates) });
     setSaving(false);
-    if (error) return setMsg("Erro ao salvar. Confira se a migração 0011 foi executada no Supabase.");
+    if (error) return setMsg("Erro ao salvar. Confira se as migrações 0011 e 0012 foram executadas no Supabase.");
     setReasons(cleanReasons);
     setScript(cleaned);
     setDirty(false);
@@ -86,7 +88,7 @@ export default function RhConfigPage() {
   return (
     <AdminLayout
       title="Configurações do RH"
-      subtitle="Motivos de reprovação e roteiro padrão de entrevista"
+      subtitle="Motivos de reprovação, roteiro de entrevista e modelos de mensagem"
       actions={
         <>
           <span className="text-sm text-brand-500" aria-live="polite">
@@ -107,7 +109,7 @@ export default function RhConfigPage() {
         </p>
       )}
       {msg && !dirty && msg.startsWith("Erro") && <p className="mb-4 rounded-2xl bg-rose-50 p-3 text-sm text-rose-700">{msg}</p>}
-      {!reasons || !script ? (
+      {!reasons || !script || !templates ? (
         <p className="text-brand-500">Carregando...</p>
       ) : (
         <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
@@ -257,6 +259,59 @@ export default function RhConfigPage() {
               + Nova parte
             </button>
             <p className="mt-3 text-xs text-brand-500">Quem já tem o roteiro salvo na ficha mantém o dele; as mudanças valem para os próximos.</p>
+          </Panel>
+
+          <Panel
+            title="Modelos de mensagem (WhatsApp)"
+            subtitle="Usados no botão WhatsApp da ficha, na devolutiva ao reprovar e no envio em sequência em Finalizados"
+            className="xl:col-span-2"
+            action={
+              <button
+                type="button"
+                onClick={() => confirm("Voltar para os textos padrão das mensagens?") && (setTemplates(DEFAULT_MESSAGE_TEMPLATES), touch())}
+                className="text-xs font-semibold text-brand-500 underline hover:text-brand-900"
+              >
+                Textos padrão
+              </button>
+            }
+          >
+            <p className="mb-3 text-xs text-brand-500">
+              Variáveis (trocadas pelos dados da pessoa):{" "}
+              {MESSAGE_VARS.map((v) => (
+                <code key={v.key} title={v.hint} className="mr-1.5 rounded bg-brand-50 px-1.5 py-0.5 text-[11px] text-brand-800">
+                  {`{${v.key}}`}
+                </code>
+              ))}
+            </p>
+            <div className="grid gap-3 lg:grid-cols-2">
+              {templates.map((t, i) => (
+                <div key={t.key} className="rounded-2xl border border-brand-100 bg-brand-50/40 p-3">
+                  <input
+                    aria-label={`Nome do modelo ${i + 1}`}
+                    value={t.label}
+                    onChange={(e) => {
+                      const next = [...templates];
+                      next[i] = { ...t, label: e.target.value };
+                      setTemplates(next);
+                      touch();
+                    }}
+                    className="w-full rounded-lg bg-transparent px-2 py-1 text-sm font-bold text-brand-950 outline-none focus:bg-white"
+                  />
+                  <textarea
+                    aria-label={`Texto do modelo ${t.label}`}
+                    value={t.text}
+                    rows={5}
+                    onChange={(e) => {
+                      const next = [...templates];
+                      next[i] = { ...t, text: e.target.value };
+                      setTemplates(next);
+                      touch();
+                    }}
+                    className="input mt-1 !bg-white text-sm"
+                  />
+                </div>
+              ))}
+            </div>
           </Panel>
         </div>
       )}

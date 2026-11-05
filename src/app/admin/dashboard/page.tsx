@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import Icon from "@/components/Icon";
+import PendingPanel, { type PastInterview } from "@/components/admin/rh/PendingPanel";
 import { AreaChart, Avatar, DeltaPill, Funnel, KpiCard, Panel, RankBars, Ring, Segmented, type Datum, type FunnelStep } from "@/components/admin/rh/charts";
 import { createClient } from "@/lib/supabase/client";
 import { fetchAll } from "@/lib/rh/fetch-all";
@@ -12,7 +13,7 @@ import { isOpen, jobTitles, PIPELINE_LABEL, stageDef, STATUS } from "@/lib/rh/co
 import { aiScoreTone, formatTime, hireChance } from "@/lib/rh/format";
 import type { Application, Interview, Job, Pipeline, Stage } from "@/lib/types";
 
-type DashApp = Pick<Application, "id" | "candidate_id" | "job_id" | "job_title" | "jobs" | "pipeline" | "stage" | "status" | "closed_at" | "ai_score" | "interview_score" | "created_at" | "stage_changed_at"> & {
+type DashApp = Pick<Application, "id" | "candidate_id" | "job_id" | "job_title" | "jobs" | "pipeline" | "stage" | "status" | "closed_at" | "ai_score" | "interview_score" | "created_at" | "stage_changed_at" | "feedback_sent_at" | "ai_status"> & {
   candidates: { full_name: string; sources: string[] } | null;
 };
 type DashInterview = Pick<Interview, "id" | "candidate_id" | "application_id" | "starts_at"> & {
@@ -123,6 +124,7 @@ export default function DashboardPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [apps, setApps] = useState<DashApp[]>([]);
   const [interviews, setInterviews] = useState<DashInterview[]>([]);
+  const [past, setPast] = useState<PastInterview[]>([]);
   const [loading, setLoading] = useState(true);
   const [rhReady, setRhReady] = useState(true);
   const [funil, setFunil] = useState<Funil>("todos");
@@ -137,7 +139,7 @@ export default function DashboardPage() {
       fetchAll<DashApp>((from, to) =>
         db
           .from("applications")
-          .select("id,candidate_id,job_id,job_title,jobs,pipeline,stage,status,closed_at,ai_score,interview_score,created_at,stage_changed_at,candidates(full_name,sources)")
+          .select("id,candidate_id,job_id,job_title,jobs,pipeline,stage,status,closed_at,ai_score,interview_score,created_at,stage_changed_at,feedback_sent_at,ai_status,candidates(full_name,sources)")
           .order("created_at", { ascending: false })
           .range(from, to)
       ),
@@ -148,11 +150,20 @@ export default function DashboardPage() {
         .gte("starts_at", now.toISOString())
         .lt("starts_at", new Date(now.getTime() + 7 * 86_400_000).toISOString())
         .order("starts_at"),
-    ]).then(([j, a, i]) => {
+      // Entrevistas que já passaram e continuam "agendada": falta registrar o resultado
+      db
+        .from("interviews")
+        .select("id,candidate_id,application_id,starts_at,candidates(full_name)")
+        .eq("status", "agendada")
+        .lt("ends_at", now.toISOString())
+        .order("starts_at")
+        .limit(50),
+    ]).then(([j, a, i, p]) => {
       setJobs((j.data as Job[]) ?? []);
       setApps(a.data);
       setRhReady(!a.error);
       setInterviews((i.data as unknown as DashInterview[]) ?? []);
+      setPast((p.data as unknown as PastInterview[]) ?? []);
       setLoading(false);
     });
   }, []);
@@ -278,6 +289,13 @@ export default function DashboardPage() {
               Os dados de candidatos aparecem aqui depois que a migração 0010 for executada no Supabase.
             </p>
           )}
+
+          {/* O que precisa de alguém agora */}
+          <PendingPanel
+            apps={apps.filter((a) => funil === "todos" || a.pipeline === funil)}
+            past={past.filter((i) => funil === "todos" || !i.application_id || apps.find((a) => a.id === i.application_id)?.pipeline === funil)}
+            now={now}
+          />
 
           {/* Indicadores */}
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">

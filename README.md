@@ -202,8 +202,8 @@ Crie um arquivo `.env.local` (use `.env.example` como base):
 
 ### Como ligar (uma vez)
 
-1. Rode no SQL Editor do Supabase, nessa ordem, `supabase/migrations/0010_rh.sql`
-   e `supabase/migrations/0011_rh_status_vagas_roteiro.sql`.
+1. Rode no SQL Editor do Supabase, nessa ordem, `supabase/migrations/0010_rh.sql`,
+   `0011_rh_status_vagas_roteiro.sql` e `0012_rh_mensagens_copiloto.sql`.
 2. Na Vercel → **Settings → Environment Variables**, adicione:
    - `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project Settings → API → `service_role`);
    - `DEEPSEEK_API_KEY` (opcional, para o scorecard de IA; crie em platform.deepseek.com → API keys e coloque saldo).
@@ -257,9 +257,35 @@ de contratação, tempo até contratar, permanência), motivos de reprovação, 
 etapa as pessoas saíram e a lista com filtros. Lá dá para **Desligar** um
 contratado ou **Reabrir** um processo (volta para a etapa em que estava).
 
+### Rotina do dia a dia
+
+- **Prévia rápida:** no pipeline, clicar no nome abre um painel lateral com o
+  essencial (vagas, etapa, score e resumo da IA, entrevista marcada) e as ações
+  WhatsApp, Contratar, Reprovar e Abrir ficha completa.
+- **Mensagens prontas no WhatsApp:** convite, lembrete, aprovação e devolutiva,
+  com variáveis como {primeiro_nome}, {vagas}, {link_agenda} e {data_entrevista}.
+  O texto pode ser ajustado antes de enviar e tudo fica no histórico.
+- **Devolutiva:** ao reprovar, o sistema oferece a devolutiva pronta. Em
+  Finalizados há o filtro "sem devolutiva" e o envio em sequência.
+- **Pendências** (no Painel):
+  - atrasados por etapa (prazos em `STAGE_SLA_DAYS`, em `src/lib/rh/constants.ts`);
+  - entrevistas que já passaram sem resultado;
+  - reprovados sem devolutiva;
+  - erros da IA.
+
+  No pipeline, o card atrasado ganha um selo, e há o filtro "Passou do prazo".
+- **Copiloto da entrevista:** com o roteiro preenchido, a IA resume a entrevista
+  e **sugere** as 5 notas com a evidência de cada uma, além de pontos a
+  confirmar. Respostas sobre filhos ou família nunca entram nas notas. A equipe
+  decide se usa as notas sugeridas.
+
+A pesquisa de mercado que orientou estas melhorias e as próximas fases está em
+[`docs/pesquisa-mercado-ats.md`](docs/pesquisa-mercado-ats.md).
+
 ### Configurações do RH (`/admin/configuracoes/rh`)
 
 - **Motivos de reprovação:** adicionar, renomear, reordenar e remover.
+- **Modelos de mensagem** do WhatsApp.
 - **Roteiro padrão de entrevista:** partes, perguntas e "o que a pergunta avalia".
   Na ficha de cada candidato o roteiro aparece pronto para preencher as respostas,
   e pode ser ajustado só para aquela pessoa (mudar, tirar ou incluir perguntas,
