@@ -1,7 +1,7 @@
 import { after, NextResponse, type NextRequest } from "next/server";
 import { createServiceClient, HAS_SERVICE_ROLE } from "@/lib/supabase/service";
 import { evaluateApplication, HAS_AI } from "@/lib/rh/ai";
-import { TALENT_POOL } from "@/lib/rh/constants";
+import { jobsOf, TALENT_POOL } from "@/lib/rh/constants";
 import {
   formatWhatsapp,
   onlyDigits,
@@ -11,7 +11,7 @@ import {
   type ApplicationFields,
 } from "@/lib/rh/validate";
 import { slugify } from "@/lib/slug";
-import type { Job } from "@/lib/types";
+import type { Application, Job, JobRef, Pipeline } from "@/lib/types";
 
 export const runtime = "nodejs";
 // A avaliação por IA roda depois da resposta, dentro desta mesma função.
@@ -144,41 +144,69 @@ export async function POST(req: NextRequest) {
       if (existing?.resume_path) await db.storage.from("curriculos").remove([existing.resume_path]);
     }
 
-    // Uma candidatura por vaga escolhida (pula as que a pessoa já tinha)
+    // Um card por pessoa e funil, com todas as vagas escolhidas nele.
+    // Se a pessoa já tem um card em aberto no funil, as vagas novas entram nesse card.
     const { data: settings } = await db.from("site_settings").select("ai_auto_evaluate").limit(1).maybeSingle();
     // Avaliação ligada: fica "pendente" mesmo sem a chave da IA, para ser avaliada quando ela for configurada
     const wantAi = settings?.ai_auto_evaluate ?? true;
     const autoAi = wantAi && HAS_AI;
-    const { data: previous } = await db.from("applications").select("job_id, job_title").eq("candidate_id", candidateId);
-    const already = new Set((previous ?? []).map((a) => a.job_id ?? `pool:${a.job_title}`));
 
-    const rows = [
-      ...jobs.map((j) => ({ job_id: j.id, job_title: j.title, pipeline: j.category })),
-      ...(wantsPool ? [{ job_id: null, job_title: TALENT_POOL, pipeline: "trabalho" as const }] : []),
+    const chosen: { pipeline: Pipeline; ref: JobRef }[] = [
+      ...jobs.map((j) => ({ pipeline: j.category, ref: { id: j.id, title: j.title } })),
+      ...(wantsPool ? [{ pipeline: "trabalho" as const, ref: { id: null, title: TALENT_POOL } }] : []),
     ];
-    const fresh = rows.filter((r) => !already.has(r.job_id ?? `pool:${r.job_title}`));
-    const repeated = rows.filter((r) => already.has(r.job_id ?? `pool:${r.job_title}`)).map((r) => r.job_title);
+    const sameJob = (a: JobRef, b: JobRef) => (a.id && b.id ? a.id === b.id : a.title === b.title);
+    const { data: openApps } = await db.from("applications").select("id, pipeline, stage, jobs, job_id, job_title").eq("candidate_id", candidateId).eq("status", "em_processo");
 
-    let created: { id: string }[] = [];
-    if (fresh.length) {
-      const { data, error } = await db
+    const added: string[] = [];
+    const repeated: string[] = [];
+    const toEvaluate: string[] = [];
+    for (const pipeline of ["trabalho", "professor"] as Pipeline[]) {
+      const refs = chosen.filter((c) => c.pipeline === pipeline).map((c) => c.ref);
+      if (!refs.length) continue;
+      const current = (openApps ?? []).find((a) => a.pipeline === pipeline) as (Pick<Application, "id" | "stage" | "jobs" | "job_id" | "job_title"> & { pipeline: Pipeline }) | undefined;
+      if (!current) {
+        const { data, error } = await db
+          .from("applications")
+          .insert({ candidate_id: candidateId, pipeline, job_id: refs[0].id, job_title: refs[0].title, jobs: refs, ai_status: wantAi ? "pendente" : "sem_ia" })
+          .select("id")
+          .single();
+        if (error) throw error;
+        added.push(...refs.map((r) => r.title));
+        toEvaluate.push(data.id);
+        continue;
+      }
+      const have = jobsOf(current);
+      const fresh = refs.filter((r) => !have.some((h) => sameJob(h, r)));
+      repeated.push(...refs.filter((r) => have.some((h) => sameJob(h, r))).map((r) => r.title));
+      if (!fresh.length) continue;
+      // Ainda na triagem: a IA avalia de novo, agora com todas as vagas
+      const reevaluate = wantAi && ["novo", "visto", "avaliado_ia"].includes(current.stage);
+      const { error } = await db
         .from("applications")
-        .insert(fresh.map((r) => ({ ...r, candidate_id: candidateId, ai_status: wantAi ? "pendente" : "sem_ia" })))
-        .select("id");
+        .update({ jobs: [...have, ...fresh], ...(reevaluate ? { ai_status: "pendente" } : {}) })
+        .eq("id", current.id);
       if (error) throw error;
-      created = data ?? [];
+      await db.from("application_events").insert({
+        application_id: current.id,
+        kind: "edicao",
+        actor: "candidato",
+        detail: `Candidatou-se também a: ${fresh.map((r) => r.title).join(", ")}`,
+      });
+      added.push(...fresh.map((r) => r.title));
+      if (reevaluate) toEvaluate.push(current.id);
     }
 
-    if (autoAi && created.length) {
+    if (autoAi && toEvaluate.length) {
       after(async () => {
-        await Promise.all(created.map((a) => evaluateApplication(db, a.id)));
+        await Promise.all(toEvaluate.map((id) => evaluateApplication(db, id)));
       });
     }
 
     return NextResponse.json({
       ok: true,
       nome: profile.full_name.split(" ")[0],
-      vagas: fresh.map((r) => r.job_title),
+      vagas: added,
       repetidas: repeated,
     });
   } catch (e) {

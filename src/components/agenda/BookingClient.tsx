@@ -14,21 +14,19 @@ interface Props {
   location: string;
   instructions: string;
   mapsUrl: string | null;
-  jobs: { id: string; title: string }[];
 }
 
 const DAY = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Recife", weekday: "short", day: "2-digit", month: "2-digit" });
 const dayLabel = (key: string) => DAY.format(new Date(`${key}T12:00:00-03:00`)).replace(".", "");
 
 /** Escolha de dia e horário da entrevista. */
-export default function BookingClient({ token, days, upcoming, location, instructions, mapsUrl, jobs }: Props) {
+export default function BookingClient({ token, days, upcoming, location, instructions, mapsUrl }: Props) {
   const [current, setCurrent] = useState(upcoming);
   const [changing, setChanging] = useState(!upcoming);
   const [day, setDay] = useState(days[0]?.date ?? "");
   const [slot, setSlot] = useState<Slot | null>(null);
   const [name, setName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
-  const [jobId, setJobId] = useState("");
   const [consent, setConsent] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
@@ -58,7 +56,7 @@ export default function BookingClient({ token, days, upcoming, location, instruc
       if (whatsapp.replace(/\D/g, "").length < 10) return setError("Informe o WhatsApp com DDD.");
       if (!consent) return setError("É preciso concordar com a Política de Privacidade.");
     }
-    const data = await call({ token, start: slot.start, name, whatsapp, jobId: jobId || null, consent });
+    const data = await call({ token, start: slot.start, name, whatsapp, consent });
     if (data) {
       setBooked({ start: data.start, end: data.end });
       setCurrent({ id: "novo", starts_at: data.start, ends_at: data.end });
@@ -205,19 +203,7 @@ export default function BookingClient({ token, days, upcoming, location, instruc
                   <input className="input" type="tel" inputMode="tel" placeholder="(81) 9 9999-9999" value={whatsapp} onChange={(e) => setWhatsapp(formatWhatsapp(e.target.value))} />
                 </label>
               </div>
-              {jobs.length > 0 && (
-                <label className="block">
-                  <span className="label">Vaga da entrevista (se souber)</span>
-                  <select className="input" value={jobId} onChange={(e) => setJobId(e.target.value)}>
-                    <option value="">Não sei / outra</option>
-                    {jobs.map((j) => (
-                      <option key={j.id} value={j.id}>
-                        {j.title}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
+              <p className="text-xs text-inkmuted">Use o mesmo WhatsApp da sua candidatura: assim já ligamos a entrevista às vagas que você escolheu.</p>
               <label className="flex items-start gap-3 text-sm text-inksoft">
                 <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1 h-4 w-4 accent-[#8a7040]" />
                 <span>

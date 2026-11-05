@@ -8,11 +8,11 @@ import { AreaChart, Avatar, DeltaPill, Funnel, KpiCard, Panel, RankBars, Ring, S
 import { createClient } from "@/lib/supabase/client";
 import { fetchAll } from "@/lib/rh/fetch-all";
 import { addDays, dateKey, weekdayOf } from "@/lib/rh/agenda";
-import { isActive, PIPELINE_LABEL, stageDef } from "@/lib/rh/constants";
+import { isOpen, jobTitles, PIPELINE_LABEL, stageDef, STATUS } from "@/lib/rh/constants";
 import { aiScoreTone, formatTime, hireChance } from "@/lib/rh/format";
 import type { Application, Interview, Job, Pipeline, Stage } from "@/lib/types";
 
-type DashApp = Pick<Application, "id" | "candidate_id" | "job_title" | "pipeline" | "stage" | "ai_score" | "interview_score" | "created_at" | "stage_changed_at"> & {
+type DashApp = Pick<Application, "id" | "candidate_id" | "job_id" | "job_title" | "jobs" | "pipeline" | "stage" | "status" | "closed_at" | "ai_score" | "interview_score" | "created_at" | "stage_changed_at"> & {
   candidates: { full_name: string; sources: string[] } | null;
 };
 type DashInterview = Pick<Interview, "id" | "candidate_id" | "application_id" | "starts_at"> & {
@@ -30,12 +30,13 @@ const PERIODS: { key: Periodo; short: string; label: string }[] = [
   { key: "tudo", short: "Tudo", label: "Todo o período" },
 ];
 
-/** Até onde a candidatura chegou no processo (para o funil). Reprovados contam só até a triagem. */
-const REACH: Partial<Record<Stage, number>> = {
-  novo: 0, visto: 0, avaliado_ia: 1, depois: 1, proximo_ano: 1, reprovado: 0,
-  convite: 2, entrevista: 3, entrevistado: 3, onboarding: 3, treinamento: 3, contratado: 4, desligado: 4,
+/** Até onde a candidatura chegou no processo (para o funil). Reprovados contam até a etapa em que saíram. */
+const REACH: Record<Stage, number> = {
+  novo: 0, visto: 0, avaliado_ia: 1, depois: 1, proximo_ano: 1,
+  convite: 2, entrevista: 3, entrevistado: 3, onboarding: 3, treinamento: 3,
 };
-const reach = (a: DashApp) => Math.max(REACH[a.stage] ?? 0, a.ai_score != null ? 1 : 0);
+const reach = (a: DashApp) =>
+  a.status === "contratado" || a.status === "desligado" ? 4 : Math.max(REACH[a.stage] ?? 0, a.ai_score != null ? 1 : 0);
 
 const SCORE_BUCKETS = [
   { label: "85 a 100 · muito aderente", min: 85 },
@@ -46,7 +47,7 @@ const SCORE_BUCKETS = [
 
 const DAY_BADGE = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", weekday: "short", timeZone: "America/Recife" });
 
-const STAGE_ORDER: Stage[] = ["novo", "visto", "avaliado_ia", "convite", "entrevista", "entrevistado", "onboarding", "treinamento", "contratado", "depois", "proximo_ano", "reprovado", "desligado"];
+const STAGE_ORDER: Stage[] = ["novo", "visto", "avaliado_ia", "convite", "entrevista", "entrevistado", "onboarding", "treinamento", "depois", "proximo_ano"];
 const MONTH = new Intl.DateTimeFormat("pt-BR", { month: "short", year: "2-digit", timeZone: "UTC" });
 const DAY = (key: string) => `${key.slice(8)}/${key.slice(5, 7)}`;
 
@@ -94,6 +95,8 @@ function top(map: Map<string, number>, n: number): Datum[] {
   return rest ? [...head, { label: "Outras", value: rest }] : head;
 }
 
+const jobsTitlesHas = (a: DashApp, title: string) => jobTitles(a).includes(title);
+
 const cardLink = "text-[13px] font-semibold text-brand-600 hover:text-brand-950";
 
 /** Lista de pessoas com avatar (maiores scores da IA). */
@@ -107,7 +110,7 @@ function ScoreList({ rows }: { rows: DashApp[] }) {
           <Avatar name={a.candidates?.full_name ?? "?"} size="sm" />
           <Link href={`/admin/candidatos/${a.candidate_id}?c=${a.id}`} className="min-w-0 flex-1">
             <span className="block truncate text-sm font-semibold text-brand-950 hover:underline">{a.candidates?.full_name ?? "—"}</span>
-            <span className="block truncate text-xs text-brand-500">{a.job_title} · {stageDef(a.pipeline, a.stage).label}</span>
+            <span className="block truncate text-xs text-brand-500">{jobTitles(a).join(", ")} · {stageDef(a.pipeline, a.stage).label}</span>
           </Link>
           <span className={`shrink-0 rounded-lg px-2 py-1 text-xs font-bold tabular-nums ${aiScoreTone(a.ai_score)}`}>{a.ai_score}</span>
         </li>
@@ -134,7 +137,7 @@ export default function DashboardPage() {
       fetchAll<DashApp>((from, to) =>
         db
           .from("applications")
-          .select("id,candidate_id,job_title,pipeline,stage,ai_score,interview_score,created_at,stage_changed_at,candidates(full_name,sources)")
+          .select("id,candidate_id,job_id,job_title,jobs,pipeline,stage,status,closed_at,ai_score,interview_score,created_at,stage_changed_at,candidates(full_name,sources)")
           .order("created_at", { ascending: false })
           .range(from, to)
       ),
@@ -163,22 +166,29 @@ export default function DashboardPage() {
     const inPeriod = scoped.filter((a) => t(a.created_at) >= since);
     const pct = (cur: number, prev: number | null) => (prev == null ? null : prev ? ((cur - prev) / prev) * 100 : cur ? 100 : 0);
     const prevCount = days ? scoped.filter((a) => t(a.created_at) >= prevSince && t(a.created_at) < since).length : null;
-    const active = scoped.filter((a) => isActive(a.stage));
-    const hiredApps = scoped.filter((a) => a.stage === "contratado");
-    const hired = hiredApps.filter((a) => t(a.stage_changed_at) >= since).length;
-    const hiredPrev = days ? hiredApps.filter((a) => t(a.stage_changed_at) >= prevSince && t(a.stage_changed_at) < since).length : null;
+    const active = scoped.filter(isOpen);
+    const closedT = (a: DashApp) => t(a.closed_at ?? a.stage_changed_at);
+    const hiredApps = scoped.filter((a) => a.status === "contratado" || a.status === "desligado");
+    const hired = hiredApps.filter((a) => closedT(a) >= since).length;
+    const hiredPrev = days ? hiredApps.filter((a) => closedT(a) >= prevSince && closedT(a) < since).length : null;
     const scored = inPeriod.filter((a) => a.ai_score != null);
     const avgAi = scored.length ? Math.round(scored.reduce((s, a) => s + (a.ai_score ?? 0), 0) / scored.length) : null;
 
     const byJob = new Map<string, number>();
-    inPeriod.forEach((a) => byJob.set(a.job_title, (byJob.get(a.job_title) ?? 0) + 1));
+    inPeriod.forEach((a) => jobTitles(a).forEach((j) => byJob.set(j, (byJob.get(j) ?? 0) + 1)));
 
+    // Em processo: por etapa. Finalizados: pelo resultado.
     const byStage = new Map<Stage, number>();
-    inPeriod.forEach((a) => byStage.set(a.stage, (byStage.get(a.stage) ?? 0) + 1));
-    const stages: Datum[] = STAGE_ORDER.filter((s) => byStage.has(s)).map((s) => ({
-      label: stageDef(funil === "professor" ? "professor" : "trabalho", s).label,
-      value: byStage.get(s) ?? 0,
-    }));
+    inPeriod.filter(isOpen).forEach((a) => byStage.set(a.stage, (byStage.get(a.stage) ?? 0) + 1));
+    const stages: Datum[] = [
+      ...STAGE_ORDER.filter((s) => byStage.has(s)).map((s) => ({
+        label: stageDef(funil === "professor" ? "professor" : "trabalho", s).label,
+        value: byStage.get(s) ?? 0,
+      })),
+      ...(["contratado", "reprovado", "desligado"] as const)
+        .map((st) => ({ label: `${STATUS[st].label}s`, value: inPeriod.filter((a) => a.status === st).length }))
+        .filter((d) => d.value),
+    ];
 
     const funnel: FunnelStep[] = [
       "Candidaturas recebidas",
@@ -203,7 +213,7 @@ export default function DashboardPage() {
       const k = j.category === "professor" ? (j.discipline ? `Professor ${j.discipline}` : "Professores") : j.department || "Outros";
       byArea.set(k, (byArea.get(k) ?? 0) + 1);
     });
-    const withoutCandidates = openJobs.filter((j) => !inPeriod.some((a) => a.job_title === j.title)).length;
+    const withoutCandidates = openJobs.filter((j) => !inPeriod.some((a) => jobsTitlesHas(a, j.title))).length;
 
     const trend = timeline(inPeriod, periodo);
     return {
@@ -308,9 +318,9 @@ export default function DashboardPage() {
               </div>
               <AreaChart data={view.trend} unit="candidaturas" unitOne="candidatura" />
             </Panel>
-            <Panel title="Funil do processo" subtitle="candidaturas do período por etapa alcançada">
+            <Panel title="Funil do processo" subtitle="processos do período por etapa alcançada">
               <Funnel steps={view.funnel} />
-              <p className="mt-4 text-xs leading-relaxed text-brand-500">Reprovados contam até a triagem. A taxa ao lado é a conversão em relação à etapa anterior.</p>
+              <p className="mt-4 text-xs leading-relaxed text-brand-500">Reprovados contam até a etapa em que saíram. A taxa ao lado é a conversão em relação à etapa anterior.</p>
             </Panel>
           </div>
 
@@ -341,7 +351,7 @@ export default function DashboardPage() {
                           <Ring value={hireChance(a) ?? 0} label="Chance de contratação" />
                         </div>
                         <p className="mt-3 truncate font-bold text-brand-950">{a.candidates?.full_name ?? "—"}</p>
-                        <p className="truncate text-xs text-brand-500">{a.job_title}</p>
+                        <p className="truncate text-xs text-brand-500">{jobTitles(a).join(", ")}</p>
                         <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
                           <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-2 py-0.5 font-medium text-brand-700 ring-1 ring-brand-100">
                             <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} aria-hidden />

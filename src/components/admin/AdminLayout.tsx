@@ -15,6 +15,7 @@ const svg = (d: React.ReactNode) => (
 const NAV = [
   { href: "/admin/dashboard", label: "Dashboard", icon: svg(<><rect x="3.5" y="3.5" width="7" height="8" rx="2" /><rect x="13.5" y="3.5" width="7" height="5" rx="2" /><rect x="13.5" y="11.5" width="7" height="9" rx="2" /><rect x="3.5" y="14.5" width="7" height="6" rx="2" /></>) },
   { href: "/admin/candidatos", label: "Candidatos", icon: svg(<><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20v-1a5 5 0 0 1 5-5h3a5 5 0 0 1 5 5v1" /><path d="M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20v-1a5 5 0 0 0-3.5-4.8" /></>) },
+  { href: "/admin/candidatos/finalizados", label: "Finalizados", icon: svg(<><path d="M9 11.5 11.5 14 16 9" /><rect x="3.5" y="3.5" width="17" height="17" rx="4" /></>) },
   { href: "/admin/agenda", label: "Agenda", icon: svg(<><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" /><path d="M8 3v4M16 3v4M3.5 10h17" /></>) },
   { href: "/admin/vagas", label: "Vagas", icon: svg(<><rect x="3" y="7.5" width="18" height="12" rx="2.5" /><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5M3 13h18" /></>) },
   { href: "/admin/configuracoes", label: "Configurações", icon: svg(<><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" /></>) },
@@ -73,7 +74,9 @@ export default function AdminLayout({
           </div>
           <nav className="space-y-1 px-3">
             {NAV.map((item) => {
-              const active = pathname.startsWith(item.href);
+              // Item mais específico que casa com a página (Finalizados fica dentro de Candidatos)
+              const best = NAV.filter((n) => pathname.startsWith(n.href)).sort((a, b) => b.href.length - a.href.length)[0];
+              const active = best?.href === item.href;
               return (
                 <Link
                   key={item.href}

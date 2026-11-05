@@ -1,7 +1,8 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { BEM_VINDO, MANDAMENTOS, NAO_BEM_VINDO } from "@/lib/cultura";
-import type { AiReport, Application, Candidate, Job } from "@/lib/types";
+import { jobsOf, TALENT_POOL } from "./constants";
+import type { AiReport, Application, Candidate, Job, JobRef } from "@/lib/types";
 
 /**
  * Avaliação de candidaturas com a IA da DeepSeek (API compatível com o formato
@@ -33,6 +34,7 @@ Como avaliar:
 - fit_cultural: nota de 0 a 10 de como o texto da pessoa conversa com os mandamentos, com um comentário curto.
 - A vaga é presencial em Caruaru-PE, salvo quando a vaga disser outra coisa. Se a pessoa mora longe, registre isso em pontos_de_atencao, sem reprovar só por isso.
 - Para "Banco de Talentos" (sem vaga específica), avalie o potencial geral para trabalhar no CPPEM.
+- A pessoa pode ter escolhido mais de uma vaga (várias tags <vaga>). Nesse caso, dê em "vagas" a aderência (0 a 100) a CADA uma, com um comentário curto; "score" e "criterios" são os da vaga em que ela é mais aderente. Com uma vaga só, "vagas" tem um item.
 - Currículo é opcional. Não penalize quem não enviou; avalie com o que houver.
 
 Regras de justiça (obrigatórias):
@@ -53,6 +55,7 @@ Responda SOMENTE com um objeto JSON válido, sem texto fora dele, exatamente nes
   "pontos_de_atencao": ["..."],
   "fit_cultural": { "nota": 0, "comentario": "..." },
   "perguntas_entrevista": ["3 a 5 perguntas para a entrevista"],
+  "vagas": [{ "vaga": "título da vaga", "score": 0, "comentario": "por que essa nota" }],
   "curriculo_lido": true
 }`;
 
@@ -72,9 +75,9 @@ function plain(html: string | null | undefined): string {
     .trim();
 }
 
-function jobBlock(app: Application, job: Job | null): string {
+function jobBlock(ref: JobRef, job: Job | null): string {
   if (!job) {
-    return `<vaga>\nTítulo: ${app.job_title}\n${app.job_title === "Banco de Talentos" ? "Candidatura para o Banco de Talentos (sem vaga específica)." : "Vaga não está mais cadastrada no site; avalie pelo título."}\n</vaga>`;
+    return `<vaga>\nTítulo: ${ref.title}\n${ref.title === TALENT_POOL ? "Candidatura para o Banco de Talentos (sem vaga específica)." : "Vaga não está mais cadastrada no site; avalie pelo título."}\n</vaga>`;
   }
   const lines = [
     `Título: ${job.title}`,
@@ -153,6 +156,9 @@ function normalize(raw: unknown): AiReport {
     fit_cultural: { nota: clampInt(r.fit_cultural?.nota, 10), comentario: String(r.fit_cultural?.comentario ?? "") },
     perguntas_entrevista: list(r.perguntas_entrevista),
     curriculo_lido: !!r.curriculo_lido,
+    vagas: Array.isArray(r.vagas)
+      ? r.vagas.slice(0, 20).map((v) => ({ vaga: String(v?.vaga ?? ""), score: clampInt(v?.score, 100), comentario: String(v?.comentario ?? "") })).filter((v) => v.vaga)
+      : [],
   };
 }
 
@@ -226,10 +232,13 @@ export async function evaluateApplication(db: SupabaseClient, applicationId: str
   const { data: app, error } = await db.from("applications").select("*").eq("id", applicationId).maybeSingle();
   if (error || !app) return { ok: false, error: "Candidatura não encontrada" };
   const application = app as Application;
-  const [{ data: cand }, { data: job }] = await Promise.all([
+  const refs = jobsOf(application);
+  const ids = refs.map((r) => r.id).filter(Boolean) as string[];
+  const [{ data: cand }, { data: jobRows }] = await Promise.all([
     db.from("candidates").select("*").eq("id", application.candidate_id).maybeSingle(),
-    application.job_id ? db.from("jobs").select("*").eq("id", application.job_id).maybeSingle() : Promise.resolve({ data: null }),
+    ids.length ? db.from("jobs").select("*").in("id", ids) : Promise.resolve({ data: [] }),
   ]);
+  const byId = new Map(((jobRows as Job[]) ?? []).map((j) => [j.id, j]));
   if (!cand) return fail("Candidato não encontrado");
   const candidate = cand as Candidate;
 
@@ -238,12 +247,14 @@ export async function evaluateApplication(db: SupabaseClient, applicationId: str
   try {
     const resume = await resumeText(db, candidate);
     const { content, model } = await askDeepSeek(
-      `${jobBlock(application, (job as Job) ?? null)}\n\n${candidateBlock(candidate, resume)}\n\nAvalie esta candidatura e responda em JSON no formato pedido.`
+      `${refs.map((r) => jobBlock(r, r.id ? byId.get(r.id) ?? null : null)).join("\n\n")}\n\n${candidateBlock(candidate, resume)}\n\n${
+        refs.length > 1 ? `A pessoa escolheu ${refs.length} vagas. ` : ""
+      }Avalie esta candidatura e responda em JSON no formato pedido.`
     );
     const report = normalize(parseJson(content));
     report.curriculo_lido = !!resume.text;
 
-    const { data: current } = await db.from("applications").select("stage").eq("id", applicationId).maybeSingle();
+    const { data: current } = await db.from("applications").select("stage, status").eq("id", applicationId).maybeSingle();
     const update: Record<string, unknown> = {
       ai_status: "concluida",
       ai_score: report.score,
@@ -253,7 +264,7 @@ export async function evaluateApplication(db: SupabaseClient, applicationId: str
       ai_error: null,
     };
     // Igual ao Notion: quem ainda não foi avaliado passa para "Avaliado por IA"
-    if (current && ["novo", "visto"].includes(current.stage)) update.stage = "avaliado_ia";
+    if (current && current.status === "em_processo" && ["novo", "visto"].includes(current.stage)) update.stage = "avaliado_ia";
     await db.from("applications").update(update).eq("id", applicationId);
     await db.from("application_events").insert({
       application_id: applicationId,

@@ -202,7 +202,8 @@ Crie um arquivo `.env.local` (use `.env.example` como base):
 
 ### Como ligar (uma vez)
 
-1. Rode `supabase/migrations/0010_rh.sql` no SQL Editor do Supabase.
+1. Rode no SQL Editor do Supabase, nessa ordem, `supabase/migrations/0010_rh.sql`
+   e `supabase/migrations/0011_rh_status_vagas_roteiro.sql`.
 2. Na Vercel → **Settings → Environment Variables**, adicione:
    - `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project Settings → API → `service_role`);
    - `DEEPSEEK_API_KEY` (opcional, para o scorecard de IA; crie em platform.deepseek.com → API keys e coloque saldo).
@@ -220,20 +221,50 @@ incluindo **Banco de Talentos**), nome completo, e-mail, WhatsApp, Instagram ou
 LinkedIn, idade, cidade, currículo (opcional; PDF, Word ou imagem até 4 MB, limite de envio da Vercel),
 descrição sobre a pessoa e "como encontrou a vaga", além do aceite da Política
 de Privacidade. Só o currículo é opcional. Quem se candidata de novo com o mesmo
-WhatsApp ou e-mail não vira cadastro duplicado: os dados são atualizados e só as
-vagas novas viram candidaturas.
+WhatsApp ou e-mail não vira cadastro duplicado: os dados são atualizados e as
+vagas novas entram no card que a pessoa já tem.
+
+**Um card por pessoa e funil:** quem escolhe várias vagas tem UM card no funil
+de Trabalho (e um no de Professores, se escolheu vaga de professor), com todas
+as vagas nele. A IA avalia o card contra todas as vagas escolhidas.
 
 ### Pipeline (`/admin/candidatos`)
 
-- Dois funis: **Trabalho** (etapas do ATS do Notion: Não avaliado, Avaliado por
-  IA, Convite enviado, Entrevista agendada, Entrevista realizada, Onboarding,
-  Treinamento, Contratado, Possivelmente depois, Reprovado, Desligado) e
-  **Professores** (Não avaliado, Visto, Avaliado por IA, Convite enviado,
-  Entrevista/aula-teste agendada, Entrevista realizada, Contratado, Banco para o
-  próximo ano, Reprovado). As etapas ficam em `src/lib/rh/constants.ts`.
-- Arraste o card para mudar de etapa (ou use **Mover**). Ao reprovar, o sistema
-  pede o motivo (mesma lista do Notion).
-- Cada mudança fica registrada no **histórico** da ficha (quem fez e quando).
+- Dois funis: **Trabalho** (Não avaliado, Avaliado por IA, Convite enviado,
+  Entrevista agendada, Entrevista realizada, Onboarding, Treinamento, Possivelmente
+  depois) e **Professores** (Não avaliado, Visto, Avaliado por IA, Convite enviado,
+  Entrevista/aula-teste agendada, Entrevista realizada, Banco para o próximo ano).
+  As etapas ficam em `src/lib/rh/constants.ts`.
+- A IA avalia cada candidatura nova sozinha e move o card para "Avaliado por IA";
+  a equipe trabalha daí em diante. Se uma avaliação ficar presa, o pipeline tenta
+  de novo sozinho; se der erro, o card avisa e dá para reavaliar na ficha.
+- Cada card mostra as vagas da pessoa, o score da IA em barra de progresso (e a
+  nota da entrevista, quando houver), há quanto tempo está na etapa e a entrevista
+  marcada.
+- **Filtros:** busca (nome, e-mail, WhatsApp, cidade ou vaga), vaga, score da IA,
+  recomendação da IA, nota da entrevista, entrevista marcada, cidade, idade, como
+  encontrou a vaga, canal de entrada, currículo, data da candidatura, tempo parado
+  na etapa, quantidade de vagas e erros da IA. Sete ordenações.
+- Arraste o card para mudar de etapa (ou use o menu ⋯).
+
+### Resultado: Contratado, Reprovado e Desligado (`/admin/candidatos/finalizados`)
+
+Não são etapas: são o **resultado** do processo, como "ganho" e "perdido" num CRM.
+Ao arrastar um card aparecem as áreas **Contratado** e **Reprovado** (ou use o
+menu ⋯ / os botões da ficha). Reprovar exige um motivo da lista configurada. O
+card sai do pipeline e vai para **Finalizados**, que tem números próprios (taxa
+de contratação, tempo até contratar, permanência), motivos de reprovação, em que
+etapa as pessoas saíram e a lista com filtros. Lá dá para **Desligar** um
+contratado ou **Reabrir** um processo (volta para a etapa em que estava).
+
+### Configurações do RH (`/admin/configuracoes/rh`)
+
+- **Motivos de reprovação:** adicionar, renomear, reordenar e remover.
+- **Roteiro padrão de entrevista:** partes, perguntas e "o que a pergunta avalia".
+  Na ficha de cada candidato o roteiro aparece pronto para preencher as respostas,
+  e pode ser ajustado só para aquela pessoa (mudar, tirar ou incluir perguntas,
+  ou trazer as perguntas sugeridas pela IA).
+- Ficam na tabela privada `rh_settings` (só o admin lê; candidatos não veem).
 
 ### Scorecard de IA
 
@@ -258,7 +289,8 @@ Técnica), de 0 a 10, com a média calculada pelo banco igual à fórmula do Not
   link do candidato. Ele escolhe um horário livre, pode remarcar ou cancelar pelo
   mesmo link, e a candidatura vai para "Entrevista agendada".
 - **Link geral** (`/agenda`): qualquer pessoa informa nome e WhatsApp e escolhe o
-  horário; se já for candidata, a entrevista entra na candidatura dela.
+  horário (não precisa dizer a vaga). Se já for candidata, o sistema reconhece
+  pelo WhatsApp e a entrevista entra no card dela.
 - Disponibilidade (dias, faixas de horário, duração, antecedência mínima, dias
   bloqueados, local e orientações) em **Admin → Agenda**. Horários no fuso de
   Caruaru.

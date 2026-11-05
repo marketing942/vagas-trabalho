@@ -4,7 +4,6 @@ import { bookingContext } from "@/lib/rh/booking";
 import { isOfferedSlot } from "@/lib/rh/agenda";
 import { formatDateTime } from "@/lib/rh/format";
 import { formatWhatsapp, onlyDigits } from "@/lib/rh/validate";
-import type { Job } from "@/lib/types";
 
 export const runtime = "nodejs";
 
@@ -73,9 +72,6 @@ export async function POST(req: NextRequest) {
     if (name.split(" ").length < 2 || name.length > 120) return fail("Escreva seu nome completo.");
     if (digits.length < 10 || digits.length > 11) return fail("Informe o WhatsApp com DDD.");
     if (body.consent !== true) return fail("É preciso concordar com a Política de Privacidade.");
-    const jobId = typeof body.jobId === "string" && /^[0-9a-f-]{36}$/i.test(body.jobId) ? body.jobId : null;
-    const { data: job } = jobId ? await db.from("jobs").select("id, title, category").eq("id", jobId).eq("status", "aberta").maybeSingle() : { data: null };
-
     const { data: found } = await db.from("candidates").select("id").in("whatsapp_digits", [digits, `55${digits}`]).order("created_at", { ascending: false }).limit(1);
     if (found?.length) {
       candidateId = found[0].id;
@@ -90,18 +86,15 @@ export async function POST(req: NextRequest) {
       createdNow = true;
     }
 
-    // Candidatura: a da vaga escolhida, a mais recente da pessoa ou uma nova
-    const { data: apps } = await db.from("applications").select("id, job_id, stage").eq("candidate_id", candidateId).order("created_at", { ascending: false });
-    let target = (job && apps?.find((a) => a.job_id === job.id)) || (!job ? apps?.[0] : undefined);
-    if (!target && job) {
-      const j = job as Pick<Job, "id" | "title" | "category">;
-      const { data } = await db
-        .from("applications")
-        .insert({ candidate_id: candidateId, job_id: j.id, job_title: j.title, pipeline: j.category, ai_status: "sem_ia" })
-        .select("id, job_id, stage")
-        .single();
-      target = data ?? undefined;
-    }
+    // Liga a entrevista ao card em aberto da pessoa (o mais recente), sem pedir a vaga de novo
+    const { data: apps } = await db
+      .from("applications")
+      .select("id, stage")
+      .eq("candidate_id", candidateId)
+      .eq("status", "em_processo")
+      .order("created_at", { ascending: false })
+      .limit(1);
+    const target = apps?.[0];
     applicationId = target?.id ?? null;
     stage = target?.stage ?? null;
 

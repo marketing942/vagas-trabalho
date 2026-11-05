@@ -1,5 +1,5 @@
 import type { Application } from "@/lib/types";
-import { isActive, stageDef } from "./constants";
+import { stageDef } from "./constants";
 
 /** Fuso de Caruaru (sem horário de verão). */
 export const TZ = "America/Recife";
@@ -54,8 +54,8 @@ export function aiScoreTone(score: number | null): string {
  * com o quanto a pessoa já avançou no funil. Não é uma probabilidade estatística:
  * serve para ordenar quem merece atenção primeiro.
  */
-export function hireChance(app: Pick<Application, "pipeline" | "stage" | "ai_score" | "interview_score">): number | null {
-  if (!isActive(app.stage)) return null;
+export function hireChance(app: Pick<Application, "pipeline" | "stage" | "status" | "ai_score" | "interview_score">): number | null {
+  if (app.status !== "em_processo") return null;
   const ai = app.ai_score != null ? app.ai_score / 100 : null;
   const interview = app.interview_score != null && app.interview_score > 0 ? Number(app.interview_score) / 10 : null;
   let quality = 0.5; // sem nenhuma avaliação ainda

@@ -3,7 +3,6 @@ import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/ThemeToggle";
 import BookingClient from "@/components/agenda/BookingClient";
 import { getSettings } from "@/lib/settings";
-import { getOpenJobs } from "@/lib/jobs";
 import { availableDays } from "@/lib/rh/agenda";
 import { bookingContext } from "@/lib/rh/booking";
 import { createServiceClient, HAS_SERVICE_ROLE } from "@/lib/supabase/service";
@@ -20,7 +19,6 @@ export const metadata: Metadata = {
 export default async function AgendaPage({ searchParams }: { searchParams: Promise<{ c?: string }> }) {
   const [settings, params] = await Promise.all([getSettings(), searchParams]);
   const ctx = HAS_SERVICE_ROLE ? await bookingContext(createServiceClient(), params.c) : null;
-  const jobs = ctx && !params.c ? await getOpenJobs() : [];
 
   return (
     <>
@@ -43,7 +41,7 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
               {ctx?.firstName ? `${ctx.firstName}, escolha o seu horário` : "Agende a sua entrevista"}
             </h1>
             <p className="mt-3 max-w-2xl text-lg text-brand-100">
-              {ctx?.app ? `Processo seletivo: ${ctx.app.job_title}.` : "Escolha o dia e o horário que ficam melhores para você."}
+              {ctx?.app ? `Processo seletivo: ${ctx.app.jobs.join(", ")}.` : "Escolha o dia e o horário que ficam melhores para você."}
             </p>
           </div>
         </div>
@@ -60,7 +58,6 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
               location={ctx.cfg.location}
               instructions={ctx.cfg.instructions}
               mapsUrl={settings.maps_url}
-              jobs={jobs.map((j) => ({ id: j.id, title: j.title }))}
             />
           )}
         </div>
