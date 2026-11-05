@@ -203,8 +203,8 @@ Crie um arquivo `.env.local` (use `.env.example` como base):
 ### Como ligar (uma vez)
 
 1. Rode no SQL Editor do Supabase, nessa ordem, `supabase/migrations/0010_rh.sql`,
-   `0011_rh_status_vagas_roteiro.sql`, `0012_rh_mensagens_copiloto.sql` e
-   `0013_rh_cultura_eliminatorias.sql`.
+   `0011_rh_status_vagas_roteiro.sql`, `0012_rh_mensagens_copiloto.sql`,
+   `0013_rh_cultura_eliminatorias.sql` e `0014_rh_lgpd_retencao.sql`.
 2. Na Vercel → **Settings → Environment Variables**, adicione:
    - `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project Settings → API → `service_role`);
    - `DEEPSEEK_API_KEY` (opcional, para o scorecard de IA; crie em platform.deepseek.com → API keys e coloque saldo).
@@ -352,6 +352,19 @@ longo do tempo, por vaga, por etapa e por origem, maiores scores da IA, maior
 **chance de contratação** (estimativa que combina a etapa atual, o score da IA e
 a nota da entrevista) e próximas entrevistas. Filtros por funil e período.
 
+### Relatórios (`/admin/relatorios`)
+
+Filtros por funil e período (90 dias, 6 meses, 12 meses ou tudo).
+
+- **Tempo até contratar** (média e mediana, da candidatura ao "Contratado").
+- **Tempo médio em cada etapa**, calculado pelo histórico do card, com o prazo
+  de cada etapa marcado; em laranja, as etapas que passam do prazo.
+- **Origem dos contratados**: candidaturas, entrevistas, contratações e taxa de
+  contratação por canal ("como encontrou a vaga").
+- **Taxa e prazo da devolutiva** para quem foi reprovado.
+- **Conversão por vaga**.
+- As tabelas baixam em CSV (abre no Excel).
+
 ### Dados pessoais (LGPD)
 
 Os dados ficam no Supabase, acessíveis só para quem tem login no admin. Os
@@ -359,6 +372,18 @@ currículos ficam em bucket privado e abrem por links temporários. "Excluir" na
 ficha apaga a pessoa, as candidaturas, o histórico, as entrevistas e o currículo.
 A Política de Privacidade (`/privacidade`) descreve a coleta, o uso de IA e o
 prazo de guarda (até 2 anos após o último envio).
+
+**Rotina de prazo de guarda** (`/admin/configuracoes/lgpd`, também avisada no
+painel de pendências):
+
+- escolha o prazo (padrão 24 meses, como na Política de Privacidade);
+- a lista mostra quem passou do prazo **sem processo em aberto e sem ter sido
+  contratado**, pela última movimentação (cadastro, card ou resultado);
+- **Anonimizar** apaga nome, contato, rede social, idade, cidade, texto sobre a
+  pessoa, currículo, anotações e respostas, e mantém vagas, etapas, resultado,
+  motivo, notas, origem e datas (os relatórios continuam certos);
+- **Excluir** apaga tudo, como o botão da ficha;
+- nada é apagado sozinho: a equipe revisa e confirma.
 
 ---
 
