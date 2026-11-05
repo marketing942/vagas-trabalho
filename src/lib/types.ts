@@ -121,10 +121,27 @@ export interface InterviewScript {
   sections: { title: string; questions: InterviewQuestion[] }[];
 }
 
+/** Modelo de mensagem (WhatsApp) com variáveis como {primeiro_nome}. */
+export interface MessageTemplate {
+  key: string;
+  label: string;
+  text: string;
+}
+
+/** Análise da entrevista feita pela IA (copiloto): só sugestão, a equipe decide. */
+export interface InterviewAi {
+  resumo: string;
+  notas: Record<"score_fit" | "score_proatividade" | "score_comunicacao" | "score_resiliencia" | "score_tecnica", { nota: number | null; evidencia: string }>;
+  pontos_confirmar: string[];
+  model: string;
+  created_at: string;
+}
+
 /** Configurações privadas do RH (tabela rh_settings, só o admin lê). */
 export interface RhSettings {
   rejection_reasons: string[];
   interview_script: InterviewScript;
+  message_templates: MessageTemplate[];
 }
 
 export type AiStatus = "pendente" | "avaliando" | "concluida" | "erro" | "sem_ia";
@@ -183,6 +200,9 @@ export interface Application {
   /** Todas as vagas do card (a primeira é a principal: job_id / job_title) */
   jobs: JobRef[];
   interview_answers: InterviewScript | null;
+  /** Quando a devolutiva foi enviada a quem foi reprovado */
+  feedback_sent_at: string | null;
+  interview_ai: InterviewAi | null;
   rejection_reason: string | null;
   ai_status: AiStatus;
   ai_score: number | null;

@@ -1,4 +1,4 @@
-import type { AgendaConfig, Application, AppStatus, InterviewScript, JobRef, Pipeline, Stage } from "@/lib/types";
+import type { AgendaConfig, Application, AppStatus, InterviewScript, JobRef, MessageTemplate, Pipeline, Stage } from "@/lib/types";
 
 /* ---------------------------------------------------------------
  * Perguntas do formulário (as mesmas do formulário do Notion)
@@ -94,6 +94,28 @@ export function stageDef(pipeline: Pipeline, stage: string): StageDef {
 
 export const stageLabel = (pipeline: Pipeline, stage: string) => stageDef(pipeline, stage).label;
 
+/**
+ * Prazo (em dias) para a pessoa sair de cada etapa. Passou disso, o card ganha o selo
+ * "atrasado" e entra nas pendências. Sem prazo = etapa de espera (ex.: banco do próximo ano).
+ * "Entrevista agendada" não tem prazo fixo: a pendência é a entrevista que já passou sem resultado.
+ */
+export const STAGE_SLA_DAYS: Partial<Record<Stage, number>> = {
+  novo: 1,
+  visto: 2,
+  avaliado_ia: 3,
+  convite: 4,
+  entrevistado: 3,
+  onboarding: 10,
+  treinamento: 21,
+};
+
+/** Dias na etapa e se passou do prazo. */
+export function stageDelay(app: Pick<Application, "stage" | "stage_changed_at">, now: number) {
+  const days = Math.floor((now - new Date(app.stage_changed_at).getTime()) / 86_400_000);
+  const sla = STAGE_SLA_DAYS[app.stage];
+  return { days, sla: sla ?? null, late: sla != null && days > sla };
+}
+
 /** Resultado da candidatura: fica fora das etapas, como "ganho" e "perdido" num CRM. */
 export const STATUS: Record<AppStatus, { label: string; tone: string; dot: string }> = {
   em_processo: { label: "Em processo", tone: "bg-brand-50 text-brand-700 ring-brand-100", dot: "bg-brand-400" },
@@ -124,6 +146,45 @@ export const DEFAULT_REJECTION_REASONS = [
   "No treinamento",
   "Pertence ao outro funil",
   "Outro motivo",
+];
+
+/** Modelos de mensagem padrão (o RH edita em Configurações → RH). */
+export const DEFAULT_MESSAGE_TEMPLATES: MessageTemplate[] = [
+  {
+    key: "convite",
+    label: "Convite para entrevista",
+    text: "Olá, {primeiro_nome}! Aqui é do RH do CPPEM. Gostamos do seu perfil para {vagas} e queremos conhecer você. Escolha o melhor dia e horário para a sua entrevista neste link: {link_agenda}",
+  },
+  {
+    key: "lembrete",
+    label: "Lembrete da entrevista",
+    text: "Oi, {primeiro_nome}! Passando para lembrar da sua entrevista no CPPEM: {data_entrevista}, em {local}. Chegue com 10 minutos de antecedência. Qualquer imprevisto, é só responder aqui.",
+  },
+  {
+    key: "aprovado",
+    label: "Aprovação",
+    text: "Parabéns, {primeiro_nome}! Você foi aprovado(a) no processo seletivo do CPPEM para {vagas}. Vamos combinar os próximos passos por aqui.",
+  },
+  {
+    key: "devolutiva",
+    label: "Devolutiva (não seguiu no processo)",
+    text: "Olá, {primeiro_nome}! Obrigado por participar do processo seletivo do CPPEM para {vagas}. Neste momento seguimos com outros perfis, mas gostamos de conhecer você e seu cadastro continua no nosso banco de talentos para próximas oportunidades. Desejamos muito sucesso!",
+  },
+  {
+    key: "devolutiva_entrevista",
+    label: "Devolutiva após entrevista",
+    text: "Olá, {primeiro_nome}! Obrigado pelo seu tempo na entrevista para {vagas}. Depois de avaliar com cuidado, decidimos seguir com outro perfil desta vez. Foi muito bom conhecer você e vamos lembrar do seu nome nas próximas vagas. Sucesso!",
+  },
+];
+
+/** Variáveis aceitas nos modelos de mensagem. */
+export const MESSAGE_VARS: { key: string; hint: string }[] = [
+  { key: "primeiro_nome", hint: "Ana" },
+  { key: "nome", hint: "Ana Paula Souza" },
+  { key: "vagas", hint: "a vaga Vendedor Interno" },
+  { key: "link_agenda", hint: "link pessoal de agendamento" },
+  { key: "data_entrevista", hint: "quinta-feira, 12 de novembro, às 14:00" },
+  { key: "local", hint: "endereço da entrevista" },
 ];
 
 /** Roteiro de entrevista padrão do CPPEM (o RH edita em Configurações). */

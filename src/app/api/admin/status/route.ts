@@ -10,7 +10,7 @@ export async function GET() {
   // 0010 (tabelas do RH) e 0011 (resultado, várias vagas, roteiro e motivos)
   const [{ error }, { error: e11 }] = await Promise.all([
     db.from("applications").select("id, status, jobs", { head: true, count: "exact" }).limit(1),
-    db.from("rh_settings").select("id").limit(1),
+    db.from("rh_settings").select("id, message_templates").limit(1),
   ]);
   return NextResponse.json({ serviceRole: HAS_SERVICE_ROLE, ai: HAS_AI, aiModel: AI_MODEL, migration: !error && !e11 });
 }
