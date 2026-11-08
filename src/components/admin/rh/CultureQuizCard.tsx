@@ -27,21 +27,21 @@ export default function CultureQuizCard({
         </div>
         {r && (
           <span className="text-right">
-            <span className="block text-3xl font-black tabular-nums text-brand-950">{r.score}</span>
+            <span className="block text-3xl font-bold tabular-nums text-brand-950">{r.score}</span>
             <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${cultureBand(r.score).tone}`}>{cultureBand(r.score).label}</span>
           </span>
         )}
       </div>
 
       {!r ? (
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-brand-50/60 p-3">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-brand-50/60 p-3">
           <p className="text-sm text-brand-600">Ainda não respondeu. O link é pessoal e leva uns 5 minutos.</p>
           {app.status === "em_processo" && (
             <span className="flex gap-2">
-              <button type="button" onClick={onSend} className="rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
+              <button type="button" onClick={onSend} className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
                 Enviar pelo WhatsApp
               </button>
-              <button type="button" onClick={onCopy} className="rounded-xl border border-brand-200 bg-white px-3 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50">
+              <button type="button" onClick={onCopy} className="rounded-lg border border-brand-200 bg-white px-3 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50">
                 Copiar link
               </button>
             </span>
@@ -71,7 +71,7 @@ export default function CultureQuizCard({
             <summary className="cursor-pointer text-[13px] font-medium text-brand-500 hover:text-brand-900">Ver as respostas</summary>
             <ol className="mt-2 space-y-2.5">
               {CULTURE_QUIZ.map((q, i) => (
-                <li key={q.id} className="rounded-xl border border-brand-100 p-3">
+                <li key={q.id} className="rounded-lg border border-stone-200 p-3">
                   <p className="text-xs text-brand-500">
                     {i + 1}. {q.situation}
                   </p>

@@ -63,7 +63,7 @@ export default function ScheduleDialog({
       aria-labelledby="agendar-titulo"
       onKeyDown={(e) => e.key === "Escape" && onClose()}
     >
-      <div className="w-full max-w-md rounded-[22px] bg-white p-6 shadow-xl">
+      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
         <h2 id="agendar-titulo" className="text-lg font-bold text-brand-950">
           Agendar entrevista
         </h2>
@@ -92,10 +92,10 @@ export default function ScheduleDialog({
         </div>
         {msg && <p className="mt-3 text-sm text-rose-700">{msg}</p>}
         <div className="mt-6 flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-xl border border-brand-200 px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50">
+          <button type="button" onClick={onClose} className="rounded-lg border border-brand-200 px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50">
             Cancelar
           </button>
-          <button type="button" disabled={busy} onClick={save} className="rounded-xl bg-brand-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
+          <button type="button" disabled={busy} onClick={save} className="rounded-lg bg-brand-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
             {busy ? "Marcando..." : "Confirmar entrevista"}
           </button>
         </div>

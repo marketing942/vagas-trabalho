@@ -60,7 +60,7 @@ export default function EditCandidateDialog({
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-brand-950/50 p-4" role="dialog" aria-modal="true" aria-labelledby="edit-title" onKeyDown={(e) => e.key === "Escape" && onClose()}>
-      <form onSubmit={save} className="w-full max-w-xl space-y-4 rounded-2xl bg-white p-6 shadow-xl">
+      <form onSubmit={save} className="w-full max-w-xl space-y-4 rounded-lg bg-white p-6 shadow-xl">
         <h2 id="edit-title" className="text-lg font-bold text-brand-950">
           Editar dados
         </h2>

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
-import Icon from "@/components/Icon";
+import FunnelChart from "@/components/admin/rh/FunnelChart";
 import {
   KpiCard,
   Panel,
@@ -94,6 +94,7 @@ export default function RelatoriosPage() {
   const [funil, setFunil] = useState<Funil>("todos");
   const [periodo, setPeriodo] = useState<Periodo>("180");
   const [now] = useState(() => Date.now());
+  const [vaga, setVaga] = useState("");
 
   useEffect(() => {
     const db = createClient();
@@ -248,6 +249,7 @@ export default function RelatoriosPage() {
       .sort((a, b) => b.apps - a.apps);
 
     return {
+      inPeriod,
       total: inPeriod.length,
       stageTimes,
       toHireAvg: avg(toHire),
@@ -262,6 +264,21 @@ export default function RelatoriosPage() {
       bestSource: sources.find((s) => s.hires > 0) ?? null,
     };
   }, [apps, events, funil, periodo, now]);
+
+  // Funil de recrutamento (filtro próprio por vaga)
+  const funnel = useMemo(() => {
+    if (!r) return null;
+    const vagas = [...new Set(r.inPeriod.flatMap((a) => jobTitles(a)))].sort((x, y) => x.localeCompare(y, "pt-BR"));
+    const list = vaga ? r.inPeriod.filter((a) => jobTitles(a).includes(vaga)) : r.inPeriod;
+    return {
+      vagas,
+      apps: list.length,
+      interviews: list.filter(interviewed).length,
+      hires: list.filter(hired).length,
+      open: list.filter((a) => a.status === "em_processo").length,
+      rejected: list.filter((a) => a.status === "reprovado").length,
+    };
+  }, [r, vaga]);
 
   const periodLabel = {
     "90": "últimos 90 dias",
@@ -302,7 +319,7 @@ export default function RelatoriosPage() {
       }
     >
       {error && (
-        <p className="mb-4 rounded-2xl bg-rose-50 p-3 text-sm text-rose-700">
+        <p className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">
           {error}
         </p>
       )}
@@ -312,7 +329,6 @@ export default function RelatoriosPage() {
         <div className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <KpiCard
-              icon={<Icon name="clock" />}
               label="Tempo até contratar"
               value={
                 r.toHireAvg == null ? "–" : `${Math.round(r.toHireAvg)} dias`
@@ -322,10 +338,8 @@ export default function RelatoriosPage() {
                   ? "sem contratações no período"
                   : `mediana ${Math.round(r.toHireMedian)} dias · ${r.hires} contratação(ões)`
               }
-              tone="brand"
             />
             <KpiCard
-              icon={<Icon name="star" />}
               label="Melhor origem"
               value={r.bestSource?.name ?? "–"}
               hint={
@@ -333,21 +347,14 @@ export default function RelatoriosPage() {
                   ? `${r.bestSource.hires} contratação(ões)`
                   : "sem contratações no período"
               }
-              tone="gold"
             />
             <KpiCard
-              icon={<Icon name="chat" />}
               label="Taxa de devolutiva"
               value={r.feedbackRate == null ? "–" : `${r.feedbackRate}%`}
               hint={`${r.feedback} de ${r.rejected} reprovados`}
-              tone={
-                r.feedbackRate != null && r.feedbackRate < 80
-                  ? "violet"
-                  : "green"
-              }
+              warn={r.feedbackRate != null && r.feedbackRate < 80}
             />
             <KpiCard
-              icon={<Icon name="flag" />}
               label="Prazo da devolutiva"
               value={
                 r.feedbackDelay == null
@@ -355,9 +362,38 @@ export default function RelatoriosPage() {
                   : `${NF1.format(r.feedbackDelay)} dias`
               }
               hint="em média, depois de reprovar"
-              tone="brand"
             />
           </div>
+
+          {funnel && (
+            <Panel
+              title="Funil de recrutamento"
+              subtitle={`candidaturas recebidas no período${vaga ? ` para ${vaga}` : ""}, e até onde chegaram`}
+              action={
+                <select aria-label="Filtrar o funil por vaga" className="input !w-auto max-w-full !py-1.5 text-[13px]" value={vaga} onChange={(e) => setVaga(e.target.value)}>
+                  <option value="">Todas as vagas</option>
+                  {/* mantém a vaga escolhida mesmo se sair do período */}
+                  {vaga && !funnel.vagas.includes(vaga) && <option value={vaga}>{vaga}</option>}
+                  {funnel.vagas.map((v) => (
+                    <option key={v} value={v}>
+                      {v}
+                    </option>
+                  ))}
+                </select>
+              }
+            >
+              <FunnelChart
+                steps={[
+                  { label: "Candidaturas", value: funnel.apps },
+                  { label: "Entrevistas", value: funnel.interviews, conversionLabel: "das candidaturas chegaram à entrevista" },
+                  { label: "Contratados", value: funnel.hires, conversionLabel: "das entrevistas viraram contratação" },
+                ]}
+              />
+              <p className="mt-4 border-t border-stone-100 pt-3 text-xs text-stone-500">
+                Das {funnel.apps} candidaturas: {funnel.open} ainda em processo · {funnel.rejected} reprovada(s). Contratados inclui quem foi desligado depois.
+              </p>
+            </Panel>
+          )}
 
           <Panel
             title="Tempo médio em cada etapa"

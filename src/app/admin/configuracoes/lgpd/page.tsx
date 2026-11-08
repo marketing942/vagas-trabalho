@@ -108,12 +108,12 @@ export default function LgpdPage() {
         ← Configurações gerais
       </Link>
       {!ready && (
-        <p className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+        <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
           Rode a migração <code>0014_rh_lgpd_retencao.sql</code> no Supabase para usar esta página.
         </p>
       )}
       {msg && (
-        <p role="status" className="mb-4 rounded-2xl bg-brand-900 px-4 py-2.5 text-sm font-semibold text-white">
+        <p role="status" className="mb-4 rounded-lg bg-brand-900 px-4 py-2.5 text-sm font-semibold text-white">
           {msg}
         </p>
       )}
@@ -130,7 +130,7 @@ export default function LgpdPage() {
                 </option>
               ))}
             </select>
-            <button type="button" disabled={months === savedMonths} onClick={saveMonths} className="shrink-0 rounded-xl bg-brand-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+            <button type="button" disabled={months === savedMonths} onClick={saveMonths} className="shrink-0 rounded-lg bg-brand-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
               Salvar
             </button>
           </div>
@@ -156,14 +156,14 @@ export default function LgpdPage() {
           action={
             rows && rows.length > 0 ? (
               <div className="flex gap-2">
-                <button type="button" disabled={!selected.size || busy} onClick={anonymize} className="rounded-xl bg-brand-900 px-3.5 py-2 text-sm font-semibold text-white disabled:opacity-50">
+                <button type="button" disabled={!selected.size || busy} onClick={anonymize} className="rounded-lg bg-brand-900 px-3.5 py-2 text-sm font-semibold text-white disabled:opacity-50">
                   Anonimizar ({selected.size})
                 </button>
                 <button
                   type="button"
                   disabled={!selected.size || busy}
                   onClick={remove}
-                  className="rounded-xl border border-rose-200 px-3.5 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-50"
+                  className="rounded-lg border border-rose-200 px-3.5 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-50"
                 >
                   Excluir ({selected.size})
                 </button>
@@ -174,7 +174,7 @@ export default function LgpdPage() {
           {!rows ? (
             <p className="text-sm text-brand-500">Carregando...</p>
           ) : rows.length === 0 ? (
-            <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">✓ Ninguém passou do prazo de guarda.</p>
+            <p className="rounded-lg bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">✓ Ninguém passou do prazo de guarda.</p>
           ) : (
             <div className="-mx-2 overflow-x-auto">
               <table className="w-full min-w-[560px] text-left text-sm">

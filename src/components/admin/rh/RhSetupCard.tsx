@@ -51,7 +51,7 @@ export default function RhSetupCard({
         continuam indo para o formulário do Notion.
       </p>
 
-      <ul className="space-y-2 rounded-xl bg-brand-50 p-4 text-sm">
+      <ul className="space-y-2 rounded-lg bg-brand-50 p-4 text-sm">
         {!status ? (
           <li className="text-brand-500">Conferindo a configuração do servidor...</li>
         ) : (

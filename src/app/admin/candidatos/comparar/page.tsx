@@ -39,7 +39,7 @@ function MetricRow({ label, values, max, fmt = (v) => String(v) }: { label: stri
               <span className="h-1.5 w-full max-w-[120px] overflow-hidden rounded-full bg-brand-100" aria-hidden>
                 <span className={`block h-full rounded-full ${v === best && best > 0 ? "bg-emerald-500" : "bg-brand-400"}`} style={{ width: `${(v / max) * 100}%` }} />
               </span>
-              <span className={`text-sm tabular-nums ${v === best && best > 0 ? "font-black text-emerald-700" : "font-semibold text-brand-900"}`}>{fmt(v)}</span>
+              <span className={`text-sm tabular-nums ${v === best && best > 0 ? "font-bold text-emerald-700" : "font-semibold text-brand-900"}`}>{fmt(v)}</span>
             </span>
           )}
         </td>
@@ -207,19 +207,19 @@ function Comparar() {
             type="button"
             disabled={busy}
             onClick={askAi}
-            className="rounded-xl border border-sky-200 bg-sky-50 px-3.5 py-2 text-sm font-semibold text-sky-800 hover:bg-sky-100 disabled:opacity-60"
+            className="rounded-lg border border-sky-200 bg-sky-50 px-3.5 py-2 text-sm font-semibold text-sky-800 hover:bg-sky-100 disabled:opacity-60"
           >
             {busy ? "Comparando..." : ai ? "Comparar de novo" : "Comparar com IA"}
           </button>
         </div>
-        {error && <p className="mt-3 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
+        {error && <p className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
         {ai && (
           <div className="mt-4 space-y-4">
             <p className="text-sm leading-relaxed text-brand-800">{ai.resumo}</p>
             <ol className="space-y-2">
               {ai.ordem.map((o, i) => (
-                <li key={o.id} className="flex gap-3 rounded-2xl border border-brand-100 p-3">
-                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-900 text-sm font-black text-white">{i + 1}</span>
+                <li key={o.id} className="flex gap-3 rounded-lg border border-stone-200 p-3">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-900 text-sm font-bold text-white">{i + 1}</span>
                   <span>
                     <span className="block font-semibold text-brand-950">{name(o.id)}</span>
                     <span className="block text-sm text-brand-700">{o.motivo}</span>

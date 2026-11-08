@@ -51,7 +51,7 @@ export default function RichTextEditor({
 
   return (
     <div className="rounded-lg border border-brand-200 bg-white focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-200">
-      <div className="flex flex-wrap items-center gap-1 border-b border-brand-100 p-2">
+      <div className="flex flex-wrap items-center gap-1 border-b border-stone-200 p-2">
         <button
           type="button"
           onClick={() => exec("bold")}

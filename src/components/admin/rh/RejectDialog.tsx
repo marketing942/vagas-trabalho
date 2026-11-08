@@ -31,7 +31,7 @@ export default function RejectDialog({
       aria-labelledby="rej-title"
       onKeyDown={(e) => e.key === "Escape" && onCancel()}
     >
-      <div className="w-full max-w-md rounded-[22px] bg-white p-6 shadow-xl">
+      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
         <h2 id="rej-title" className="text-lg font-bold text-brand-950">
           {title ?? `Reprovar ${name}`}
         </h2>
@@ -45,7 +45,7 @@ export default function RejectDialog({
               {reasons.map((r) => (
                 <label
                   key={r}
-                  className={`flex cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-2 text-sm ${reason === r ? "border-rose-300 bg-rose-50 font-semibold text-rose-900" : "border-brand-100 text-brand-800 hover:bg-brand-50"}`}
+                  className={`flex cursor-pointer items-center gap-2.5 rounded-lg border px-3 py-2 text-sm ${reason === r ? "border-rose-300 bg-rose-50 font-semibold text-rose-900" : "border-stone-200 text-brand-800 hover:bg-brand-50"}`}
                 >
                   <input type="radio" name="motivo" value={r} checked={reason === r} onChange={() => setReason(r)} className="accent-rose-600" />
                   {r}
@@ -56,14 +56,14 @@ export default function RejectDialog({
         </fieldset>
         <p className="mt-3 text-xs text-brand-500">A lista de motivos é editada em Configurações → RH.</p>
         <div className="mt-6 flex justify-end gap-2">
-          <button type="button" onClick={onCancel} className="rounded-xl border border-brand-200 px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50">
+          <button type="button" onClick={onCancel} className="rounded-lg border border-brand-200 px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50">
             Cancelar
           </button>
           <button
             type="button"
             disabled={!reason}
             onClick={() => onConfirm(reason)}
-            className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Reprovar
           </button>

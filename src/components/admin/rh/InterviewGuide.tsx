@@ -50,7 +50,7 @@ export default function InterviewGuide({
     }
   }
 
-  const input = "w-full rounded-lg border border-transparent bg-transparent px-2 py-1 outline-none hover:border-brand-100 focus:border-accent-500 focus:bg-white";
+  const input = "w-full rounded-lg border border-transparent bg-transparent px-2 py-1 outline-none hover:border-stone-200 focus:border-accent-500 focus:bg-white";
 
   return (
     <section className="card p-5" aria-labelledby="roteiro">
@@ -74,7 +74,7 @@ export default function InterviewGuide({
       <div className="mt-4 space-y-6">
         {draft.sections.map((sec, si) => (
           <div key={si}>
-            <div className="flex items-center gap-2 border-b border-brand-100 pb-1.5">
+            <div className="flex items-center gap-2 border-b border-stone-200 pb-1.5">
               <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-900 text-xs font-bold text-white">{si + 1}</span>
               <input
                 aria-label={`Título da parte ${si + 1}`}
@@ -92,7 +92,7 @@ export default function InterviewGuide({
             </div>
             <ol className="mt-3 space-y-4">
               {sec.questions.map((q, qi) => (
-                <li key={qi} className="group rounded-2xl border border-brand-100 bg-brand-50/40 p-3">
+                <li key={qi} className="group rounded-lg border border-stone-200 bg-brand-50/40 p-3">
                   <div className="flex items-start gap-2">
                     <span className="mt-1.5 w-6 shrink-0 text-xs font-bold tabular-nums text-brand-400">
                       {si + 1}.{qi + 1}
@@ -144,11 +144,11 @@ export default function InterviewGuide({
         ))}
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-brand-100 pt-4">
+      <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-stone-200 pt-4">
         <button
           type="button"
           onClick={() => update((d) => void d.sections.push({ title: "Outras perguntas", questions: [{ q: "", hint: "", answer: "" }] }))}
-          className="rounded-xl border border-brand-200 px-3 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50"
+          className="rounded-lg border border-brand-200 px-3 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50"
         >
           + Nova parte
         </button>
@@ -156,7 +156,7 @@ export default function InterviewGuide({
           <button
             type="button"
             onClick={() => update((d) => void d.sections.push({ title: "Sugeridas pela IA", questions: aiQuestions.map((q) => ({ q, hint: "Sugestão da IA para este perfil", answer: "" })) }))}
-            className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-800 hover:bg-sky-100"
+            className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-800 hover:bg-sky-100"
           >
             + Perguntas sugeridas pela IA ({aiQuestions.length})
           </button>
@@ -164,14 +164,14 @@ export default function InterviewGuide({
         <button
           type="button"
           onClick={() => confirm("Voltar ao roteiro padrão? As perguntas e respostas desta pessoa serão apagadas (só depois de salvar).") && (setDraft(fresh(standard)), setDirty(true), setSaved(false))}
-          className="rounded-xl px-3 py-2 text-sm font-semibold text-brand-500 hover:bg-brand-50"
+          className="rounded-lg px-3 py-2 text-sm font-semibold text-brand-500 hover:bg-brand-50"
         >
           Restaurar roteiro padrão
         </button>
         <span className="ml-auto text-sm text-brand-500" aria-live="polite">
           {dirty ? "Alterações não salvas" : saved ? "Roteiro salvo ✓" : ""}
         </span>
-        <button type="button" disabled={!dirty || saving} onClick={save} className="rounded-xl bg-brand-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+        <button type="button" disabled={!dirty || saving} onClick={save} className="rounded-lg bg-brand-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
           {saving ? "Salvando..." : "Salvar roteiro"}
         </button>
       </div>

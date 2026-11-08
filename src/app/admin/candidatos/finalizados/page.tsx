@@ -198,20 +198,20 @@ export default function FinalizadosPage() {
         <p className="text-brand-500">Carregando...</p>
       ) : (
         <div className="space-y-5">
-          {error && <p className="rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
+          {error && <p className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
           {flash && (
-            <p role="status" className="rounded-2xl bg-brand-900 px-4 py-2.5 text-sm font-semibold text-white">
+            <p role="status" className="rounded-lg bg-brand-900 px-4 py-2.5 text-sm font-semibold text-white">
               {flash}
             </p>
           )}
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-            <KpiCard icon={<Icon name="check" />} label="Contratados" value={NF.format(stats.hired)} hint="ativos" tone="green" />
-            <KpiCard icon={<Icon name="close" />} label="Reprovados" value={NF.format(stats.rejected)} tone="brand" />
-            <KpiCard icon={<Icon name="flag" />} label="Desligados" value={NF.format(stats.fired)} hint="depois de contratados" tone="violet" />
-            <KpiCard icon={<Icon name="star" />} label="Taxa de contratação" value={stats.rate == null ? "–" : `${stats.rate}%`} hint="dos processos finalizados" tone="gold" />
-            <KpiCard icon={<Icon name="clock" />} label="Tempo até contratar" value={stats.days == null ? "–" : `${stats.days} dia${stats.days === 1 ? "" : "s"}`} hint="da candidatura à contratação" tone="brand" />
-            <KpiCard icon={<Icon name="users" />} label="Permanência" value={stats.retention == null ? "–" : `${stats.retention}%`} hint="dos contratados seguem na equipe" tone="green" />
+            <KpiCard label="Contratados" value={NF.format(stats.hired)} hint="ativos" />
+            <KpiCard label="Reprovados" value={NF.format(stats.rejected)} />
+            <KpiCard label="Desligados" value={NF.format(stats.fired)} hint="depois de contratados" />
+            <KpiCard label="Taxa de contratação" value={stats.rate == null ? "–" : `${stats.rate}%`} hint="dos processos finalizados" />
+            <KpiCard label="Tempo até contratar" value={stats.days == null ? "–" : `${stats.days} dia${stats.days === 1 ? "" : "s"}`} hint="da candidatura à contratação" />
+            <KpiCard label="Permanência" value={stats.retention == null ? "–" : `${stats.retention}%`} hint="dos contratados seguem na equipe" />
           </div>
 
           <div className="grid gap-5 lg:grid-cols-3">
@@ -227,7 +227,7 @@ export default function FinalizadosPage() {
           </div>
 
           {pendingFeedback.length > 0 && (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-[22px] border border-amber-200 bg-amber-50 px-5 py-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
               <p className="text-sm text-amber-900">
                 <strong>{pendingFeedback.length}</strong> reprovado{pendingFeedback.length === 1 ? "" : "s"} no período ainda sem devolutiva. Dar retorno é parte de uma boa
                 experiência do candidato.
@@ -238,7 +238,7 @@ export default function FinalizadosPage() {
                   setQi(0);
                   setQueue(pendingFeedback);
                 }}
-                className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
               >
                 Enviar devolutivas ({pendingFeedback.length})
               </button>
@@ -247,7 +247,7 @@ export default function FinalizadosPage() {
 
           <Panel title="Pessoas" subtitle={`${list.length} de ${scoped.length} no período`}>
             <div className="mb-4 flex flex-wrap items-center gap-2.5">
-              <div className="inline-flex flex-wrap rounded-full border border-brand-100 bg-brand-50/60 p-1" role="tablist" aria-label="Resultado">
+              <div className="inline-flex flex-wrap rounded-full border border-stone-200 bg-brand-50/60 p-1" role="tablist" aria-label="Resultado">
                 {tabs.map((t) => (
                   <button
                     key={t.key}

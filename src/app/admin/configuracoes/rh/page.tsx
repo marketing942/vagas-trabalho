@@ -94,7 +94,7 @@ export default function RhConfigPage() {
           <span className="text-sm text-brand-500" aria-live="polite">
             {dirty ? "Alterações não salvas" : msg}
           </span>
-          <button type="button" disabled={!dirty || saving || !reasons} onClick={save} className="rounded-xl bg-brand-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+          <button type="button" disabled={!dirty || saving || !reasons} onClick={save} className="rounded-lg bg-brand-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
             {saving ? "Salvando..." : "Salvar"}
           </button>
         </>
@@ -104,11 +104,11 @@ export default function RhConfigPage() {
         ← Configurações gerais
       </Link>
       {!ready && (
-        <p className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+        <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
           Rode a migração <code>0011_rh_status_vagas_roteiro.sql</code> no Supabase para poder salvar. Por enquanto aparecem os valores padrão.
         </p>
       )}
-      {msg && !dirty && msg.startsWith("Erro") && <p className="mb-4 rounded-2xl bg-rose-50 p-3 text-sm text-rose-700">{msg}</p>}
+      {msg && !dirty && msg.startsWith("Erro") && <p className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{msg}</p>}
       {!reasons || !script || !templates ? (
         <p className="text-brand-500">Carregando...</p>
       ) : (
@@ -116,7 +116,7 @@ export default function RhConfigPage() {
           <Panel title="Motivos de reprovação" subtitle="Ao reprovar, a equipe escolhe um destes. A ordem aqui é a ordem da lista.">
             <ul className="space-y-1.5">
               {reasons.map((r, i) => (
-                <li key={i} className="flex items-center gap-1 rounded-xl border border-brand-100 bg-white pl-1 pr-1">
+                <li key={i} className="flex items-center gap-1 rounded-lg border border-stone-200 bg-white pl-1 pr-1">
                   <input
                     aria-label={`Motivo ${i + 1}`}
                     value={r}
@@ -149,7 +149,7 @@ export default function RhConfigPage() {
                 onChange={(e) => setNewReason(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addReason())}
               />
-              <button type="button" onClick={addReason} className="shrink-0 rounded-xl border border-brand-200 px-3 text-sm font-semibold text-brand-800 hover:bg-brand-50">
+              <button type="button" onClick={addReason} className="shrink-0 rounded-lg border border-brand-200 px-3 text-sm font-semibold text-brand-800 hover:bg-brand-50">
                 Adicionar
               </button>
             </div>
@@ -176,7 +176,7 @@ export default function RhConfigPage() {
           >
             <div className="space-y-5">
               {script.sections.map((sec, si) => (
-                <div key={si} className="rounded-2xl border border-brand-100 bg-brand-50/40 p-3">
+                <div key={si} className="rounded-lg border border-stone-200 bg-brand-50/40 p-3">
                   <div className="flex items-center gap-1">
                     <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-900 text-xs font-bold text-white">{si + 1}</span>
                     <input
@@ -202,7 +202,7 @@ export default function RhConfigPage() {
                   </div>
                   <ol className="mt-2 space-y-1.5">
                     {sec.questions.map((q, qi) => (
-                      <li key={qi} className="flex items-start gap-1 rounded-xl bg-white p-1.5 ring-1 ring-brand-100">
+                      <li key={qi} className="flex items-start gap-1 rounded-lg bg-white p-1.5 ring-1 ring-brand-100">
                         <span className="w-8 shrink-0 pt-2 text-center text-xs font-bold tabular-nums text-brand-400">
                           {si + 1}.{qi + 1}
                         </span>
@@ -254,7 +254,7 @@ export default function RhConfigPage() {
             <button
               type="button"
               onClick={() => editScript((d) => void d.sections.push({ title: "Nova parte", questions: [{ q: "", hint: "" }] }))}
-              className="mt-4 rounded-xl border border-brand-200 px-3 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50"
+              className="mt-4 rounded-lg border border-brand-200 px-3 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50"
             >
               + Nova parte
             </button>
@@ -285,7 +285,7 @@ export default function RhConfigPage() {
             </p>
             <div className="grid gap-3 lg:grid-cols-2">
               {templates.map((t, i) => (
-                <div key={t.key} className="rounded-2xl border border-brand-100 bg-brand-50/40 p-3">
+                <div key={t.key} className="rounded-lg border border-stone-200 bg-brand-50/40 p-3">
                   <input
                     aria-label={`Nome do modelo ${i + 1}`}
                     value={t.label}

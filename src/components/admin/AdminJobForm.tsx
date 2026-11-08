@@ -464,7 +464,7 @@ export default function AdminJobForm({ job }: AdminJobFormProps) {
         </p>
         <ul className="space-y-2">
           {(form.screening_questions ?? []).map((q, i) => (
-            <li key={q.id} className="flex flex-wrap items-center gap-2 rounded-xl border border-brand-100 p-2">
+            <li key={q.id} className="flex flex-wrap items-center gap-2 rounded-lg border border-stone-200 p-2">
               <input
                 aria-label={`Pergunta eliminatória ${i + 1}`}
                 className="input min-w-0 flex-1 !py-2"

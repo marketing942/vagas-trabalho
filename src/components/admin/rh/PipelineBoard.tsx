@@ -332,7 +332,7 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
     <div>
       {/* Funil, busca e ordenação */}
       <div className="mb-3 flex flex-wrap items-center gap-2.5">
-        <div className="inline-flex rounded-full border border-brand-100 bg-white p-1 shadow-sm" role="tablist" aria-label="Funil">
+        <div className="inline-flex rounded-lg bg-stone-200/60 p-0.5" role="tablist" aria-label="Funil">
           {(Object.keys(PIPELINE_LABEL) as Pipeline[]).map((p) => (
             <button
               key={p}
@@ -344,7 +344,7 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
                 setF(EMPTY);
                 onPipeline(p);
               }}
-              className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${p === pipeline ? "bg-brand-900 text-white shadow" : "text-brand-600 hover:bg-brand-50"}`}
+              className={`rounded-md px-3.5 py-1.5 text-sm font-medium transition-colors ${p === pipeline ? "bg-white text-brand-950 shadow-[0_1px_2px_rgba(0,0,0,0.08)]" : "text-stone-600 hover:text-brand-950"}`}
             >
               {PIPELINE_LABEL[p]}
             </button>
@@ -369,7 +369,7 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
           aria-expanded={panel}
           aria-controls="painel-filtros"
           onClick={() => setPanel((v) => !v)}
-          className={`inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-colors ${panel || activeFilters.length ? "border-brand-900 bg-brand-900 text-white" : "border-brand-200 bg-white text-brand-800 hover:bg-brand-50"}`}
+          className={`inline-flex items-center gap-2 rounded-lg border px-3.5 py-2 text-sm font-semibold transition-colors ${panel || activeFilters.length ? "border-brand-900 bg-brand-900 text-white" : "border-brand-200 bg-white text-brand-800 hover:bg-brand-50"}`}
         >
           <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden>
             <path d="M3 5h18M6 12h12M10 19h4" />
@@ -391,7 +391,7 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
       </div>
 
       {panel && (
-        <div id="painel-filtros" className="mb-3 rounded-[22px] border border-brand-100 bg-white p-4 shadow-sm">
+        <div id="painel-filtros" className="mb-3 rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             {(Object.keys(OPTS) as (keyof Filters)[]).map((k) => (
               <label key={k} className="text-xs font-semibold text-brand-600">
@@ -447,7 +447,7 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
         </div>
       )}
 
-      {error && <p className="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
+      {error && <p className="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
       {toast && (
         <p role="status" className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full bg-brand-950 px-5 py-2.5 text-sm font-semibold text-white shadow-xl">
           {toast}
@@ -457,7 +457,7 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
       {loading ? (
         <div className="flex gap-4 overflow-hidden" aria-busy>
           {stages.slice(0, 5).map((s) => (
-            <div key={s.key} className="h-96 w-72 shrink-0 animate-pulse rounded-[22px] bg-white" />
+            <div key={s.key} className="h-96 w-72 shrink-0 animate-pulse rounded-xl bg-white" />
           ))}
         </div>
       ) : (
@@ -470,8 +470,8 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
                 key={s.key}
                 aria-label={s.label}
                 {...dropProps(s.key)}
-                className={`flex w-[19rem] shrink-0 flex-col rounded-[22px] border p-3 transition-colors ${
-                  over === s.key ? "border-accent-500 bg-accent-50" : s.side ? "border-brand-100 bg-brand-50/70" : "border-brand-100 bg-[#eef1f8]"
+                className={`flex w-[19rem] shrink-0 flex-col rounded-xl border p-3 transition-colors ${
+                  over === s.key ? "border-accent-500 bg-accent-50" : s.side ? "border-stone-200 bg-stone-100/60" : "border-stone-200 bg-stone-100"
                 }`}
               >
                 <header className="mb-3 flex items-center justify-between px-1">
@@ -479,7 +479,7 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
                     <span className={`h-2.5 w-2.5 rounded-full ${s.dot}`} aria-hidden />
                     {s.label}
                   </h2>
-                  <span className="rounded-full bg-white px-2 py-0.5 text-xs font-bold text-brand-700 shadow-sm">{items.length}</span>
+                  <span className="text-xs font-medium tabular-nums text-stone-500">{items.length}</span>
                 </header>
                 <ul className="space-y-2">
                   {items.slice(0, limit).map((a) => {
@@ -498,7 +498,7 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
                           setDragId(null);
                           setOver(null);
                         }}
-                        className={`group relative rounded-2xl border border-white bg-white p-3.5 shadow-[0_1px_2px_rgba(11,26,64,0.06)] transition-shadow hover:shadow-md ${dragId === a.id ? "opacity-50" : ""} ${compare.includes(a.id) ? "ring-2 ring-accent-400" : ""}`}
+                        className={`group relative rounded-lg border border-white bg-white p-3.5 shadow-[0_1px_2px_rgba(11,26,64,0.06)] transition-shadow hover:shadow-md ${dragId === a.id ? "opacity-50" : ""} ${compare.includes(a.id) ? "ring-2 ring-accent-400" : ""}`}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <button
@@ -573,7 +573,7 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
                           )}
                         </div>
                         {menuFor === a.id && (
-                          <ul role="menu" className="absolute right-2 top-10 z-20 w-60 rounded-2xl border border-brand-100 bg-white p-1.5 shadow-xl">
+                          <ul role="menu" className="absolute right-2 top-10 z-20 w-60 rounded-lg border border-stone-200 bg-white p-1.5 shadow-xl">
                             <li role="none" className="px-3 pb-1 pt-1.5 text-[11px] font-bold uppercase tracking-wide text-brand-400">
                               Mover para
                             </li>
@@ -621,7 +621,7 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
                   })}
                 </ul>
                 {items.length > limit && (
-                  <button type="button" onClick={() => setShown((m) => ({ ...m, [s.key]: limit + PAGE }))} className="mt-2 rounded-xl py-2 text-sm font-semibold text-brand-600 hover:bg-white">
+                  <button type="button" onClick={() => setShown((m) => ({ ...m, [s.key]: limit + PAGE }))} className="mt-2 rounded-lg py-2 text-sm font-semibold text-brand-600 hover:bg-white">
                     Mostrar mais ({items.length - limit})
                   </button>
                 )}
@@ -670,7 +670,7 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
             <div
               key={key}
               {...dropProps(key)}
-              className={`grid h-20 w-full max-w-xs place-items-center rounded-[22px] border-2 border-dashed text-base font-bold shadow-xl transition-colors ${base} ${over === key ? hover : ""}`}
+              className={`grid h-20 w-full max-w-xs place-items-center rounded-xl border-2 border-dashed text-base font-bold shadow-xl transition-colors ${base} ${over === key ? hover : ""}`}
             >
               {label}
             </div>
