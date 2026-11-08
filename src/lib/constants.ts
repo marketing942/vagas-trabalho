@@ -139,3 +139,6 @@ export const BRANDS: Brand[] = [
     ],
   },
 ];
+
+/** Nome do sistema interno de recrutamento (área administrativa). */
+export const SYSTEM_NAME = "RH CPPEM";

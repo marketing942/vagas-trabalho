@@ -28,10 +28,10 @@ export default function CandidatosPage() {
       subtitle="Quem está no processo seletivo. Contratados e reprovados ficam em Finalizados."
       actions={
         <>
-          <Link href="/admin/candidatos/finalizados" className="rounded-xl bg-brand-900 px-3.5 py-2 text-sm font-semibold text-white hover:bg-brand-800">
+          <Link href="/admin/candidatos/finalizados" className="rounded-lg bg-brand-900 px-3.5 py-2 text-sm font-semibold text-white hover:bg-brand-800">
             Finalizados (contratados e reprovados)
           </Link>
-          <Link href="/admin/candidatos/importar" className="rounded-xl border border-brand-200 px-3.5 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50">
+          <Link href="/admin/candidatos/importar" className="rounded-lg border border-brand-200 px-3.5 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50">
             Importar do Notion
           </Link>
         </>

@@ -39,7 +39,7 @@ export default function Timeline({ events, pipeline }: { events: ApplicationEven
       {events.length === 0 ? (
         <p className="mt-3 text-sm text-brand-500">Sem registros.</p>
       ) : (
-        <ol className="mt-4 space-y-4 border-l-2 border-brand-100 pl-4">
+        <ol className="mt-4 space-y-4 border-l-2 border-stone-200 pl-4">
           {events.map((e) => (
             <li key={e.id} className="relative">
               <span className="absolute -left-[23px] top-1.5 h-3 w-3 rounded-full border-2 border-white bg-brand-400" aria-hidden />

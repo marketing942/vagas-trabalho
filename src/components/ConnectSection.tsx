@@ -46,8 +46,8 @@ export default function ConnectSection({ whatsappUrl, linkedinUrl }: ConnectSect
           {linkedinUrl && (
             <div className="flex flex-col justify-between gap-6 rounded-3xl bg-gradient-to-br from-brand-800 to-brand-900 p-7 shadow-soft">
               <div className="flex items-start gap-4">
-                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white text-lg font-black text-[#122a5c]">
-                  in
+                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white text-[#0A66C2]">
+                  <SocialIcon name="linkedin" className="h-7 w-7" />
                 </span>
                 <div>
                   <h3 className="text-xl font-bold text-white">Conecte-se conosco no LinkedIn</h3>

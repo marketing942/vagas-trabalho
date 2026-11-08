@@ -54,26 +54,26 @@ export default function InterviewCopilot({
           disabled={busy || answered < 3}
           onClick={analyze}
           title={answered < 3 ? "Preencha e salve pelo menos 3 respostas do roteiro" : undefined}
-          className="rounded-xl border border-sky-200 bg-sky-50 px-3.5 py-2 text-sm font-semibold text-sky-800 hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-lg border border-sky-200 bg-sky-50 px-3.5 py-2 text-sm font-semibold text-sky-800 hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {busy ? "Analisando..." : a ? "Analisar de novo" : "Analisar entrevista com IA"}
         </button>
       </div>
 
-      {error && <p className="mt-3 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
+      {error && <p className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
       {!a ? (
-        <p className="mt-3 rounded-2xl bg-brand-50/60 p-3 text-sm text-brand-600">
+        <p className="mt-3 rounded-lg bg-brand-50/60 p-3 text-sm text-brand-600">
           {answered < 3 ? `Preencha e salve o roteiro (${answered} de pelo menos 3 respostas) para pedir a análise.` : "Pronto para analisar."}
         </p>
       ) : (
         <div className="mt-4 space-y-4">
           <p className="text-sm leading-relaxed text-brand-800">{a.resumo}</p>
-          <ul className="divide-y divide-brand-50 rounded-2xl border border-brand-100">
+          <ul className="divide-y divide-brand-50 rounded-lg border border-stone-200">
             {INTERVIEW_CRITERIA.map((c) => {
               const n = a.notas[c.key];
               return (
                 <li key={c.key} className="flex gap-3 p-3">
-                  <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl text-sm font-black tabular-nums ${n?.nota == null ? "bg-brand-50 text-brand-400" : "bg-sky-100 text-sky-900"}`}>
+                  <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg text-sm font-bold tabular-nums ${n?.nota == null ? "bg-brand-50 text-brand-400" : "bg-sky-100 text-sky-900"}`}>
                     {n?.nota ?? "–"}
                   </span>
                   <span className="min-w-0">
@@ -94,11 +94,11 @@ export default function InterviewCopilot({
               </ul>
             </div>
           )}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-brand-100 pt-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-stone-200 pt-3">
             <span className="text-xs text-brand-500">
               Sugestão da IA ({a.model}) em {formatDateTime(a.created_at)}
             </span>
-            <button type="button" onClick={apply} className="rounded-xl bg-brand-900 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-800">
+            <button type="button" onClick={apply} className="rounded-lg bg-brand-900 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-800">
               Usar notas sugeridas no scorecard
             </button>
           </div>

@@ -93,6 +93,48 @@ html[data-theme="dark"] {
   }
 }
 
+/* RH CPPEM (área administrativa): visual de ferramenta de trabalho, sóbrio.
+   Fundo neutro, linhas finas, cantos discretos e uma só família de letra. */
+.rh {
+  --c-canvas: 247 246 243;
+  --c-canvas2: 240 238 233;
+  --c-line: 231 229 228;
+  --c-line2: 214 211 209;
+  --c-inkmuted: 120 113 108;
+  background: rgb(247 246 243);
+}
+.rh h1,
+.rh h2,
+.rh h3,
+.rh h4 {
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+.rh .card {
+  border-radius: 0.75rem;
+  border-color: rgb(231 229 228);
+  box-shadow: none;
+}
+.rh .input {
+  border-radius: 0.5rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+.rh .input:focus {
+  border-color: #1e2f5e;
+  box-shadow: 0 0 0 3px rgba(30, 47, 94, 0.12);
+}
+.rh .btn {
+  border-radius: 0.5rem;
+}
+.rh a:focus-visible,
+.rh button:focus-visible,
+.rh select:focus-visible,
+.rh input:focus-visible,
+.rh textarea:focus-visible,
+.rh summary:focus-visible {
+  outline-color: #1e2f5e;
+}
+
 /* Acessibilidade: contorno visível ao navegar pelo teclado (não aparece ao clicar com o mouse) */
 a:focus-visible,
 button:focus-visible,

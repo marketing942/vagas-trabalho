@@ -266,7 +266,7 @@ export default function VagasPage() {
       ) : (
         <div className="card overflow-x-auto">
           <table className="w-full min-w-[840px] text-left text-sm">
-            <thead className="border-b border-brand-100 bg-brand-50 text-xs uppercase tracking-wide text-brand-500">
+            <thead className="border-b border-stone-200 bg-brand-50 text-xs uppercase tracking-wide text-brand-500">
               <tr>
                 <th className="px-4 py-3">Título</th>
                 <th className="px-4 py-3">Categoria</th>

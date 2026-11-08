@@ -198,7 +198,12 @@ Crie um arquivo `.env.local` (use `.env.example` como base):
 
 ---
 
-## 🧑‍💼 Sistema de RH
+## 🧑‍💼 Sistema de RH — RH CPPEM
+
+A área administrativa (`/admin`) se chama **RH CPPEM**. O nome fica em
+`SYSTEM_NAME` (`src/lib/constants.ts`) e aparece no menu, no login e na aba do
+navegador. O visual da área administrativa usa a classe `.rh` (em
+`src/app/globals.css`): fundo neutro, linhas finas e cantos discretos.
 
 ### Como ligar (uma vez)
 
@@ -355,6 +360,9 @@ a nota da entrevista) e próximas entrevistas. Filtros por funil e período.
 ### Relatórios (`/admin/relatorios`)
 
 Filtros por funil e período (90 dias, 6 meses, 12 meses ou tudo).
+
+- **Funil de recrutamento** em forma de funil: candidaturas → entrevistas →
+  contratados, com a % de cada passagem e a % do total. Tem filtro próprio por vaga.
 
 - **Tempo até contratar** (média e mediana, da candidatura ao "Contratado").
 - **Tempo médio em cada etapa**, calculado pelo histórico do card, com o prazo

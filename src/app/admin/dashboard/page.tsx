@@ -288,13 +288,13 @@ export default function DashboardPage() {
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-busy>
           {Array.from({ length: 6 }, (_, i) => (
-            <div key={i} className="h-[132px] animate-pulse rounded-[22px] bg-white" />
+            <div key={i} className="h-[132px] animate-pulse rounded-xl bg-white" />
           ))}
         </div>
       ) : (
         <div className="space-y-5">
           {!rhReady && (
-            <p className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+            <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
               Os dados de candidatos aparecem aqui depois que a migração 0010 for executada no Supabase.
             </p>
           )}
@@ -310,7 +310,6 @@ export default function DashboardPage() {
           {/* Indicadores */}
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
             <KpiCard
-              icon={<Icon name="users" />}
               label="Candidaturas"
               value={nf(view.total)}
               delta={view.delta}
@@ -318,21 +317,17 @@ export default function DashboardPage() {
               spark={view.trend.map((d) => d.value)}
             />
             <KpiCard
-              icon={<Icon name="briefcase" />}
               label="Vagas abertas"
               value={nf(view.openJobs)}
               hint={view.withoutCandidates ? `${view.withoutCandidates} sem candidatura no período` : "todas com candidaturas"}
-              tone="gold"
             />
-            <KpiCard icon={<Icon name="flag" />} label="Em processo" value={nf(view.active)} hint="agora, sem finalizados" tone="violet" />
-            <KpiCard icon={<Icon name="calendar" />} label="Entrevistas" value={nf(upcoming.length)} hint={`próximos 7 dias · ${today} hoje`} tone="violet" />
-            <KpiCard icon={<Icon name="check" />} label="Contratações" value={nf(view.hired)} delta={view.hiredDelta} hint="no período" tone="green" />
+            <KpiCard label="Em processo" value={nf(view.active)} hint="agora, sem finalizados" />
+            <KpiCard label="Entrevistas" value={nf(upcoming.length)} hint={`próximos 7 dias · ${today} hoje`} />
+            <KpiCard label="Contratações" value={nf(view.hired)} delta={view.hiredDelta} hint="no período" />
             <KpiCard
-              icon={<Icon name="spark" />}
               label="Score médio da IA"
               value={view.avgAi == null ? "–" : String(view.avgAi)}
               hint={`${nf(view.scoredCount)} avaliada${view.scoredCount === 1 ? "" : "s"}`}
-              tone="gold"
             />
           </div>
 
@@ -340,7 +335,7 @@ export default function DashboardPage() {
           <div className="grid gap-5 xl:grid-cols-3">
             <Panel title="Candidaturas recebidas" subtitle={periodLabel} className="xl:col-span-2">
               <div className="-mt-1 mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <p className="text-4xl font-extrabold tracking-tight text-brand-950 tabular-nums">{nf(view.total)}</p>
+                <p className="text-4xl font-semibold tracking-tight text-brand-950 tabular-nums">{nf(view.total)}</p>
                 <DeltaPill delta={view.delta} />
                 {view.delta != null && <span className="text-xs text-brand-500">vs. período anterior</span>}
               </div>
@@ -372,7 +367,7 @@ export default function DashboardPage() {
                     <li key={a.id}>
                       <Link
                         href={`/admin/candidatos/${a.candidate_id}?c=${a.id}`}
-                        className="flex h-full flex-col rounded-2xl border border-brand-100 bg-brand-50/40 p-4 transition-colors hover:border-brand-200 hover:bg-white"
+                        className="flex h-full flex-col rounded-lg border border-stone-200 bg-brand-50/40 p-4 transition-colors hover:border-brand-200 hover:bg-white"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <Avatar name={a.candidates?.full_name ?? "?"} size="lg" />
@@ -433,11 +428,11 @@ export default function DashboardPage() {
                       <li key={i.id}>
                         <Link
                           href={`/admin/candidatos/${i.candidate_id}${i.application_id ? `?c=${i.application_id}` : ""}`}
-                          className="flex items-center gap-3 rounded-2xl p-2 transition-colors hover:bg-brand-50"
+                          className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-brand-50"
                         >
-                          <span className="grid w-12 shrink-0 place-items-center rounded-xl bg-brand-900 py-1.5 text-white" aria-hidden>
+                          <span className="grid w-12 shrink-0 place-items-center rounded-lg bg-brand-900 py-1.5 text-white" aria-hidden>
                             <span className="text-[10px] font-semibold uppercase leading-none text-brand-200">{wd}</span>
-                            <span className="text-lg font-extrabold leading-tight tabular-nums">{d}</span>
+                            <span className="text-lg font-semibold leading-tight tabular-nums">{d}</span>
                             <span className="text-[10px] uppercase leading-none text-brand-200">{m}</span>
                           </span>
                           <span className="min-w-0 flex-1">

@@ -43,7 +43,7 @@ export default function AiScorecard({
       </div>
 
       {!r && (
-        <div className="mt-3 rounded-xl bg-brand-50 p-4 text-sm text-brand-700">
+        <div className="mt-3 rounded-lg bg-brand-50 p-4 text-sm text-brand-700">
           {app.ai_status === "avaliando" && !stuck && <p>A IA está avaliando esta candidatura. Atualize em alguns segundos.</p>}
           {(app.ai_status === "pendente" || stuck) && <p>Esta candidatura ainda não foi avaliada pela IA.</p>}
           {app.ai_status === "sem_ia" &&
@@ -62,8 +62,8 @@ export default function AiScorecard({
       {r && (
         <div className="mt-4 space-y-5">
           <div className="flex flex-wrap items-center gap-4">
-            <div className={`grid h-20 w-20 place-items-center rounded-2xl ${aiScoreTone(r.score)}`}>
-              <span className="text-3xl font-black tabular-nums">{r.score}</span>
+            <div className={`grid h-20 w-20 place-items-center rounded-lg ${aiScoreTone(r.score)}`}>
+              <span className="text-3xl font-bold tabular-nums">{r.score}</span>
             </div>
             <div className="min-w-0 flex-1">
               <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${REC_TONE[r.recomendacao]}`}>{RECOMMENDATION_LABEL[r.recomendacao]}</span>
@@ -109,7 +109,7 @@ export default function AiScorecard({
             </ul>
           </div>
 
-          <div className="rounded-xl bg-accent-50 p-3">
+          <div className="rounded-lg bg-accent-50 p-3">
             <p className="flex justify-between text-sm font-semibold text-brand-900">
               <span>Fit cultural (10 mandamentos)</span>
               <span className="tabular-nums">{r.fit_cultural.nota}/10</span>
@@ -143,7 +143,7 @@ export default function AiScorecard({
             </div>
           )}
 
-          <p className="border-t border-brand-100 pt-3 text-xs text-brand-500">
+          <p className="border-t border-stone-200 pt-3 text-xs text-brand-500">
             {r.curriculo_lido ? "Currículo lido pela IA" : "Avaliado sem currículo (ou em formato que a IA não lê)"}
             {app.ai_evaluated_at && <> · {formatDateTime(app.ai_evaluated_at)}</>}
             {app.ai_model && <> · {app.ai_model}</>}. A IA apoia a triagem; a decisão é da equipe.

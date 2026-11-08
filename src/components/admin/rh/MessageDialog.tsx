@@ -66,7 +66,7 @@ export default function MessageDialog({
       aria-labelledby="msg-titulo"
       onKeyDown={(e) => e.key === "Escape" && onClose()}
     >
-      <div className="w-full max-w-lg rounded-[22px] bg-white p-6 shadow-xl">
+      <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h2 id="msg-titulo" className="text-lg font-bold text-brand-950">
@@ -92,10 +92,10 @@ export default function MessageDialog({
         </label>
         <p className="mt-2 text-xs text-brand-500">Abre o WhatsApp com o texto pronto. Os modelos ficam em Configurações → RH.</p>
         <div className="mt-5 flex flex-wrap justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-xl border border-brand-200 px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50">
+          <button type="button" onClick={onClose} className="rounded-lg border border-brand-200 px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50">
             {skipLabel}
           </button>
-          <button type="button" disabled={busy || !text.trim()} onClick={send} className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60">
+          <button type="button" disabled={busy || !text.trim()} onClick={send} className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60">
             Abrir no WhatsApp
           </button>
         </div>

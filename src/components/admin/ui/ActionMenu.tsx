@@ -45,7 +45,7 @@ export default function ActionMenu({
         {label}
       </button>
       {open && (
-        <ul role="menu" className={`absolute top-full z-30 mt-1.5 w-72 rounded-2xl border border-brand-100 bg-white p-1.5 shadow-xl ${align === "right" ? "right-0" : "left-0"}`}>
+        <ul role="menu" className={`absolute top-full z-30 mt-1.5 w-72 rounded-lg border border-stone-200 bg-white p-1.5 shadow-xl ${align === "right" ? "right-0" : "left-0"}`}>
           {items
             .filter((i) => !i.hidden)
             .map((i) => (
@@ -57,7 +57,7 @@ export default function ActionMenu({
                     setOpen(false);
                     i.onSelect();
                   }}
-                  className={`w-full rounded-xl px-3 py-2 text-left text-sm ${i.danger ? "text-rose-700 hover:bg-rose-50" : "text-brand-900 hover:bg-brand-50"}`}
+                  className={`w-full rounded-lg px-3 py-2 text-left text-sm ${i.danger ? "text-rose-700 hover:bg-rose-50" : "text-brand-900 hover:bg-brand-50"}`}
                 >
                   <span className="block font-semibold">{i.label}</span>
                   {i.hint && <span className="block text-xs text-brand-500">{i.hint}</span>}

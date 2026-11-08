@@ -53,7 +53,7 @@ export function RankBars({ data, empty = "Sem dados no período.", unit, total }
  * Componentes do painel (visual inspirado em CRMs modernos)
  * ---------------------------------------------------------------- */
 
-/** Filtro em pílulas (segmentado), ex.: 30D · 90D · 12M. */
+/** Filtro segmentado, ex.: 30D · 90D · 12M. */
 export function Segmented<T extends string>({
   label,
   options,
@@ -66,7 +66,7 @@ export function Segmented<T extends string>({
   onChange: (v: T) => void;
 }) {
   return (
-    <div className="inline-flex rounded-full border border-brand-100 bg-white p-1 shadow-sm" role="group" aria-label={label}>
+    <div className="inline-flex rounded-lg bg-stone-200/60 p-0.5" role="group" aria-label={label}>
       {options.map((o) => (
         <button
           key={o.key}
@@ -74,8 +74,8 @@ export function Segmented<T extends string>({
           title={o.title}
           aria-pressed={value === o.key}
           onClick={() => onChange(o.key)}
-          className={`rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors ${
-            value === o.key ? "bg-brand-900 text-white shadow" : "text-brand-600 hover:bg-brand-50 hover:text-brand-900"
+          className={`rounded-md px-3 py-1 text-[13px] font-medium transition-colors ${
+            value === o.key ? "bg-white text-brand-950 shadow-[0_1px_2px_rgba(0,0,0,0.08)]" : "text-stone-600 hover:text-brand-950"
           }`}
         >
           {o.label}
@@ -85,14 +85,15 @@ export function Segmented<T extends string>({
   );
 }
 
-/** Pílula de variação contra o período anterior. */
+/** Variação contra o período anterior (texto colorido, sem enfeite). */
 export function DeltaPill({ delta }: { delta: number | null | undefined }) {
   if (delta == null || !Number.isFinite(delta)) return null;
   const d = Math.round(delta);
-  const tone = d > 0 ? "bg-emerald-50 text-emerald-700 ring-emerald-200" : d < 0 ? "bg-rose-50 text-rose-700 ring-rose-200" : "bg-brand-50 text-brand-600 ring-brand-100";
+  const tone = d > 0 ? "text-emerald-700" : d < 0 ? "text-rose-700" : "text-stone-500";
   return (
-    <span className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-bold tabular-nums ring-1 ${tone}`} title="vs. período anterior">
-      {d > 0 ? "▲" : d < 0 ? "▼" : "="} {Math.abs(d)}%
+    <span className={`text-xs font-semibold tabular-nums ${tone}`} title="vs. período anterior">
+      {d > 0 ? "+" : d < 0 ? "−" : "±"}
+      {Math.abs(d)}%
     </span>
   );
 }
@@ -110,37 +111,30 @@ export function Sparkline({ values, className = "h-9 w-24" }: { values: number[]
   );
 }
 
-/** Card de indicador: ícone em círculo, rótulo, número grande, variação e linha de tendência. */
+/** Indicador: rótulo, número, variação e linha de tendência. */
 export function KpiCard({
-  icon,
   label,
   value,
   hint,
   delta,
   spark,
-  tone = "brand",
+  warn = false,
 }: {
-  icon: React.ReactNode;
   label: string;
   value: string;
   hint?: string;
   delta?: number | null;
   spark?: number[];
-  tone?: "brand" | "gold" | "green" | "violet";
+  /** Número em destaque de atenção (ex.: taxa abaixo da meta) */
+  warn?: boolean;
 }) {
-  const ring = { brand: "bg-brand-50 text-brand-700", gold: "bg-accent-50 text-accent-700", green: "bg-emerald-50 text-emerald-700", violet: "bg-violet-50 text-violet-700" }[tone];
   return (
-    <div className="flex flex-col justify-between rounded-[22px] border border-brand-100 bg-white p-5 shadow-[0_1px_2px_rgba(11,26,64,0.04),0_8px_24px_-12px_rgba(11,26,64,0.12)]">
-      <div className="flex items-center gap-3">
-        <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${ring}`} aria-hidden>
-          {icon}
-        </span>
-        <p className="text-sm font-medium leading-tight text-brand-600">{label}</p>
-      </div>
-      <div className="mt-4 flex items-end justify-between gap-2">
+    <div className="flex min-w-0 flex-col justify-between rounded-lg border border-stone-200 bg-white px-4 py-3.5">
+      <p className="text-[13px] font-medium text-stone-500">{label}</p>
+      <div className="mt-2 flex items-end justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-[28px] font-extrabold leading-none tracking-tight text-brand-950 tabular-nums">{value}</p>
-          <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-brand-500">
+          <p className={`font-semibold leading-tight tracking-tight tabular-nums ${value.length > 12 ? "text-lg" : "text-[26px]"} ${warn ? "text-amber-700" : "text-brand-950"}`}>{value}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-stone-500">
             <DeltaPill delta={delta} />
             {hint && <span>{hint}</span>}
           </div>
@@ -167,13 +161,13 @@ export function Panel({
 }) {
   return (
     <section
-      className={`min-w-0 rounded-[22px] border border-brand-100 bg-white p-5 shadow-[0_1px_2px_rgba(11,26,64,0.04),0_8px_24px_-12px_rgba(11,26,64,0.12)] sm:p-6 ${className}`}
+      className={`min-w-0 rounded-lg border border-stone-200 bg-white p-4 sm:p-5 ${className}`}
       aria-label={title}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-[15px] font-bold text-brand-950">{title}</h2>
-          {subtitle && <p className="mt-0.5 text-[13px] text-brand-500">{subtitle}</p>}
+          <h2 className="text-[15px] font-semibold text-brand-950">{title}</h2>
+          {subtitle && <p className="mt-0.5 text-[13px] text-stone-500">{subtitle}</p>}
         </div>
         {action}
       </div>
@@ -229,7 +223,7 @@ export function AreaChart({ data, unit, unitOne, height = 220 }: { data: Datum[]
             }}
           >
             {ticks.map((_, i) => (
-              <span key={i} className={`pointer-events-none absolute inset-x-0 h-px ${i === ticks.length - 1 ? "bg-brand-200" : "border-t border-dashed border-brand-100"}`} style={{ top: `${(i / (ticks.length - 1)) * 100}%` }} aria-hidden />
+              <span key={i} className={`pointer-events-none absolute inset-x-0 h-px ${i === ticks.length - 1 ? "bg-brand-200" : "border-t border-dashed border-stone-200"}`} style={{ top: `${(i / (ticks.length - 1)) * 100}%` }} aria-hidden />
             ))}
             <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full overflow-visible" aria-hidden>
               <defs>
@@ -250,7 +244,7 @@ export function AreaChart({ data, unit, unitOne, height = 220 }: { data: Datum[]
                   aria-hidden
                 />
                 <span
-                  className="pointer-events-none absolute top-0 z-10 whitespace-nowrap rounded-xl bg-brand-950 px-3 py-2 text-xs text-white shadow-lg"
+                  className="pointer-events-none absolute top-0 z-10 whitespace-nowrap rounded-lg bg-brand-950 px-3 py-2 text-xs text-white shadow-lg"
                   style={{ left: `${x(hover)}%`, transform: `translate(${x(hover) > 70 ? "-100%" : x(hover) < 30 ? "0" : "-50%"}, calc(-100% - 8px))` }}
                   role="status"
                 >
@@ -340,12 +334,9 @@ export function Funnel({ steps }: { steps: FunnelStep[] }) {
 export function Avatar({ name, size = "md" }: { name: string; size?: "sm" | "md" | "lg" }) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   const ini = ((parts[0]?.[0] ?? "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase() || "?";
-  const tones = ["bg-brand-100 text-brand-800", "bg-accent-100 text-accent-800", "bg-emerald-100 text-emerald-800", "bg-violet-100 text-violet-800", "bg-sky-100 text-sky-800", "bg-rose-100 text-rose-800"];
-  let hash = 0;
-  for (const ch of name) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
   const dim = { sm: "h-8 w-8 text-xs", md: "h-10 w-10 text-sm", lg: "h-12 w-12 text-base" }[size];
   return (
-    <span className={`grid shrink-0 place-items-center rounded-full font-bold ${dim} ${tones[hash % tones.length]}`} aria-hidden>
+    <span className={`grid shrink-0 place-items-center rounded-full bg-stone-200/70 font-semibold text-brand-900 ${dim}`} aria-hidden>
       {ini}
     </span>
   );
@@ -361,7 +352,7 @@ export function Ring({ value, label }: { value: number; label: string }) {
         <circle cx="22" cy="22" r={r} fill="none" stroke="#e3e9f3" strokeWidth="4" />
         <circle cx="22" cy="22" r={r} fill="none" stroke={BAR} strokeWidth="4" strokeLinecap="round" strokeDasharray={`${(value / 100) * c} ${c}`} />
       </svg>
-      <span className="text-[11px] font-extrabold tabular-nums text-brand-950" aria-hidden>
+      <span className="text-[11px] font-semibold tabular-nums text-brand-950" aria-hidden>
         {value}%
       </span>
     </span>

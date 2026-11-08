@@ -54,10 +54,10 @@ export default function PendingPanel({ apps, past, now, lgpd = 0 }: { apps: Pend
     .map((a) => ({ key: a.id, href: ficha(a.candidate_id, a.id), name: name(a), detail: "Reavalie na ficha" }));
 
   const groups = [
-    { title: "Atrasados no pipeline", hint: "passaram do prazo da etapa", items: late, tone: "bg-amber-100 text-amber-800" },
-    { title: "Entrevistas sem resultado", hint: "marque realizada ou não compareceu", items: noResult, tone: "bg-violet-100 text-violet-800" },
-    { title: "Sem devolutiva", hint: "reprovados nos últimos 30 dias", items: noFeedback, tone: "bg-rose-100 text-rose-800" },
-    { title: "Erro na avaliação da IA", hint: "não receberam score", items: aiError, tone: "bg-brand-100 text-brand-700" },
+    { title: "Atrasados no pipeline", hint: "passaram do prazo da etapa", items: late },
+    { title: "Entrevistas sem resultado", hint: "marque realizada ou não compareceu", items: noResult },
+    { title: "Sem devolutiva", hint: "reprovados nos últimos 30 dias", items: noFeedback },
+    { title: "Erro na avaliação da IA", hint: "não receberam score", items: aiError },
   ];
   const total = groups.reduce((n, g) => n + g.items.length, 0) + (lgpd ? 1 : 0);
 
@@ -72,14 +72,14 @@ export default function PendingPanel({ apps, past, now, lgpd = 0 }: { apps: Pend
       }
     >
       {total === 0 ? (
-        <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">✓ Tudo em dia: ninguém atrasado, sem entrevistas pendentes e devolutivas enviadas.</p>
+        <p className="rounded-lg bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">✓ Tudo em dia: ninguém atrasado, sem entrevistas pendentes e devolutivas enviadas.</p>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {groups.map((g) => (
-            <section key={g.title} aria-label={g.title} className="rounded-2xl border border-brand-100 p-3">
+            <section key={g.title} aria-label={g.title} className="rounded-lg border border-stone-200 p-3">
               <div className="flex items-center justify-between gap-2">
                 <h3 className="text-sm font-bold text-brand-950">{g.title}</h3>
-                <span className={`rounded-full px-2 py-0.5 text-xs font-bold tabular-nums ${g.items.length ? g.tone : "bg-emerald-50 text-emerald-700"}`}>{g.items.length}</span>
+                <span className={`rounded-md px-1.5 py-0.5 text-xs font-semibold tabular-nums ${g.items.length ? "bg-amber-100 text-amber-900" : "bg-stone-100 text-stone-500"}`}>{g.items.length}</span>
               </div>
               <p className="text-xs text-brand-500">{g.hint}</p>
               {g.items.length === 0 ? (
@@ -104,7 +104,7 @@ export default function PendingPanel({ apps, past, now, lgpd = 0 }: { apps: Pend
       {lgpd > 0 && (
         <Link
           href="/admin/configuracoes/lgpd"
-          className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3 text-sm hover:bg-brand-50"
+          className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-stone-200 bg-brand-50/60 px-4 py-3 text-sm hover:bg-brand-50"
         >
           <span className="text-brand-800">
             <strong>LGPD:</strong> {lgpd} cadastro{lgpd === 1 ? "" : "s"} passaram do prazo de guarda dos dados.

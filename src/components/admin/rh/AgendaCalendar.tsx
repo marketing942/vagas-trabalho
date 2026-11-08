@@ -105,8 +105,8 @@ export default function AgendaCalendar({ version }: { version: number }) {
                 onClick={() => setSelected(k)}
                 aria-pressed={isSel}
                 aria-label={`${formatLongDay(at(k, "12:00").toISOString())}: ${list.length} entrevista(s)`}
-                className={`flex min-h-[64px] flex-col items-start rounded-xl border p-1.5 text-left transition-colors ${
-                  isSel ? "border-brand-900 bg-brand-900 text-white" : k === today ? "border-accent-500 bg-accent-50" : "border-brand-100 hover:bg-brand-50"
+                className={`flex min-h-[64px] flex-col items-start rounded-lg border p-1.5 text-left transition-colors ${
+                  isSel ? "border-brand-900 bg-brand-900 text-white" : k === today ? "border-accent-500 bg-accent-50" : "border-stone-200 hover:bg-brand-50"
                 }`}
               >
                 <span className="text-sm font-bold">{Number(k.slice(8))}</span>

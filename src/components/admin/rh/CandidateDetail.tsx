@@ -46,7 +46,7 @@ interface Data {
   templates: MessageTemplate[];
 }
 
-const btn = "inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition-colors";
+const btn = "inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold transition-colors";
 const caret = (
   <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
     <path d="m5 8 5 5 5-5" strokeLinecap="round" strokeLinejoin="round" />
@@ -255,7 +255,7 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
           <div className="flex min-w-0 items-center gap-4">
             <Avatar name={c.full_name} size="lg" />
             <div className="min-w-0">
-              <h2 className="truncate text-2xl font-extrabold tracking-tight text-brand-950">{c.full_name}</h2>
+              <h2 className="truncate text-2xl font-semibold tracking-tight text-brand-950">{c.full_name}</h2>
               <p className="mt-0.5 text-sm text-brand-500">{meta}</p>
             </div>
           </div>
@@ -283,7 +283,7 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
                   <circle cx="19" cy="12" r="1.8" />
                 </svg>
               }
-              className="grid h-10 w-10 place-items-center rounded-xl border border-brand-200 bg-white text-brand-600 hover:bg-brand-50"
+              className="grid h-10 w-10 place-items-center rounded-lg border border-brand-200 bg-white text-brand-600 hover:bg-brand-50"
               items={[
                 { label: "Editar dados", onSelect: () => setEditing(true) },
                 { label: "Excluir candidato", hint: "Apaga tudo, inclusive o currículo (LGPD)", onSelect: remove, danger: true },
@@ -294,7 +294,7 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
 
         {/* ===== Processo: vagas, etapa e resultado ===== */}
         {app && (
-          <div className="mt-5 border-t border-brand-100 pt-4">
+          <div className="mt-5 border-t border-stone-200 pt-4">
             {apps.length > 1 && (
               <div className="mb-4 flex flex-wrap gap-1.5" role="tablist" aria-label="Processos desta pessoa">
                 {apps.map((a) => (
@@ -307,7 +307,7 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
                       setNotes(null);
                       setTab(null);
                     }}
-                    className={`rounded-full px-3 py-1.5 text-xs font-semibold ${a.id === app.id ? "bg-brand-900 text-white" : "bg-brand-50 text-brand-700 hover:bg-brand-100"}`}
+                    className={`rounded-md px-3 py-1.5 text-xs font-medium ${a.id === app.id ? "bg-brand-950 text-white" : "bg-stone-100 text-brand-900 hover:bg-stone-200"}`}
                   >
                     {PIPELINE_LABEL[a.pipeline]} · {a.status === "em_processo" ? stageDef(a.pipeline, a.stage).label : `${STATUS[a.status].label} em ${formatDate(a.closed_at ?? a.stage_changed_at)}`}
                   </button>
@@ -343,8 +343,8 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
                             type="button"
                             aria-current={cur ? "step" : undefined}
                             onClick={() => changeStage(s.key)}
-                            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
-                              cur ? "bg-brand-900 text-white shadow" : done ? "bg-brand-100 text-brand-800 hover:bg-brand-200" : "bg-white text-brand-500 ring-1 ring-brand-100 hover:bg-brand-50"
+                            className={`rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                              cur ? "bg-brand-950 text-white" : done ? "bg-stone-100 text-brand-900 hover:bg-stone-200" : "bg-white text-stone-500 ring-1 ring-stone-200 hover:bg-stone-50 hover:text-brand-950"
                             }`}
                           >
                             {done && "✓ "}
@@ -359,7 +359,7 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
                           type="button"
                           aria-current={s.key === app.stage ? "step" : undefined}
                           onClick={() => changeStage(s.key)}
-                          className={`rounded-full border border-dashed px-3 py-1.5 text-xs font-semibold ${s.key === app.stage ? "border-amber-400 bg-amber-50 text-amber-800" : "border-brand-200 text-brand-500 hover:bg-brand-50"}`}
+                          className={`rounded-md border border-dashed px-2.5 py-1.5 text-xs font-medium ${s.key === app.stage ? "border-amber-400 bg-amber-50 text-amber-800" : "border-brand-200 text-brand-500 hover:bg-brand-50"}`}
                         >
                           {s.label}
                         </button>
@@ -371,7 +371,7 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
                   {chance != null && (
                     <span className="mr-1 text-right" title="Estimativa do sistema: combina a etapa atual, o score da IA e a nota da entrevista.">
                       <span className="block text-[11px] font-bold uppercase tracking-wide text-brand-500">Chance</span>
-                      <span className="block text-xl font-black tabular-nums text-brand-900">{chance}%</span>
+                      <span className="block text-xl font-bold tabular-nums text-brand-900">{chance}%</span>
                     </span>
                   )}
                   <button type="button" onClick={() => changeStatus("contratado")} className={`${btn} bg-emerald-600 text-white hover:bg-emerald-700`}>
@@ -383,7 +383,7 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
                 </div>
               </div>
             ) : (
-              <div className={`mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3 ring-1 ${STATUS[app.status].tone}`}>
+              <div className={`mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg px-4 py-3 ring-1 ${STATUS[app.status].tone}`}>
                 <p className="text-sm">
                   <strong>{STATUS[app.status].label}</strong> em {formatDate(app.closed_at ?? app.stage_changed_at)}
                   {app.status === "reprovado" && <> · motivo: {app.rejection_reason || "sem motivo"}</>} · estava em “{stageDef(app.pipeline, app.stage).label}”
@@ -426,7 +426,7 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
         <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
           {/* ===== Abas ===== */}
           <div className="min-w-0">
-            <div className="mb-3 flex gap-1 overflow-x-auto rounded-2xl border border-brand-100 bg-white p-1" role="tablist" aria-label="Seções da ficha">
+            <div className="mb-4 flex gap-5 overflow-x-auto border-b border-stone-200" role="tablist" aria-label="Seções da ficha">
               {TABS.map((t) => (
                 <button
                   key={t.key}
@@ -435,7 +435,7 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
                   aria-selected={activeTab === t.key}
                   aria-controls={`painel-${t.key}`}
                   onClick={() => setTab(t.key)}
-                  className={`shrink-0 rounded-xl px-4 py-2 text-sm font-semibold ${activeTab === t.key ? "bg-brand-900 text-white" : "text-brand-600 hover:bg-brand-50"}`}
+                  className={`-mb-px shrink-0 border-b-2 px-0.5 pb-2.5 pt-1 text-sm font-medium transition-colors ${activeTab === t.key ? "border-brand-950 text-brand-950" : "border-transparent text-stone-500 hover:text-brand-950"}`}
                 >
                   {t.label}
                 </button>
@@ -499,7 +499,7 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
                       value={notes ?? app.notes ?? ""}
                       onChange={(e) => setNotes(e.target.value)}
                     />
-                    <button type="button" disabled={notes === null} onClick={saveNotes} className="mt-3 rounded-xl bg-brand-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+                    <button type="button" disabled={notes === null} onClick={saveNotes} className="mt-3 rounded-lg bg-brand-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
                       Salvar anotação
                     </button>
                   </section>
@@ -566,7 +566,7 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
                 </div>
               </dl>
               {(app.screening ?? []).length > 0 && (
-                <div className="mt-3 rounded-2xl border border-brand-100 p-3">
+                <div className="mt-3 rounded-lg border border-stone-200 p-3">
                   <p className="text-xs font-bold uppercase tracking-wide text-brand-500">Perguntas eliminatórias</p>
                   <ul className="mt-1.5 space-y-1.5 text-sm">
                     {(app.screening ?? []).map((x) => (
@@ -588,7 +588,7 @@ export default function CandidateDetail({ id, initialApp }: { id: string; initia
                 </div>
               )}
               {c.about && (
-                <div className="mt-3 rounded-2xl bg-brand-50/60 p-3">
+                <div className="mt-3 rounded-lg bg-brand-50/60 p-3">
                   <p className="text-xs font-bold uppercase tracking-wide text-brand-500">Sobre a pessoa</p>
                   <p className={`mt-1 whitespace-pre-line text-sm leading-relaxed text-brand-800 ${aboutOpen ? "" : "line-clamp-5"}`}>{c.about}</p>
                   {c.about.length > 280 && (

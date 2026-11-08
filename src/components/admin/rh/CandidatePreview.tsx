@@ -69,21 +69,21 @@ export default function CandidatePreview({
   const delay = stageDelay(app, now);
   const chance = hireChance(app);
   const iv = app.interview_score != null && Number(app.interview_score) > 0 ? Number(app.interview_score) : null;
-  const btn = "rounded-xl px-3 py-2 text-sm font-semibold transition-colors";
+  const btn = "rounded-lg px-3 py-2 text-sm font-semibold transition-colors";
 
   return (
     <div className="fixed inset-0 z-40" role="dialog" aria-modal="true" aria-labelledby="previa-nome" onKeyDown={(e) => e.key === "Escape" && onClose()}>
       <button type="button" aria-label="Fechar prévia" tabIndex={-1} onClick={onClose} className="absolute inset-0 bg-brand-950/30" />
       <aside className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col overflow-hidden bg-white shadow-2xl">
-        <header className="flex items-start gap-3 border-b border-brand-100 p-5">
+        <header className="flex items-start gap-3 border-b border-stone-200 p-5">
           <Avatar name={c?.full_name ?? "?"} size="lg" />
           <div className="min-w-0 flex-1">
-            <h2 id="previa-nome" className="truncate text-lg font-extrabold text-brand-950">
+            <h2 id="previa-nome" className="truncate text-lg font-semibold text-brand-950">
               {c?.full_name ?? "Sem nome"}
             </h2>
             <p className="text-sm text-brand-500">{[c?.city, c?.age_range].filter(Boolean).join(" · ") || "—"}</p>
           </div>
-          <button ref={closeRef} type="button" onClick={onClose} aria-label="Fechar" className="grid h-9 w-9 place-items-center rounded-xl text-brand-500 hover:bg-brand-50">
+          <button ref={closeRef} type="button" onClick={onClose} aria-label="Fechar" className="grid h-9 w-9 place-items-center rounded-lg text-brand-500 hover:bg-brand-50">
             ✕
           </button>
         </header>
@@ -112,7 +112,7 @@ export default function CandidatePreview({
               {chance != null && (
                 <span className="shrink-0 text-right">
                   <span className="block text-[10px] font-bold uppercase text-brand-500">Chance</span>
-                  <span className="block text-lg font-black tabular-nums text-brand-900">{chance}%</span>
+                  <span className="block text-lg font-bold tabular-nums text-brand-900">{chance}%</span>
                 </span>
               )}
             </div>
@@ -120,14 +120,14 @@ export default function CandidatePreview({
               {delay.late ? `⚠ Atrasado: ${since(app.stage_changed_at, now)} nesta etapa (prazo de ${delay.sla} dias)` : `${since(app.stage_changed_at, now)} nesta etapa`}
             </p>
             {interviewAt && (
-              <p className="mt-2 rounded-xl bg-violet-50 px-3 py-2 text-sm font-semibold text-violet-800">
+              <p className="mt-2 rounded-lg bg-violet-50 px-3 py-2 text-sm font-semibold text-violet-800">
                 📅 Entrevista: {formatLongDay(interviewAt)}, {formatTime(interviewAt)}
               </p>
             )}
           </div>
 
           {(app.screening ?? []).some((x) => !x.ok) && (
-            <section aria-label="Perguntas eliminatórias" className="rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
+            <section aria-label="Perguntas eliminatórias" className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
               <p className="font-bold">Não atende a perguntas eliminatórias</p>
               <ul className="mt-1 list-disc pl-5 text-xs">
                 {(app.screening ?? [])
@@ -141,7 +141,7 @@ export default function CandidatePreview({
             </section>
           )}
 
-          <section aria-label="Avaliação da IA" className="rounded-2xl border border-brand-100 p-4">
+          <section aria-label="Avaliação da IA" className="rounded-lg border border-stone-200 p-4">
             <div className="flex items-center justify-between gap-2">
               <h3 className="text-sm font-bold text-brand-950">Avaliação da IA</h3>
               {r && <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${REC_TONE[r.recomendacao]}`}>{RECOMMENDATION_LABEL[r.recomendacao]}</span>}
@@ -151,7 +151,7 @@ export default function CandidatePreview({
                 <span className="h-2 flex-1 overflow-hidden rounded-full bg-brand-100">
                   <span className="block h-full rounded-full bg-brand-500" style={{ width: `${app.ai_score}%` }} />
                 </span>
-                <span className="text-sm font-black tabular-nums text-brand-950">{app.ai_score}</span>
+                <span className="text-sm font-bold tabular-nums text-brand-950">{app.ai_score}</span>
               </div>
             ) : (
               <p className="mt-1 text-sm text-brand-500">{app.ai_status === "erro" ? "Deu erro na avaliação. Reavalie na ficha." : "Ainda sem avaliação."}</p>
@@ -187,12 +187,12 @@ export default function CandidatePreview({
               )
             )}
             {app.culture != null && (
-              <p className="mt-3 border-t border-brand-100 pt-2 text-sm text-brand-800">
+              <p className="mt-3 border-t border-stone-200 pt-2 text-sm text-brand-800">
                 Questionário de cultura: <strong className="tabular-nums">{app.culture}</strong> / 100
               </p>
             )}
             {iv != null && (
-              <p className="mt-3 border-t border-brand-100 pt-2 text-sm text-brand-800">
+              <p className="mt-3 border-t border-stone-200 pt-2 text-sm text-brand-800">
                 Nota da entrevista: <strong className="tabular-nums">{iv.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}</strong> / 10
               </p>
             )}
@@ -206,7 +206,7 @@ export default function CandidatePreview({
           )}
         </div>
 
-        <footer className="space-y-2 border-t border-brand-100 p-4">
+        <footer className="space-y-2 border-t border-stone-200 p-4">
           <div className="grid grid-cols-2 gap-2">
             <button type="button" onClick={onMessage} className={`${btn} bg-emerald-600 text-white hover:bg-emerald-700`}>
               WhatsApp

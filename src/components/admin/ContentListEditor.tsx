@@ -66,7 +66,7 @@ export default function ContentListEditor({
       </p>
 
       {list.map((item, i) => (
-        <div key={i} className="space-y-3 rounded-xl border border-brand-200 bg-white p-4">
+        <div key={i} className="space-y-3 rounded-lg border border-brand-200 bg-white p-4">
           <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
             <div>
               <label className="label">{titleLabel}</label>
