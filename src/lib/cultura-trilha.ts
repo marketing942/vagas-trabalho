@@ -2,8 +2,9 @@
  * Geometria da trilha da página /cultura: o desenho da montanha e o caminho
  * que o ponto percorre enquanto a pessoa rola a página.
  *
- * `pontos` tem 12 posições: 0 = pé da montanha, 1 a 10 = um mandamento cada
- * (os checkpoints) e 11 = o topo, onde fica a bandeira.
+ * `pontos` tem 5 posições: 0 = pé da montanha, 1 a 3 = um valor cada
+ * (os checkpoints) e 4 = o topo, onde fica a bandeira.
+ * Se mudar a quantidade de valores, refaça os pontos (um a mais por valor).
  * Existem duas montanhas: uma alta (computador, ao lado do texto) e uma larga
  * (celular, fixa no alto da tela).
  */
@@ -61,16 +62,9 @@ const P = (x: number, y: number): Ponto => ({ x, y });
 /* ---------- Montanha alta (computador) ---------- */
 const altaPontos: Ponto[] = [
   P(96, 596), // pé da montanha
-  P(392, 552),
-  P(118, 508),
-  P(392, 464),
-  P(138, 420),
-  P(376, 376),
-  P(162, 332),
-  P(352, 288),
-  P(188, 244),
-  P(330, 200),
-  P(234, 160),
+  P(376, 468), // 1
+  P(124, 338), // 2
+  P(320, 210), // 3
   P(270, 88), // topo
 ];
 
@@ -94,16 +88,9 @@ export const TRILHA_ALTA: Trilha = {
 /* ---------- Montanha larga (celular) ---------- */
 const largaPontos: Ponto[] = [
   P(24, 196), // pé da montanha
-  P(51, 179),
-  P(78, 178),
-  P(105, 161),
-  P(132, 160),
-  P(159, 143),
-  P(186, 142),
-  P(213, 125),
-  P(240, 124),
-  P(267, 107),
-  P(294, 106),
+  P(104, 172), // 1
+  P(184, 138), // 2
+  P(254, 106), // 3
   P(326, 58), // topo
 ];
 

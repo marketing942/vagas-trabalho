@@ -7,14 +7,14 @@ import ExitIntentPopup from "@/components/ExitIntentPopup";
 import Jornada from "@/components/cultura/Jornada";
 import { getSettings } from "@/lib/settings";
 import { SITE_NAME } from "@/lib/site";
-import { BEM_VINDO, CULTURA_DEFINICAO, DESTAQUES, MANDAMENTOS, NAO_BEM_VINDO } from "@/lib/cultura";
+import { BEM_VINDO, CULTURA_DEFINICAO, NAO_BEM_VINDO, VALORES, VALORES_FRASE } from "@/lib/cultura";
 import { applyTarget } from "@/lib/apply";
 
 export const revalidate = 300;
 
 const TITLE = "Nossa cultura | Carreiras CPPEM";
 const DESCRIPTION =
-  "Os 10 mandamentos e o jeito de trabalhar do CPPEM: quem é bem-vindo e quem não é. Conheça a nossa cultura antes de se candidatar.";
+  "Os 3 valores do CPPEM (fé inabalável, disciplina e proatividade) e quem é bem-vindo e quem não é. Conheça a nossa cultura antes de se candidatar.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -64,8 +64,8 @@ export default async function CulturaPage() {
                 <span className="font-semibold text-rose-300">como não trabalhamos</span>.
               </p>
               <div className="mt-9 flex flex-wrap gap-3">
-                <a href="#mandamentos" className="btn-primary">
-                  Ver os 10 mandamentos
+                <a href="#valores" className="btn-primary">
+                  Ver os 3 valores
                   <Icon name="arrow" className="h-4 w-4 rotate-90" />
                 </a>
               </div>
@@ -84,16 +84,22 @@ export default async function CulturaPage() {
           </div>
         </section>
 
-        {/* ---------- Os 10 mandamentos ---------- */}
-        <section id="mandamentos" className="scroll-mt-20 bg-canvas2 pb-10 pt-14 sm:pb-14 sm:pt-20" aria-labelledby="mandamentos-titulo">
+        {/* ---------- Os 3 valores ---------- */}
+        <section id="valores" className="scroll-mt-20 bg-canvas2 pb-10 pt-14 sm:pb-14 sm:pt-20" aria-labelledby="valores-titulo">
           <div className="container-page">
             <div className="mb-8 sm:mb-10">
-              <span className="eyebrow">Do 01 ao 10</span>
-              <h2 id="mandamentos-titulo" className="mt-4 text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">
-                Nossos 10 mandamentos
+              <span className="eyebrow">O que orienta as nossas escolhas</span>
+              <h2 id="valores-titulo" className="mt-4 text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">
+                Nossos 3 valores
               </h2>
+              <p className="mt-5 max-w-3xl border-l-4 border-accent-500 pl-6 text-lg italic leading-relaxed text-inksoft sm:text-xl">
+                “{VALORES_FRASE}”
+              </p>
+              <p className="mt-4 max-w-3xl text-sm text-inksoft">
+                Estruturamos os valores e a cultura com base no livro <em>Empresas feitas para vencer</em>, de Jim Collins.
+              </p>
             </div>
-            <Jornada items={MANDAMENTOS} highlights={DESTAQUES} />
+            <Jornada items={VALORES} />
           </div>
         </section>
 
