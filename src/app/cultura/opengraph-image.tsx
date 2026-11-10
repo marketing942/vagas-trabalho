@@ -9,8 +9,8 @@ export default async function Image() {
   return new ImageResponse(
     await ogCard({
       eyebrow: "Nossa cultura",
-      title: "Os 10 mandamentos do CPPEM",
-      meta: "A forma como trabalhamos e como não trabalhamos, sem enrolação.",
+      title: "Os 3 valores do CPPEM",
+      meta: "Fé inabalável, disciplina e proatividade. Sem enrolação.",
     }),
     { ...size }
   );

@@ -4,32 +4,18 @@ import { useEffect, useId, useRef, useState } from "react";
 import { TRILHA_ALTA, TRILHA_LARGA, type Trilha } from "@/lib/cultura-trilha";
 
 interface JornadaProps {
-  items: string[];
-  /** Trecho de cada mandamento que ganha destaque (mesma ordem de `items`). */
-  highlights: string[];
+  /** Os valores, na ordem da subida (a trilha em cultura-trilha.ts precisa ter um checkpoint para cada um). */
+  items: { titulo: string; texto: string }[];
 }
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
 const suaviza = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
-/** Quebra o texto em volta do trecho destacado. */
-function Highlighted({ text, mark }: { text: string; mark: string }) {
-  const at = mark ? text.indexOf(mark) : -1;
-  if (at < 0) return <>{text}</>;
-  return (
-    <>
-      {text.slice(0, at)}
-      <span className="underline decoration-accent-500 decoration-[5px] underline-offset-[6px] [text-decoration-skip-ink:none]">{mark}</span>
-      {text.slice(at + mark.length)}
-    </>
-  );
-}
-
 /**
  * A montanha. Tudo que depende da rolagem (trecho percorrido e posição do ponto)
  * é atualizado direto no SVG pelo `Jornada`; aqui só ficam o desenho e o estado
- * de cada checkpoint (`ativo`: 0 = pé da montanha, 1 a 10 = mandamento, 11 = topo).
+ * de cada checkpoint (`ativo`: 0 = pé da montanha, 1 a 3 = valor, 4 = topo).
  */
 function Montanha({ trilha, variante, ativo }: { trilha: Trilha; variante: "alta" | "larga"; ativo: number }) {
   const uid = useId().replace(/:/g, "");
@@ -110,12 +96,12 @@ function Montanha({ trilha, variante, ativo }: { trilha: Trilha; variante: "alta
         </text>
       )}
 
-      {/* Checkpoints: um por mandamento */}
+      {/* Checkpoints: um por valor */}
       {checkpoints.map((p, k) => {
         const n = k + 1;
         const feito = n < ativo || (n === ativo && ativo > 0) || chegou;
         const atual = n === ativo;
-        const esquerda = p.x < largura / 2;
+        const esquerda = p.x > largura / 2; // o número fica do lado de dentro da montanha
         const acima = n % 2 === 1;
         const rx = variante === "alta" ? p.x + (esquerda ? -(raio + 10) : raio + 10) : p.x;
         const ry = variante === "alta" ? p.y : p.y + (acima ? -(raio + 4) : raio + 3);
@@ -188,12 +174,12 @@ function Montanha({ trilha, variante, ativo }: { trilha: Trilha; variante: "alta
 }
 
 /**
- * Os mandamentos como uma subida: conforme a pessoa rola, um ponto avança pela
- * trilha de uma montanha e cada mandamento é um checkpoint, até passar do último
+ * Os valores como uma subida: conforme a pessoa rola, um ponto avança pela
+ * trilha de uma montanha e cada valor é um checkpoint, até passar do último
  * e chegar ao topo, onde fica a bandeira.
  * O texto continua sendo uma lista comum: sem JavaScript, tudo segue legível.
  */
-export default function Jornada({ items, highlights }: JornadaProps) {
+export default function Jornada({ items }: JornadaProps) {
   const [ativo, setAtivo] = useState(0);
   const raiz = useRef<HTMLDivElement>(null);
   const painel = useRef<HTMLDivElement>(null);
@@ -225,7 +211,7 @@ export default function Jornada({ items, highlights }: JornadaProps) {
       const topoUtil = 68 + (grande.matches ? 0 : painel.current.offsetHeight);
       const leitura = topoUtil + (vh - topoUtil) * (grande.matches ? 0.5 : 0.32);
 
-      // Âncoras: o centro de cada mandamento, mais o topo; antes do primeiro, o pé da montanha.
+      // Âncoras: o centro de cada valor, mais o topo; antes do primeiro, o pé da montanha.
       const centros = pontos.map((a) => {
         const r = a.getBoundingClientRect();
         return r.top + r.height / 2;
@@ -273,7 +259,7 @@ export default function Jornada({ items, highlights }: JornadaProps) {
   }, []);
 
   const chegou = ativo === ultimo;
-  const rotulo = ativo === 0 ? "Pé da montanha" : chegou ? "Você chegou" : "Mandamento";
+  const rotulo = ativo === 0 ? "Pé da montanha" : chegou ? "Você chegou" : "Valor";
 
   return (
     <div ref={raiz} className="lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-14">
@@ -302,25 +288,26 @@ export default function Jornada({ items, highlights }: JornadaProps) {
         </div>
       </div>
 
-      {/* Os mandamentos */}
+      {/* Os valores */}
       <div>
         <ol className="pt-[6vh] lg:pt-[14vh]">
-          {items.map((text, i) => (
+          {items.map(({ titulo, texto }, i) => (
             <li
-              key={text}
-              id={`mandamento-${i + 1}`}
+              key={titulo}
+              id={`valor-${i + 1}`}
               ref={(el) => {
                 alvos.current[i] = el;
               }}
-              className={`flex min-h-[30svh] flex-col justify-center py-5 transition-opacity duration-300 lg:min-h-[52vh] ${
+              className={`flex min-h-[44svh] flex-col justify-center py-6 transition-opacity duration-300 lg:min-h-[68vh] ${
                 ativo >= 1 && ativo !== i + 1 ? "opacity-30" : "opacity-100"
               }`}
             >
-              <span className="font-eyebrow text-sm font-bold uppercase tracking-[0.2em] text-goldink">Mandamento {pad(i + 1)}</span>
-              <p className="mt-3 text-[1.75rem] font-extrabold leading-[1.12] tracking-tight text-ink sm:text-4xl lg:text-[2.6rem]">
-                <span className="sr-only">Mandamento {i + 1}: </span>
-                <Highlighted text={text} mark={highlights[i] ?? ""} />
-              </p>
+              <span className="font-eyebrow text-sm font-bold uppercase tracking-[0.2em] text-goldink">Valor {pad(i + 1)}</span>
+              <h3 className="mt-3 text-[2.25rem] font-extrabold leading-[1.05] tracking-tight text-ink sm:text-5xl lg:text-6xl">
+                <span className="sr-only">Valor {i + 1}: </span>
+                <span className="underline decoration-accent-500 decoration-[5px] underline-offset-[8px] [text-decoration-skip-ink:none]">{titulo}</span>
+              </h3>
+              <p className="mt-6 max-w-xl text-xl leading-relaxed text-inksoft sm:text-2xl">{texto}</p>
             </li>
           ))}
         </ol>
@@ -338,7 +325,7 @@ export default function Jornada({ items, highlights }: JornadaProps) {
             <span className="underline decoration-accent-500 decoration-[8px] underline-offset-[10px] [text-decoration-skip-ink:none]">Topo.</span>
           </h3>
           <p className="mt-8 max-w-xl text-xl leading-relaxed text-inksoft sm:text-2xl">
-            É assim que a gente chega lá: um mandamento de cada vez, todos os dias.
+            É assim que a gente chega lá: com fé, disciplina e proatividade, todos os dias.
           </p>
 
         </div>
