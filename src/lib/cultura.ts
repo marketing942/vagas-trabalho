@@ -49,23 +49,25 @@ export const MANDAMENTOS: string[] = [
   "Siga os processos e faça tudo por escrito.",
 ];
 
-export const BEM_VINDO: string[] = [
-  "Gente com ética e lealdade",
-  "Gente proativa que resolve sem enrolar",
-  "Gente que gosta de aprender",
-  "Gente com fome de crescimento",
-  "Gente que gosta de desafio",
-  "Gente que gosta de trabalhar e vencer em equipe",
-  "Gente que se responsabiliza pelas suas ações",
+/** "A forma como agimos": cada item completa a frase (ex.: "A forma como agimos: ética e lealdade"). */
+export const COMO_AGIMOS: string[] = [
+  "Ética e lealdade",
+  "Proatividade para resolver sem enrolar",
+  "Gosto por aprender",
+  "Fome de crescimento",
+  "Gosto por desafios",
+  "Trabalho e vitória em equipe",
+  "Responsabilidade pelas nossas ações",
 ];
 
-export const NAO_BEM_VINDO: string[] = [
-  "Gente falsa e desleal",
-  "Gente procrastinadora que deixa pra depois",
-  "Gente vitimista que “se explica” mais do que entrega",
-  "Gente que prefere ser medíocre",
-  "Gente que tem medo de crescer",
-  "Gente que desiste fácil quando a dificuldade aperta",
-  "Gente que esconde o erro e não se responsabiliza",
+/** "A forma como NÃO agimos". */
+export const COMO_NAO_AGIMOS: string[] = [
+  "Falsidade e deslealdade",
+  "Procrastinação: deixar para depois",
+  "Vitimismo: “se explicar” mais do que entregar",
+  "Aceitar a mediocridade",
+  "Medo de crescer",
+  "Desistir fácil quando a dificuldade aperta",
+  "Esconder o erro e não se responsabilizar",
 ];
 
