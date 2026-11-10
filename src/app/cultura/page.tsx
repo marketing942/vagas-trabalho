@@ -95,9 +95,6 @@ export default async function CulturaPage() {
               <p className="mt-5 max-w-3xl border-l-4 border-accent-500 pl-6 text-lg italic leading-relaxed text-inksoft sm:text-xl">
                 “{VALORES_FRASE}”
               </p>
-              <p className="mt-4 max-w-3xl text-sm text-inksoft">
-                Estruturamos os valores e a cultura com base no livro <em>Empresas feitas para vencer</em>, de Jim Collins.
-              </p>
             </div>
             <Jornada items={VALORES} />
           </div>
