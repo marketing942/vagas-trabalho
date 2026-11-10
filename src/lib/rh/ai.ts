@@ -1,6 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { BEM_VINDO, MANDAMENTOS, NAO_BEM_VINDO } from "@/lib/cultura";
+import { COMO_AGIMOS, COMO_NAO_AGIMOS, MANDAMENTOS } from "@/lib/cultura";
 import { jobsOf, TALENT_POOL } from "./constants";
 import type { AiReport, Application, Candidate, InterviewAi, Job, JobRef } from "@/lib/types";
 
@@ -24,8 +24,8 @@ const SYSTEM = `Você é recrutador(a) sênior do CPPEM Colégio e Cursos (Carua
 Cultura do CPPEM (10 mandamentos):
 ${MANDAMENTOS.map((m, i) => `${i + 1}. ${m}`).join("\n")}
 
-Quem é bem-vindo(a): ${BEM_VINDO.join("; ")}.
-Quem não é bem-vindo(a): ${NAO_BEM_VINDO.join("; ")}.
+A forma como agimos: ${COMO_AGIMOS.join("; ")}.
+A forma como NÃO agimos: ${COMO_NAO_AGIMOS.join("; ")}.
 
 Como avaliar:
 - Monte de 4 a 6 critérios a partir dos requisitos e responsabilidades da vaga. Para cada um, dê uma nota de 0 a 10 e cite a evidência concreta (do formulário ou do currículo). Sem evidência, a nota fica baixa e você diz o que faltou, sem inventar.
