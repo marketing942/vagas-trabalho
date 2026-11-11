@@ -7,14 +7,14 @@ import ExitIntentPopup from "@/components/ExitIntentPopup";
 import Jornada from "@/components/cultura/Jornada";
 import { getSettings } from "@/lib/settings";
 import { SITE_NAME } from "@/lib/site";
-import { BEM_VINDO, CULTURA_DEFINICAO, NAO_BEM_VINDO, VALORES, VALORES_FRASE } from "@/lib/cultura";
+import { COMO_AGIMOS, COMO_NAO_AGIMOS, CULTURA_DEFINICAO, VALORES, VALORES_FRASE } from "@/lib/cultura";
 import { applyTarget } from "@/lib/apply";
 
 export const revalidate = 300;
 
 const TITLE = "Nossa cultura | Carreiras CPPEM";
 const DESCRIPTION =
-  "Os 3 valores do CPPEM (fé inabalável, disciplina e proatividade) e quem é bem-vindo e quem não é. Conheça a nossa cultura antes de se candidatar.";
+  "Os 3 valores do CPPEM (fé inabalável, disciplina e proatividade) e a forma como agimos e como não agimos. Conheça a nossa cultura antes de se candidatar.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -95,31 +95,28 @@ export default async function CulturaPage() {
               <p className="mt-5 max-w-3xl border-l-4 border-accent-500 pl-6 text-lg italic leading-relaxed text-inksoft sm:text-xl">
                 “{VALORES_FRASE}”
               </p>
-              <p className="mt-4 max-w-3xl text-sm text-inksoft">
-                Estruturamos os valores e a cultura com base no livro <em>Empresas feitas para vencer</em>, de Jim Collins.
-              </p>
             </div>
             <Jornada items={VALORES} />
           </div>
         </section>
 
-        {/* ---------- Quem é / quem não é bem-vindo ---------- */}
-        <section id="perfil" className="scroll-mt-20 py-12 sm:py-16" aria-labelledby="perfil-titulo">
+        {/* ---------- Como agimos / como não agimos ---------- */}
+        <section id="agir" className="scroll-mt-20 py-12 sm:py-16" aria-labelledby="agir-titulo">
           <div className="container-page">
-            <div className="mx-auto mb-10 max-w-2xl text-center">
-              <span className="eyebrow">O perfil de quem sobe com a gente</span>
-              <h2 id="perfil-titulo" className="mt-3 text-3xl font-extrabold text-ink sm:text-4xl">
-                Quem é bem-vindo(a) aqui, e quem não é
+            <div className="mx-auto mb-10 max-w-3xl text-center">
+              <span className="eyebrow">O nosso jeito de agir</span>
+              <h2 id="agir-titulo" className="mt-3 text-3xl font-extrabold text-ink sm:text-4xl">
+                A forma como agimos, e como não agimos
               </h2>
             </div>
 
             <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-2">
               <div className="card border-good/40 p-7">
                 <h3 className="inline-flex items-center gap-3 rounded-xl bg-goodsoft px-4 py-2 text-lg font-extrabold text-good">
-                  <Icon name="check" className="h-5 w-5" /> Quem é bem-vindo(a) aqui
+                  <Icon name="check" className="h-5 w-5" /> A forma como agimos
                 </h3>
                 <ul className="mt-6 space-y-4">
-                  {BEM_VINDO.map((item) => (
+                  {COMO_AGIMOS.map((item) => (
                     <li key={item} className="flex items-start gap-3 leading-snug text-ink">
                       <Icon name="check" className="mt-0.5 h-5 w-5 shrink-0 text-good" />
                       {item}
@@ -130,10 +127,10 @@ export default async function CulturaPage() {
 
               <div className="card border-bad/40 p-7">
                 <h3 className="inline-flex items-center gap-3 rounded-xl bg-badsoft px-4 py-2 text-lg font-extrabold text-bad">
-                  <Icon name="close" className="h-5 w-5" /> Quem NÃO é bem-vindo(a) aqui
+                  <Icon name="close" className="h-5 w-5" /> A forma como NÃO agimos
                 </h3>
                 <ul className="mt-6 space-y-4">
-                  {NAO_BEM_VINDO.map((item) => (
+                  {COMO_NAO_AGIMOS.map((item) => (
                     <li key={item} className="flex items-start gap-3 leading-snug text-ink">
                       <Icon name="close" className="mt-0.5 h-5 w-5 shrink-0 text-bad" />
                       {item}

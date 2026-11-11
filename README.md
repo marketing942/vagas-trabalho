@@ -160,6 +160,22 @@ Crie um arquivo `.env.local` (use `.env.example` como base):
 | `DEEPSEEK_API_KEY`              | ❌          | Scorecard de IA (DeepSeek, modelo `deepseek-chat`). Sem ela, as candidaturas ficam aguardando avaliação |
 | `DEEPSEEK_MODEL`                | ❌          | Troca o modelo (ex.: `deepseek-reasoner`). Padrão: `deepseek-chat` |
 | `NEXT_PUBLIC_SITE_URL`          | ❌          | Endereço público (ex.: `https://vagas.cppem.com.br`) para sitemap, imagens de compartilhamento e dados de vaga. Sem ele, usa o domínio de produção da Vercel |
+| `CULTURA_INTERNA_SENHA`         | ❌          | Senha da página interna da cultura (`/interno/cultura`, só para a equipe). Sem ela, a página abre para quem tiver o link (ela não aparece no Google nem no menu do site) |
+
+---
+
+## 🦁 Página interna da cultura
+
+A página `/interno/cultura` apresenta a cultura CPPEM para a equipe e para quem
+está chegando (símbolos, heróis, práticas e valores). Ela é só para uso interno:
+não aparece no menu, no sitemap nem no Google (`noindex` e `robots.txt`).
+
+- **Trancar com senha:** na Vercel, em **Settings → Environment Variables**, crie
+  `CULTURA_INTERNA_SENHA` com a senha da equipe e faça **Redeploy**. Para trocar
+  a senha, mude o valor e refaça o deploy (quem já entrou precisa digitar a nova).
+- **Textos:** ficam em `src/lib/cultura-interna.ts` (e os valores em `src/lib/cultura.ts`).
+- **Vídeos dos troféus e artes das camisas:** `public/cultura-interna/`. Para trocar,
+  substitua o arquivo mantendo o mesmo nome.
 
 ---
 

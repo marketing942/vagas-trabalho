@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import Triade from "@/components/cultura/Triade";
 import { TRILHA_ALTA, TRILHA_LARGA, type Trilha } from "@/lib/cultura-trilha";
 
 interface JornadaProps {
@@ -327,7 +328,7 @@ export default function Jornada({ items }: JornadaProps) {
           <p className="mt-8 max-w-xl text-xl leading-relaxed text-inksoft sm:text-2xl">
             É assim que a gente chega lá: com fé, disciplina e proatividade, todos os dias.
           </p>
-
+          <Triade valores={items.map((i) => i.titulo)} />
         </div>
       </div>
     </div>
