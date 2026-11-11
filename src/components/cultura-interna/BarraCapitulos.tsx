@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Logos from "./Logos";
 
 export interface ItemCapitulo {
   id: string;
@@ -51,8 +52,7 @@ export default function BarraCapitulos({ itens }: { itens: ItemCapitulo[] }) {
     <header className="fixed inset-x-0 top-0 z-50 border-b border-[rgba(211,184,127,0.16)] bg-[rgba(6,7,11,0.72)] backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
         <a href="#topo" className="flex shrink-0 items-center gap-2.5" aria-label="Voltar ao início">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logos/cppem.png" alt="" width={32} height={32} className="h-8 w-8 object-contain" />
+          <Logos tam="h-8" />
           <span className="hidden font-eyebrow text-sm font-bold uppercase tracking-[0.22em] text-[#d3b87f] sm:inline">Cultura</span>
         </a>
         <nav aria-label="Capítulos" className="min-w-0 flex-1">

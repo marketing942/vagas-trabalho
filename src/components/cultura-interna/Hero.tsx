@@ -1,4 +1,4 @@
-import { DONOS } from "@/lib/cultura-interna";
+import Logos from "./Logos";
 
 /** Brasas fixas (sempre as mesmas, para o servidor e o navegador desenharem igual). */
 const BRASAS = Array.from({ length: 26 }, (_, i) => ({
@@ -8,13 +8,6 @@ const BRASAS = Array.from({ length: 26 }, (_, i) => ({
   atraso: -((i * 3.1) % 14),
   dx: ((i * 13) % 80) - 40,
 }));
-
-const iniciais = (nome: string) =>
-  nome
-    .split(" ")
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join("");
 
 export default function Hero() {
   return (
@@ -40,18 +33,11 @@ export default function Hero() {
 
       <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-4 py-14 sm:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:gap-8 lg:px-8">
         <div>
-          <span
-            data-reveal
-            className="inline-flex items-center gap-2 rounded-full border border-[rgba(211,184,127,0.35)] bg-[rgba(211,184,127,0.08)] px-4 py-1.5 font-eyebrow text-xs font-bold uppercase tracking-[0.22em] text-[#e8cf94]"
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-[#d3b87f]" /> Material interno · Nova cultura empresarial
-          </span>
-
           <h1
             id="hero-titulo"
             data-reveal
             style={{ ["--d" as string]: "80ms" }}
-            className="mt-7 text-[3.4rem] font-extrabold leading-[0.95] tracking-tight sm:text-8xl lg:text-[7.2rem]"
+            className="text-[3.4rem] font-extrabold leading-[0.95] tracking-tight sm:text-8xl lg:text-[7.2rem]"
           >
             <span className="ci-gold-text">Cultura</span>
             <br />
@@ -59,39 +45,8 @@ export default function Hero() {
           </h1>
 
           <p data-reveal style={{ ["--d" as string]: "180ms" }} className="mt-8 max-w-xl text-xl leading-relaxed text-[#d6d0c2] sm:text-2xl">
-            O que vemos, quem nos inspira, como agimos, o que repetimos juntos e o que orienta as nossas escolhas.{" "}
             <span className="font-semibold text-[#f6e3a8]">Seja bem-vindo(a) ao time.</span>
           </p>
-
-          <div data-reveal style={{ ["--d" as string]: "280ms" }} className="mt-10 flex flex-wrap items-center gap-4">
-            <a
-              href="#dicionario"
-              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-[#f0dcb0] via-[#c9ae7a] to-[#af9256] px-7 py-3.5 text-sm font-bold text-[#1a1409] shadow-[0_14px_34px_-12px_rgba(175,146,86,0.7)] transition hover:-translate-y-0.5"
-            >
-              Começar pelo dicionário
-              <svg viewBox="0 0 24 24" className="h-4 w-4 rotate-90" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
-            </a>
-            <a href="#valores" className="text-sm font-semibold text-[#cfc8b8] underline decoration-[#d3b87f]/60 decoration-2 underline-offset-[6px] transition hover:text-white">
-              Ir direto aos valores
-            </a>
-          </div>
-
-          {/* donos da cultura */}
-          <div data-reveal style={{ ["--d" as string]: "380ms" }} className="mt-12 max-w-2xl border-t border-[rgba(211,184,127,0.2)] pt-7">
-            <p className="font-eyebrow text-xs font-bold uppercase tracking-[0.2em] text-[#8f897b]">Donos da cultura</p>
-            <ul className="mt-3 flex flex-wrap gap-2.5">
-              {DONOS.map((d) => (
-                <li key={d} className="inline-flex items-center gap-2 rounded-full border border-[rgba(211,184,127,0.25)] bg-white/[0.04] py-1 pl-1 pr-3.5 text-sm font-semibold text-white">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#f0dcb0] to-[#9c7a3c] text-[0.7rem] font-extrabold text-[#1a1409]">
-                    {iniciais(d)}
-                  </span>
-                  {d}
-                </li>
-              ))}
-            </ul>
-          </div>
         </div>
 
         {/* o leão, com anéis girando */}
@@ -115,15 +70,7 @@ export default function Hero() {
             <circle cx="200" cy="200" r="138" fill="rgba(211,184,127,0.05)" stroke="rgba(211,184,127,0.3)" />
           </svg>
           <div className="ci-anim absolute inset-[14%] flex items-center justify-center" style={{ animation: "ci-float 7s ease-in-out infinite" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/logos/cppem.png"
-              alt="CPPEM"
-              width={480}
-              height={480}
-              fetchPriority="high"
-              className="h-full w-full object-contain drop-shadow-[0_20px_40px_rgba(211,184,127,0.3)]"
-            />
+            <Logos tam="h-24 min-[420px]:h-28 sm:h-32 lg:h-36" prioridade className="drop-shadow-[0_20px_40px_rgba(211,184,127,0.3)]" />
           </div>
         </div>
       </div>

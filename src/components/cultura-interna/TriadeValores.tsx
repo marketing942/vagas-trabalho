@@ -7,11 +7,13 @@ interface Valor {
   texto: string;
 }
 
-/** Círculos da tríade: em cima, embaixo à esquerda, embaixo à direita. */
+/** Círculos da tríade: em cima, embaixo à esquerda, embaixo à direita (todos na mesma cor dourada). */
+const COR = "#d3b87f";
+const OPACIDADE = 0.26;
 const POS = [
-  { cx: 240, cy: 135, tx: 240, ty: 100, fill: "#d3b87f", op: 0.3 },
-  { cx: 160, cy: 270, tx: 120, ty: 284, fill: "#6f89d1", op: 0.36 },
-  { cx: 320, cy: 270, tx: 360, ty: 284, fill: "#f6e3a8", op: 0.18 },
+  { cx: 240, cy: 135, tx: 240, ty: 100 },
+  { cx: 160, cy: 270, tx: 120, ty: 284 },
+  { cx: 320, cy: 270, tx: 360, ty: 284 },
 ];
 
 /**
@@ -43,8 +45,8 @@ export default function TriadeValores({ valores }: { valores: Valor[] }) {
               cx={p.cx}
               cy={p.cy}
               r={120}
-              fill={p.fill}
-              fillOpacity={ativo === i ? p.op * 2 : ativo === null ? p.op : p.op * 0.55}
+              fill={COR}
+              fillOpacity={ativo === i ? OPACIDADE * 2 : ativo === null ? OPACIDADE : OPACIDADE * 0.55}
               style={{ transition: "fill-opacity .35s" }}
             />
           ))}

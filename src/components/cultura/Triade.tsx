@@ -4,9 +4,9 @@
  * Recebe os 3 títulos na ordem: em cima, embaixo à esquerda, embaixo à direita.
  */
 const POSICOES = [
-  { cx: 240, cy: 135, tx: 240, ty: 96, fill: "#d3b87f", opacidade: 0.3 }, // em cima
-  { cx: 160, cy: 270, tx: 120, ty: 282, fill: "#6f89d1", opacidade: 0.36 }, // embaixo à esquerda
-  { cx: 320, cy: 270, tx: 360, ty: 282, fill: "#f6ebcd", opacidade: 0.18 }, // embaixo à direita
+  { cx: 240, cy: 135, tx: 240, ty: 96, fill: "#d3b87f", opacidade: 0.26 }, // em cima
+  { cx: 160, cy: 270, tx: 120, ty: 282, fill: "#d3b87f", opacidade: 0.26 }, // embaixo à esquerda
+  { cx: 320, cy: 270, tx: 360, ty: 282, fill: "#d3b87f", opacidade: 0.26 }, // embaixo à direita
 ];
 
 export default function Triade({ valores }: { valores: string[] }) {

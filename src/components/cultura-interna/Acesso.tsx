@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Logos from "./Logos";
 import { entrar, type EstadoAcesso } from "@/app/interno/cultura/actions";
 
 /** Tela de senha da página interna (só aparece se CULTURA_INTERNA_SENHA estiver definida). */
@@ -11,8 +12,9 @@ export default function Acesso() {
     <main className="relative isolate flex min-h-screen items-center justify-center px-4 py-16">
       <div aria-hidden className="absolute left-1/2 top-1/3 -z-10 h-[60vmin] w-[60vmin] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(211,184,127,0.16),transparent_65%)]" />
       <form action={acao} className="ci-panel w-full max-w-sm p-8 text-center">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logos/cppem.png" alt="CPPEM" width={96} height={96} className="mx-auto h-24 w-24 object-contain" />
+        <div className="flex justify-center">
+          <Logos tam="h-20" />
+        </div>
         <h1 className="ci-gold-text mt-4 text-3xl font-extrabold">Cultura CPPEM</h1>
         <p className="mt-2 text-sm text-[#c9c3b4]">Material interno da equipe. Digite a senha para entrar.</p>
         <label htmlFor="senha" className="sr-only">

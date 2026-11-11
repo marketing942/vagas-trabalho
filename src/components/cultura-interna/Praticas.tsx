@@ -39,12 +39,36 @@ function Lado({ lado, titulo, itens, icones }: { lado: "ari" | "oli"; titulo: st
   );
 }
 
-/** Camadas da pirâmide (viewBox 600 x 520). */
-const CAMADAS = [
-  { d: "M300,8 L436,196 L164,196 Z", topo: 20 },
-  { d: "M174,212 L426,212 L508,364 L92,364 Z", topo: 53 },
-  { d: "M84,380 L516,380 L590,512 L10,512 Z", topo: 78 },
+/**
+ * Pirâmide: um único triângulo (ponta em 300,10; base de 20 a 580 em y = 500) fatiado em 3 camadas
+ * com um vão fixo entre elas. Como todas as bordas ficam sobre as mesmas duas retas, as camadas encaixam
+ * e os textos (centralizados em cy) ficam sempre dentro do formato.
+ */
+const ALTURA = 510;
+const TOPO_Y = 10;
+const BASE_Y = 500;
+const K = 280 / (BASE_Y - TOPO_Y); // quanto a metade da largura cresce a cada unidade de altura
+const meia = (y: number) => (y - TOPO_Y) * K;
+const f = (n: number) => n.toFixed(1);
+
+const FATIAS = [
+  { y1: 10, y2: 210 },
+  { y1: 222, y2: 350 },
+  { y1: 362, y2: 500 },
 ];
+const CAMADAS = FATIAS.map(({ y1, y2 }) => {
+  const a = meia(y1);
+  const b = meia(y2);
+  return {
+    d: `M${f(300 - a)},${y1} L${f(300 + a)},${y1} L${f(300 + b)},${y2} L${f(300 - b)},${y2} Z`,
+    // centro do bloco de texto (um pouco abaixo do meio nas camadas estreitas, onde o topo é fino)
+    cy: y1 === 10 ? 152 : (y1 + y2) / 2,
+  };
+});
+const topoDe = (cy: number) => `${((cy / ALTURA) * 100).toFixed(2)}%`;
+/** Posição (em % da largura) do número, encostado na borda inclinada da camada. */
+const esquerdaDe = (cy: number) => `${(((300 - meia(cy) - 50) / 600) * 100).toFixed(2)}%`;
+
 const ICONES_PIR: NomeIcone[] = ["predio", "grupo", "grupo"];
 
 export default function Praticas() {
@@ -77,8 +101,8 @@ export default function Praticas() {
           </div>
 
           <div data-reveal="zoom" className="mx-auto w-full max-w-xl" style={{ containerType: "inline-size" }}>
-            <div className="relative" style={{ aspectRatio: "600 / 520" }}>
-              <svg viewBox="0 0 600 520" className="absolute inset-0 h-full w-full overflow-visible" aria-hidden focusable="false">
+            <div className="relative" style={{ aspectRatio: `600 / ${ALTURA}` }}>
+              <svg viewBox={`0 0 600 ${ALTURA}`} className="absolute inset-0 h-full w-full overflow-visible" aria-hidden focusable="false">
                 <defs>
                   <linearGradient id="pir-fill" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0" stopColor="#d3b87f" stopOpacity="0.28" />
@@ -97,23 +121,23 @@ export default function Praticas() {
                 ))}
               </svg>
               {PRIORIDADES.map((p, i) => (
-                <div key={p.nome} className="pointer-events-none absolute inset-x-0 flex -translate-y-1/2 flex-col items-center text-center" style={{ top: `${i === 0 ? 27 : i === 1 ? 56 : 86}%` }}>
-                  <Icone nome={ICONES_PIR[i]} className="text-[#f6e3a8]" style={{ width: "max(22px, 5.5cqw)", height: "max(22px, 5.5cqw)" }} />
-                  <span className="mt-1 font-extrabold uppercase tracking-wide text-white" style={{ fontSize: "max(16px, 4.6cqw)" }}>
+                <div key={p.nome} className="pointer-events-none absolute inset-x-0 flex -translate-y-1/2 flex-col items-center text-center" style={{ top: topoDe(CAMADAS[i].cy) }}>
+                  <Icone nome={ICONES_PIR[i]} className="text-[#f6e3a8]" style={{ width: "max(20px, 5cqw)", height: "max(20px, 5cqw)" }} />
+                  <span className="mt-0.5 font-extrabold uppercase leading-none tracking-wide text-white" style={{ fontSize: "max(14px, 3.9cqw)" }}>
                     {p.nome}
                   </span>
-                  <span className="text-[#d6d0c2]" style={{ fontSize: "max(11px, 2.7cqw)" }}>
+                  <span className="mt-1 leading-tight text-[#d6d0c2]" style={{ fontSize: "max(10.5px, 2.4cqw)" }}>
                     {p.texto}
                   </span>
                 </div>
               ))}
-              {/* ordem: 1, 2, 3 */}
-              {[0, 1, 2].map((i) => (
+              {/* ordem: 1, 2, 3 (cada número encosta na borda inclinada da sua camada) */}
+              {CAMADAS.map((c, i) => (
                 <span
                   key={i}
                   aria-hidden
-                  className="absolute left-0 flex -translate-y-1/2 items-center justify-center rounded-full border border-[#d3b87f]/60 bg-[#06070b] font-display font-extrabold text-[#d3b87f]"
-                  style={{ top: `${i === 0 ? 27 : i === 1 ? 56 : 86}%`, width: "max(24px, 6cqw)", height: "max(24px, 6cqw)", fontSize: "max(12px, 3cqw)" }}
+                  className="absolute flex -translate-y-1/2 items-center justify-center rounded-full border border-[#d3b87f]/60 bg-[#06070b] font-display font-extrabold text-[#d3b87f]"
+                  style={{ top: topoDe(c.cy), left: esquerdaDe(c.cy), width: "max(24px, 6cqw)", height: "max(24px, 6cqw)", fontSize: "max(12px, 3cqw)" }}
                 >
                   {i + 1}
                 </span>

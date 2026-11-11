@@ -1,11 +1,8 @@
 /**
- * Conteúdo da página interna /interno/cultura, vindo do documento
+ * Conteúdo da página interna da cultura, vindo do documento
  * "Implementação de Nova Cultura Empresarial" (Notion, última edição em 10/11/2026).
  * Para mudar um texto, edite aqui: a página se atualiza sozinha.
  */
-
-/** Donos da implementação da cultura. */
-export const DONOS = ["Itallo Mota", "Mateus Timóteo", "Everton Mota"];
 
 /** O dicionário da cultura: a ordem importa (cada passo leva ao próximo). */
 export const DICIONARIO = [
@@ -56,10 +53,11 @@ export const LIVROS = [
 ];
 
 export const HEROIS = [
-  { id: "cultura", nome: "Quem representar melhor a cultura", destaque: true },
-  { id: "davi", nome: "Rei Davi", destaque: false },
-  { id: "moises", nome: "Moisés", destaque: false },
-  { id: "salomao", nome: "Salomão", destaque: false },
+  { id: "jesus", nome: "Jesus Cristo", destaque: "O maior herói" },
+  { id: "cultura", nome: "Quem representar melhor a cultura", destaque: "Herói da Cultura" },
+  { id: "davi", nome: "Rei Davi", destaque: null },
+  { id: "moises", nome: "Moisés", destaque: null },
+  { id: "salomao", nome: "Salomão", destaque: null },
 ];
 
 export const ARISTOCRATAS = [
@@ -88,3 +86,53 @@ export const PRIORIDADES_FECHO = "Benefício para a empresa, para os clientes e 
 
 export const VALORES_NOTA =
   "Estruturamos os valores e a cultura com base no livro Empresas feitas pra vencer, para melhor objetivação daquilo que pregamos.";
+
+/* ---------- Valores e jeito de agir (os mesmos da página pública de cultura) ---------- */
+
+/** Frase que resume os 3 valores. */
+export const VALORES_FRASE =
+  "A fé nos mantém firmes, a disciplina nos faz avançar e a proatividade nos coloca à frente.";
+
+export interface Valor {
+  titulo: string;
+  texto: string;
+}
+
+/** Os 3 valores do CPPEM. */
+export const VALORES: Valor[] = [
+  {
+    titulo: "Fé Inabalável",
+    texto: "Diante da realidade nua e crua, nunca recuamos ou desistimos.",
+  },
+  {
+    titulo: "Disciplina",
+    texto:
+      "Vontade inabalável de fazer o que precisa ser feito. Significa uma determinação quase estoica de fazer o que for necessário para tornar a empresa excelente, mesmo quando ninguém está olhando.",
+  },
+  {
+    titulo: "Proatividade",
+    texto: "Não espera ordem. Enxerga o problema antes que vire crise e age enquanto os outros ainda percebem.",
+  },
+];
+
+/** "A forma como agimos": cada item completa a frase (ex.: "A forma como agimos: ética e lealdade"). */
+export const COMO_AGIMOS: string[] = [
+  "Ética e lealdade",
+  "Proatividade para resolver sem enrolar",
+  "Gosto por aprender",
+  "Fome de crescimento",
+  "Gosto por desafios",
+  "Trabalho e vitória em equipe",
+  "Responsabilidade pelas nossas ações",
+];
+
+/** "A forma como NÃO agimos". */
+export const COMO_NAO_AGIMOS: string[] = [
+  "Falsidade e deslealdade",
+  "Procrastinação: deixar para depois",
+  "Vitimismo: “se explicar” mais do que entregar",
+  "Aceitar a mediocridade",
+  "Medo de crescer",
+  "Desistir fácil quando a dificuldade aperta",
+  "Esconder o erro e não se responsabilizar",
+];

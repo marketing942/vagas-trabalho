@@ -1,7 +1,7 @@
 import Capitulo from "./Capitulo";
 import Livros from "./Livros";
 import VideoTrofeu from "./VideoTrofeu";
-import { FRASES, SALAS, SIMBOLOS_DEF } from "@/lib/cultura-interna";
+import { FRASES, SALAS, SIMBOLOS_DEF, VALORES } from "@/lib/cultura-interna";
 
 function Sub({ eyebrow, titulo, children }: { eyebrow?: string; titulo: string; children?: React.ReactNode }) {
   return (
@@ -18,31 +18,25 @@ export default function Simbolos() {
     <Capitulo id="simbolos" numero={1} eyebrow="Passo 1 · O que vemos e reconhecemos" titulo="Símbolos" definicao={SIMBOLOS_DEF}>
       {/* ---------- Camisas ---------- */}
       <div id="camisas" className="scroll-mt-20">
-        <Sub eyebrow="Valor: Disciplina" titulo="Camisas">
-          A camisa do time leva a frase que resume a disciplina: <strong className="text-[#f6e3a8]">“Eu faço o que precisa ser feito.”</strong>
-        </Sub>
-        <div className="grid gap-6 md:grid-cols-2">
-          {[
-            { src: "/cultura-interna/camisa-preta.webp", alt: "Camisa preta do time CPPEM: logo no peito, bandeira do Brasil na manga e, nas costas, a frase Eu faço o que precisa ser feito, com a palavra feito em dourado." },
-            { src: "/cultura-interna/camisa-cinza.webp", alt: "Camisa preta do time CPPEM, versão minimalista: logo discreto no peito e, nas costas, a frase Eu faço o que precisa ser feito." },
-          ].map((c, i) => (
-            <figure
-              key={c.src}
-              data-reveal
-              style={{ ["--d" as string]: `${i * 120}ms` }}
-              className="group overflow-hidden rounded-3xl border border-[rgba(211,184,127,0.28)] bg-black shadow-[0_30px_70px_-34px_rgba(0,0,0,0.9)]"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={c.src}
-                alt={c.alt}
-                width={1000}
-                height={1000}
-                loading="lazy"
-                className="aspect-square w-full object-cover transition duration-700 group-hover:scale-[1.04]"
-              />
-            </figure>
-          ))}
+        <Sub eyebrow="Valor: Disciplina" titulo="Camisas" />
+        <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_1fr] lg:gap-16">
+          <figure data-reveal className="group overflow-hidden rounded-3xl border border-[rgba(211,184,127,0.28)] bg-black shadow-[0_30px_70px_-34px_rgba(0,0,0,0.9)]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/cultura-interna/camisa-preta.webp"
+              alt="Camisa preta do time CPPEM: logo no peito, bandeira do Brasil na manga e, nas costas, a frase Eu faço o que precisa ser feito, com a palavra feito em dourado."
+              width={1000}
+              height={1000}
+              loading="lazy"
+              className="aspect-square w-full object-cover transition duration-700 group-hover:scale-[1.04]"
+            />
+          </figure>
+          <div data-reveal="right">
+            <p className="text-4xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-5xl">
+              Eu faço o que precisa ser <span className="ci-gold-text">feito.</span>
+            </p>
+            <p className="mt-6 max-w-xl text-lg leading-relaxed text-[#c9c3b4]">{VALORES[1].texto}</p>
+          </div>
         </div>
       </div>
 

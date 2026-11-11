@@ -8,7 +8,7 @@ export const CULTURA_DEFINICAO =
 
 /** Frase que resume os 3 valores. */
 export const VALORES_FRASE =
-  "Nossa fé nos mantém firmes, nossa disciplina nos faz avançar e nossa proatividade nos coloca à frente.";
+  "A fé nos mantém firmes, a disciplina nos faz avançar e a proatividade nos coloca à frente.";
 
 export interface Valor {
   titulo: string;

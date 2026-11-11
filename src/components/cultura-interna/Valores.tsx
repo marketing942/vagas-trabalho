@@ -1,8 +1,7 @@
 import Capitulo from "./Capitulo";
 import Icone from "./icones";
 import TriadeValores from "./TriadeValores";
-import { COMO_AGIMOS, COMO_NAO_AGIMOS, VALORES, VALORES_FRASE } from "@/lib/cultura";
-import { VALORES_NOTA } from "@/lib/cultura-interna";
+import { COMO_AGIMOS, COMO_NAO_AGIMOS, VALORES, VALORES_FRASE, VALORES_NOTA } from "@/lib/cultura-interna";
 
 function Lista({ titulo, itens, bom }: { titulo: string; itens: string[]; bom: boolean }) {
   return (
@@ -38,7 +37,7 @@ export default function Valores() {
           “
         </span>
         <p className="relative text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl">
-          Nossa <span className="ci-gold-text">fé</span> nos mantém firmes, nossa <span className="ci-gold-text">disciplina</span> nos faz avançar e nossa{" "}
+          A <span className="ci-gold-text">fé</span> nos mantém firmes, a <span className="ci-gold-text">disciplina</span> nos faz avançar e a{" "}
           <span className="ci-gold-text">proatividade</span> nos coloca à frente.
         </p>
         <span className="sr-only">{VALORES_FRASE}</span>
