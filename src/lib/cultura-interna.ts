@@ -9,8 +9,6 @@ export const DICIONARIO = [
   { id: "simbolos", nome: "Símbolos", def: "o que vemos e reconhecemos", capitulo: true },
   { id: "herois", nome: "Heróis", def: "quem e quais histórias nos inspiram", capitulo: true },
   { id: "praticas", nome: "Práticas", def: "como agimos no dia a dia", capitulo: true },
-  // o documento define os rituais, mas ainda não detalha nenhum
-  { id: "rituais", nome: "Rituais", def: "o que repetimos juntos com intenção", capitulo: false },
   { id: "valores", nome: "Valores", def: "o que orienta nossas escolhas", capitulo: true },
 ] as const;
 
@@ -25,7 +23,8 @@ export const SALAS = [
 export const FRASES = [
   "Fazemos o que precisa ser feito",
   "Trabalhamos com a verdade nua e crua",
-  "A zona de conforto é o campo de batalha dos fracos. Disciplina não é negociável.",
+  "A zona de conforto é o campo de batalha dos fracos.",
+  "Disciplina não é negociável.",
 ];
 
 /** Capas das edições brasileiras (imagens e páginas do Google Livros). */

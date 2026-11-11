@@ -11,12 +11,11 @@ export default function Dicionario() {
             O dicionário da cultura
           </h2>
           <p className="mt-5 text-lg leading-relaxed text-[#c9c3b4] sm:text-xl">
-            Cultura não é um quadro na parede. É uma sequência: o que vemos vira inspiração, a inspiração vira prática, a prática vira ritual, e tudo isso
-            sustenta os valores.
+            Cultura não é um quadro na parede. É uma sequência: o que vemos vira inspiração, a inspiração vira prática, e tudo isso sustenta os valores.
           </p>
         </header>
 
-        <ol className="grid gap-3 lg:grid-cols-5 lg:gap-0">
+        <ol className="grid gap-3 lg:grid-cols-4 lg:gap-0">
           {DICIONARIO.map((d, i) => (
             <li key={d.id} data-reveal style={{ ["--d" as string]: `${i * 110}ms` }} className="relative flex flex-col items-stretch lg:flex-row">
               {(() => {

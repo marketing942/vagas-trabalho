@@ -30,7 +30,7 @@ function Lista({ titulo, itens, bom }: { titulo: string; itens: string[]; bom: b
 
 export default function Valores() {
   return (
-    <Capitulo id="valores" numero={5} eyebrow="Passo 5 · O que orienta nossas escolhas" titulo="Valores" definicao="O que orienta nossas escolhas.">
+    <Capitulo id="valores" numero={4} eyebrow="Passo 4 · O que orienta nossas escolhas" titulo="Valores" definicao="O que orienta nossas escolhas.">
       <blockquote data-reveal className="relative mx-auto mb-16 max-w-4xl text-center sm:mb-20">
         <span aria-hidden className="absolute -top-10 left-1/2 -translate-x-1/2 select-none font-display text-[8rem] font-extrabold leading-none text-[#d3b87f]/20">
           “
