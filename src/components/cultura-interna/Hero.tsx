@@ -28,10 +28,21 @@ export default function Hero() {
             }}
           />
         ))}
+        {/* montanha (a escalada), bem suave */}
+        <svg viewBox="0 0 1440 600" preserveAspectRatio="xMidYMax slice" className="absolute inset-x-0 bottom-0 h-[75%] w-full opacity-[0.16]" focusable="false">
+          <defs>
+            <linearGradient id="hero-mont" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#f6e3a8" />
+              <stop offset="1" stopColor="#d3b87f" stopOpacity="0.05" />
+            </linearGradient>
+          </defs>
+          <path d="M0 600V430l130-90 110 70 150-150 120 100 170-230 140 190 110-90 150 150 120-110 140 130V600Z" fill="url(#hero-mont)" opacity="0.5" />
+          <path d="M0 600V500l180-120 140 110 220-280 120 140 90-80 130 160 170-170 130 120 120-90 140 90V600Z" fill="url(#hero-mont)" />
+        </svg>
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#06070b] to-transparent" />
       </div>
 
-      <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-4 py-14 sm:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:gap-8 lg:px-8">
+      <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-4 py-14 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:gap-8 lg:px-8">
         <div>
           <h1
             id="hero-titulo"
@@ -49,29 +60,9 @@ export default function Hero() {
           </p>
         </div>
 
-        {/* o leão, com anéis girando */}
-        <div data-reveal="zoom" className="relative mx-auto aspect-square w-full max-w-[26rem] lg:max-w-none">
-          <svg viewBox="0 0 400 400" className="absolute inset-0 h-full w-full" aria-hidden>
-            <defs>
-              <linearGradient id="hero-anel" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0" stopColor="#f6e3a8" />
-                <stop offset="1" stopColor="#9c7a3c" />
-              </linearGradient>
-            </defs>
-            <g className="ci-anim" style={{ transformOrigin: "200px 200px", animation: "ci-spin 60s linear infinite" }}>
-              <circle cx="200" cy="200" r="192" fill="none" stroke="url(#hero-anel)" strokeWidth="1.2" strokeDasharray="2 9" strokeLinecap="round" opacity="0.8" />
-            </g>
-            <g className="ci-anim" style={{ transformOrigin: "200px 200px", animation: "ci-spin-rev 90s linear infinite" }}>
-              <circle cx="200" cy="200" r="165" fill="none" stroke="url(#hero-anel)" strokeWidth="1" strokeDasharray="60 14 6 14" opacity="0.45" />
-              <circle cx="200" cy="35" r="4" fill="#f6e3a8" />
-              <circle cx="365" cy="200" r="3" fill="#d3b87f" />
-              <circle cx="60" cy="316" r="3" fill="#d3b87f" />
-            </g>
-            <circle cx="200" cy="200" r="138" fill="rgba(211,184,127,0.05)" stroke="rgba(211,184,127,0.3)" />
-          </svg>
-          <div className="ci-anim absolute inset-[14%] flex items-center justify-center" style={{ animation: "ci-float 7s ease-in-out infinite" }}>
-            <Logos tam="h-24 min-[420px]:h-28 sm:h-32 lg:h-36" prioridade className="drop-shadow-[0_20px_40px_rgba(211,184,127,0.3)]" />
-          </div>
+        {/* as duas marcas, grandes, lado a lado */}
+        <div data-reveal="zoom" className="flex justify-center lg:justify-end">
+          <Logos tam="h-40 min-[420px]:h-44 sm:h-60 lg:h-72 xl:h-80" prioridade className="gap-4 drop-shadow-[0_20px_40px_rgba(211,184,127,0.3)] sm:gap-8" />
         </div>
       </div>
 

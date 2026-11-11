@@ -18,16 +18,11 @@ const POS = [
 
 /**
  * Tríade dos valores: os três círculos e, ao lado, a definição de cada valor.
- * Passar o mouse, tocar ou usar o teclado em um valor destaca o círculo e o texto dele.
+ * Clicar, tocar ou usar o teclado em um valor o seleciona: o círculo é destacado e a descrição abre.
  */
 export default function TriadeValores({ valores }: { valores: Valor[] }) {
-  const [ativo, setAtivo] = useState<number | null>(null);
-  const alvo = (i: number | null) => ({
-    onMouseEnter: () => setAtivo(i),
-    onMouseLeave: () => setAtivo(null),
-    onFocus: () => setAtivo(i),
-    onBlur: () => setAtivo(null),
-  });
+  // O valor escolhido (clique, toque ou teclado) fica selecionado até a pessoa escolher outro.
+  const [ativo, setAtivo] = useState<number>(0);
 
   return (
     <div className="grid items-center gap-10 lg:grid-cols-[1fr_1fr] lg:gap-14">
@@ -46,11 +41,11 @@ export default function TriadeValores({ valores }: { valores: Valor[] }) {
               cy={p.cy}
               r={120}
               fill={COR}
-              fillOpacity={ativo === i ? OPACIDADE * 2 : ativo === null ? OPACIDADE : OPACIDADE * 0.55}
+              fillOpacity={ativo === i ? OPACIDADE * 2 : OPACIDADE * 0.55}
               style={{ transition: "fill-opacity .35s" }}
             />
           ))}
-          <circle cx={240} cy={225} r={62} fill="url(#tv-brilho)" opacity={ativo === null ? 1 : 0.5} style={{ transition: "opacity .35s" }} />
+          <circle cx={240} cy={225} r={62} fill="url(#tv-brilho)" opacity={0.6} style={{ transition: "opacity .35s" }} />
           {POS.map((p, i) => (
             <circle
               key={`c${i}`}
@@ -60,7 +55,7 @@ export default function TriadeValores({ valores }: { valores: Valor[] }) {
               fill="none"
               stroke="#d3b87f"
               strokeWidth={ativo === i ? 3.5 : 2}
-              strokeOpacity={ativo === null || ativo === i ? 0.95 : 0.45}
+              strokeOpacity={ativo === i ? 0.95 : 0.45}
               style={{ transition: "all .35s" }}
             />
           ))}
@@ -73,7 +68,7 @@ export default function TriadeValores({ valores }: { valores: Valor[] }) {
               fontSize={21}
               fontWeight={800}
               fill="#fff"
-              opacity={ativo === null || ativo === i ? 1 : 0.5}
+              opacity={ativo === i ? 1 : 0.55}
               style={{ fontFamily: "var(--font-display), system-ui, sans-serif", transition: "opacity .35s" }}
             >
               {valores[i].titulo}
@@ -92,33 +87,46 @@ export default function TriadeValores({ valores }: { valores: Valor[] }) {
               aria-label={`${valores[i].titulo}: ${valores[i].texto}`}
               style={{ cursor: "pointer", outline: "none" }}
               onClick={() => setAtivo(i)}
-              {...alvo(i)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setAtivo(i);
+                }
+              }}
             />
           ))}
         </svg>
       </div>
 
-      <ul className="space-y-4">
-        {valores.map((v, i) => (
-          <li
-            key={v.titulo}
-            data-reveal="right"
-            style={{ ["--d" as string]: `${i * 110}ms` }}
-            {...alvo(i)}
-            onClick={() => setAtivo(i)}
-            className={`rounded-3xl border p-6 transition duration-300 sm:p-7 ${
-              ativo === i
-                ? "border-[rgba(211,184,127,0.75)] bg-[rgba(211,184,127,0.12)] shadow-[0_24px_60px_-30px_rgba(211,184,127,0.7)]"
-                : "border-[rgba(211,184,127,0.2)] bg-white/[0.03]"
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#d3b87f] font-display text-sm font-extrabold text-[#1a1409]">{i + 1}</span>
-              <h4 className="ci-gold-text text-2xl font-extrabold">{v.titulo}</h4>
-            </div>
-            <p className="mt-3 text-[1.02rem] leading-relaxed text-[#d6d0c2]">{v.texto}</p>
-          </li>
-        ))}
+      <ul className="space-y-3">
+        {valores.map((v, i) => {
+          const on = ativo === i;
+          return (
+            <li
+              key={v.titulo}
+              className={`rounded-3xl border transition-colors duration-300 ${
+                on ? "border-[rgba(211,184,127,0.75)] bg-[rgba(211,184,127,0.1)] shadow-[0_24px_60px_-30px_rgba(211,184,127,0.7)]" : "border-[rgba(211,184,127,0.2)] bg-white/[0.03]"
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => setAtivo(i)}
+                aria-expanded={on}
+                aria-controls={`valor-desc-${i}`}
+                className="flex w-full items-center gap-3 rounded-3xl p-5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#d3b87f] sm:p-6"
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#d3b87f] font-display text-sm font-extrabold text-[#1a1409]">{i + 1}</span>
+                <span className="ci-gold-text text-2xl font-extrabold">{v.titulo}</span>
+              </button>
+              {/* a descrição abre e fecha suavemente, sem mudar o resto da página de lugar */}
+              <div id={`valor-desc-${i}`} className={`grid transition-[grid-template-rows] duration-300 ease-out ${on ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+                <div className="overflow-hidden">
+                  <p className={`px-5 pb-6 text-[1.02rem] leading-relaxed text-[#d6d0c2] transition-opacity duration-300 sm:px-6 ${on ? "opacity-100" : "opacity-0"}`}>{v.texto}</p>
+                </div>
+              </div>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

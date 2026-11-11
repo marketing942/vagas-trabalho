@@ -1,7 +1,6 @@
 import Capitulo from "./Capitulo";
-import Icone from "./icones";
 import TriadeValores from "./TriadeValores";
-import { COMO_AGIMOS, COMO_NAO_AGIMOS, VALORES, VALORES_FRASE, VALORES_NOTA } from "@/lib/cultura-interna";
+import { COMO_AGIMOS, COMO_NAO_AGIMOS, VALORES, VALORES_FRASE } from "@/lib/cultura-interna";
 
 function Lista({ titulo, itens, bom }: { titulo: string; itens: string[]; bom: boolean }) {
   return (
@@ -44,11 +43,6 @@ export default function Valores() {
       </blockquote>
 
       <TriadeValores valores={VALORES} />
-
-      <p data-reveal className="mx-auto mt-14 flex max-w-3xl items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4 text-sm leading-relaxed text-[#c9c3b4]">
-        <Icone nome="premio" className="mt-0.5 h-5 w-5 shrink-0 text-[#d3b87f]" />
-        {VALORES_NOTA}
-      </p>
 
       <div id="agir" className="mt-24 scroll-mt-20 sm:mt-32">
         <div className="mb-10 max-w-3xl" data-reveal>

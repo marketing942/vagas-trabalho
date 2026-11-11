@@ -22,7 +22,11 @@ export const SALAS = [
   { tipo: "Sala de Reunião", nome: "Sala de Guerra" },
 ];
 
-export const FRASES = ["Fazemos o que precisa ser feito", "Trabalhamos com a verdade nua e crua"];
+export const FRASES = [
+  "Fazemos o que precisa ser feito",
+  "Trabalhamos com a verdade nua e crua",
+  "A zona de conforto é o campo de batalha dos fracos. Disciplina não é negociável.",
+];
 
 /** Capas das edições brasileiras (imagens e páginas do Google Livros). */
 export const LIVROS = [
@@ -84,8 +88,6 @@ export const PRIORIDADES = [
 
 export const PRIORIDADES_FECHO = "Benefício para a empresa, para os clientes e para nós.";
 
-export const VALORES_NOTA =
-  "Estruturamos os valores e a cultura com base no livro Empresas feitas pra vencer, para melhor objetivação daquilo que pregamos.";
 
 /* ---------- Valores e jeito de agir (os mesmos da página pública de cultura) ---------- */
 
