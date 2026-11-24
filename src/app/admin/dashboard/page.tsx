@@ -1,19 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import Icon from "@/components/Icon";
+import AiUsagePanel from "@/components/admin/rh/AiUsagePanel";
 import PendingPanel, { type PastInterview } from "@/components/admin/rh/PendingPanel";
 import { AreaChart, Avatar, DeltaPill, Funnel, KpiCard, Panel, RankBars, Ring, Segmented, type Datum, type FunnelStep } from "@/components/admin/rh/charts";
 import { createClient } from "@/lib/supabase/client";
 import { fetchAll } from "@/lib/rh/fetch-all";
+import { retryEvaluations, stuckEvaluations } from "@/lib/rh/retry-ai";
 import { addDays, dateKey, weekdayOf } from "@/lib/rh/agenda";
 import { isOpen, jobTitles, PIPELINE_LABEL, stageDef, STATUS } from "@/lib/rh/constants";
 import { aiScoreTone, formatTime, hireChance } from "@/lib/rh/format";
 import type { Application, Interview, Job, Pipeline, Stage } from "@/lib/types";
 
-type DashApp = Pick<Application, "id" | "candidate_id" | "job_id" | "job_title" | "jobs" | "pipeline" | "stage" | "status" | "closed_at" | "ai_score" | "interview_score" | "created_at" | "stage_changed_at" | "feedback_sent_at" | "ai_status"> & {
+type DashApp = Pick<Application, "id" | "candidate_id" | "job_id" | "job_title" | "jobs" | "pipeline" | "stage" | "status" | "closed_at" | "ai_score" | "interview_score" | "created_at" | "stage_changed_at" | "feedback_sent_at" | "ai_status" | "updated_at"> & {
   candidates: { full_name: string; sources: string[] } | null;
 };
 type DashInterview = Pick<Interview, "id" | "candidate_id" | "application_id" | "starts_at"> & {
@@ -131,6 +133,8 @@ export default function DashboardPage() {
   const [funil, setFunil] = useState<Funil>("todos");
   const [periodo, setPeriodo] = useState<Periodo>("30");
   const [now] = useState(() => Date.now());
+  const [reloadKey, setReloadKey] = useState(0);
+  const retried = useRef(false);
 
   useEffect(() => {
     const db = createClient();
@@ -140,7 +144,7 @@ export default function DashboardPage() {
       fetchAll<DashApp>((from, to) =>
         db
           .from("applications")
-          .select("id,candidate_id,job_id,job_title,jobs,pipeline,stage,status,closed_at,ai_score,interview_score,created_at,stage_changed_at,feedback_sent_at,ai_status,candidates(full_name,sources)")
+          .select("id,candidate_id,job_id,job_title,jobs,pipeline,stage,status,closed_at,ai_score,interview_score,created_at,stage_changed_at,feedback_sent_at,ai_status,updated_at,candidates(full_name,sources)")
           .order("created_at", { ascending: false })
           .range(from, to)
       ),
@@ -163,6 +167,12 @@ export default function DashboardPage() {
       setJobs((j.data as Job[]) ?? []);
       setApps(a.data);
       setRhReady(!a.error);
+      // Avaliações da IA que ficaram para trás são refeitas em segundo plano
+      if (!retried.current) {
+        retried.current = true;
+        const stuck = stuckEvaluations(a.data);
+        if (stuck.length) retryEvaluations(stuck).then(() => setReloadKey((k) => k + 1));
+      }
       setInterviews((i.data as unknown as DashInterview[]) ?? []);
       setPast((p.data as unknown as PastInterview[]) ?? []);
       // LGPD: quantos passaram do prazo de guarda (sem a migração 0014, fica 0)
@@ -175,7 +185,7 @@ export default function DashboardPage() {
         );
       setLoading(false);
     });
-  }, []);
+  }, [reloadKey]);
 
   const view = useMemo(() => {
     const days = periodo === "tudo" ? null : Number(periodo);
@@ -450,6 +460,9 @@ export default function DashboardPage() {
             <Panel title="Como encontraram a vaga" subtitle={`uma vez por pessoa, ${periodLabel}`}>
               <RankBars data={view.sources} total={view.people} unit="pessoas" />
             </Panel>
+            <div className="lg:col-span-2 xl:col-span-3">
+              <AiUsagePanel days={periodo === "tudo" ? null : Number(periodo)} />
+            </div>
             <Panel
               title="Vagas abertas por área"
               subtitle="agora"
