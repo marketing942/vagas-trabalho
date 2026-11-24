@@ -170,9 +170,46 @@ function normalize(raw: unknown): AiReport {
 
 class AiError extends Error {}
 
-/** Chama a API da DeepSeek (modo JSON). Tenta de novo em sobrecarga ou erro temporário. */
-async function askDeepSeek(user: string, system = SYSTEM): Promise<{ content: string; model: string }> {
+/** A função do servidor para em 300 s: a IA tem até 240 s no total (todas as tentativas), para sempre terminar e registrar o resultado. */
+const BUDGET_MS = 240_000;
+/** Cada tentativa espera no máximo isto pela resposta. */
+const ATTEMPT_MS = 110_000;
+/** Ler o currículo (PDF/Word) nunca pode travar a avaliação. */
+const RESUME_MS = 25_000;
+
+type AiKind = "avaliacao" | "copiloto" | "comparacao";
+interface UsageCtx {
+  db?: SupabaseClient;
+  kind?: AiKind;
+  applicationId?: string | null;
+}
+
+/** Guarda quantos tokens a chamada gastou (para o painel de custos). Nunca atrapalha a avaliação. */
+async function recordUsage(ctx: UsageCtx, model: string, usage: Record<string, unknown> | undefined) {
+  if (!ctx.db || !ctx.kind || !usage) return;
+  const n = (v: unknown) => Math.max(0, Math.round(Number(v) || 0));
+  const prompt = n(usage.prompt_tokens);
+  try {
+    await ctx.db.from("ai_usage").insert({
+      kind: ctx.kind,
+      application_id: ctx.applicationId ?? null,
+      model,
+      prompt_tokens: prompt,
+      cache_hit_tokens: Math.min(prompt, n(usage.prompt_cache_hit_tokens)),
+      completion_tokens: n(usage.completion_tokens),
+    });
+  } catch {
+    // sem a migração 0015 ou sem rede: só não registra
+  }
+}
+
+/** Chama a API da DeepSeek (modo JSON). Tenta de novo em sobrecarga ou erro temporário, dentro do orçamento de tempo. */
+async function askDeepSeek(user: string, system = SYSTEM, ctx: UsageCtx = {}): Promise<{ content: string; model: string }> {
+  const deadline = Date.now() + BUDGET_MS;
+  const slow = () => new AiError("A IA demorou demais para responder. Tente reavaliar.");
   for (let attempt = 0; ; attempt++) {
+    const left = deadline - Date.now();
+    if (left < 10_000) throw slow();
     let res: Response;
     try {
       res = await fetch(`${BASE_URL}/chat/completions`, {
@@ -189,24 +226,28 @@ async function askDeepSeek(user: string, system = SYSTEM): Promise<{ content: st
           max_tokens: 4000,
           stream: false,
         }),
-        signal: AbortSignal.timeout(150_000),
+        signal: AbortSignal.timeout(Math.min(ATTEMPT_MS, left)),
       });
     } catch (e) {
-      if (attempt < 2) continue;
-      throw new AiError(e instanceof Error && e.name === "TimeoutError" ? "A IA demorou demais para responder. Tente reavaliar." : "Não foi possível falar com a IA. Tente reavaliar.");
+      console.error("[IA] falha ao chamar a DeepSeek:", e instanceof Error ? `${e.name}: ${e.message}` : e);
+      if (attempt < 2 && deadline - Date.now() > 20_000) continue;
+      throw e instanceof Error && e.name === "TimeoutError" ? slow() : new AiError("Não foi possível falar com a IA. Tente reavaliar.");
     }
     if (res.ok) {
       const data = await res.json();
+      const model = String(data?.model ?? AI_MODEL);
+      await recordUsage(ctx, model, data?.usage);
       const choice = data?.choices?.[0];
       if (choice?.finish_reason === "length") throw new AiError("A resposta da IA ficou incompleta. Tente reavaliar.");
       if (choice?.finish_reason === "content_filter") throw new AiError("A IA não avaliou esta candidatura (filtro de conteúdo). Avalie manualmente.");
       const content = String(choice?.message?.content ?? "");
       if (!content.trim()) throw new AiError("A IA respondeu vazio. Tente reavaliar.");
-      return { content, model: String(data?.model ?? AI_MODEL) };
+      return { content, model };
     }
+    console.error(`[IA] DeepSeek respondeu ${res.status}`);
     if (res.status === 401) throw new AiError("Chave da IA inválida (DEEPSEEK_API_KEY).");
     if (res.status === 402) throw new AiError("Sem saldo na conta da DeepSeek. Recarregue em platform.deepseek.com.");
-    if ((res.status === 429 || res.status >= 500) && attempt < 2) {
+    if ((res.status === 429 || res.status >= 500) && attempt < 2 && deadline - Date.now() > 20_000) {
       await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
       continue;
     }
@@ -228,6 +269,7 @@ function parseJson(content: string): unknown {
  */
 export async function evaluateApplication(db: SupabaseClient, applicationId: string): Promise<{ ok: boolean; error?: string }> {
   const fail = async (message: string) => {
+    console.error(`[IA] avaliação ${applicationId} falhou: ${message}`);
     await db.from("applications").update({ ai_status: "erro", ai_error: message.slice(0, 500) }).eq("id", applicationId);
     return { ok: false, error: message };
   };
@@ -251,11 +293,19 @@ export async function evaluateApplication(db: SupabaseClient, applicationId: str
   await db.from("applications").update({ ai_status: "avaliando", ai_error: null }).eq("id", applicationId);
 
   try {
-    const resume = await resumeText(db, candidate);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const resume = await Promise.race([
+      resumeText(db, candidate),
+      new Promise<{ text: null; note: string }>((resolve) => {
+        timer = setTimeout(() => resolve({ text: null, note: "enviado, mas a leitura do arquivo demorou demais; veja o arquivo na ficha" }), RESUME_MS);
+      }),
+    ]).finally(() => clearTimeout(timer));
     const { content, model } = await askDeepSeek(
       `${refs.map((r) => jobBlock(r, r.id ? byId.get(r.id) ?? null : null)).join("\n\n")}\n\n${candidateBlock(candidate, resume)}${screeningBlock(application)}\n\n${
         refs.length > 1 ? `A pessoa escolheu ${refs.length} vagas. ` : ""
-      }Avalie esta candidatura e responda em JSON no formato pedido.`
+      }Avalie esta candidatura e responda em JSON no formato pedido.`,
+      SYSTEM,
+      { db, kind: "avaliacao", applicationId }
     );
     const report = normalize(parseJson(content));
     report.curriculo_lido = !!resume.text;
@@ -352,7 +402,7 @@ ${answered.map((a, i) => `${i + 1}. [${a.parte}] ${a.pergunta}${a.avalia ? ` (av
 Analise esta entrevista e responda em JSON no formato pedido.`;
 
   try {
-    const { content, model } = await askDeepSeek(user, COPILOT_SYSTEM);
+    const { content, model } = await askDeepSeek(user, COPILOT_SYSTEM, { db, kind: "copiloto", applicationId });
     const raw = parseJson(content) as Partial<InterviewAi>;
     if (!raw || typeof raw !== "object" || !raw.notas) throw new SyntaxError("formato");
     const notas = Object.fromEntries(
@@ -432,7 +482,7 @@ export async function compareFinalists(db: SupabaseClient, ids: string[]): Promi
     })
     .join("\n\n");
   try {
-    const { content, model } = await askDeepSeek(`${block}\n\nCompare estas pessoas e responda em JSON no formato pedido.`, COMPARE_SYSTEM);
+    const { content, model } = await askDeepSeek(`${block}\n\nCompare estas pessoas e responda em JSON no formato pedido.`, COMPARE_SYSTEM, { db, kind: "comparacao" });
     const raw = parseJson(content) as Partial<CompareResult>;
     const valid = new Set(apps.map((a) => a.id));
     return {

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { retryEvaluations, stuckEvaluations } from "@/lib/rh/retry-ai";
 import { createClient } from "@/lib/supabase/client";
 import { fetchAll } from "@/lib/rh/fetch-all";
 import { AGE_OPTIONS, jobTitles, PIPELINE_LABEL, SOURCE_OPTIONS, stageDelay, STAGES } from "@/lib/rh/constants";
@@ -26,6 +27,7 @@ export type BoardApp = Pick<
   | "stage"
   | "status"
   | "ai_status"
+  | "updated_at"
   | "ai_score"
   | "interview_score"
   | "stage_changed_at"
@@ -41,7 +43,7 @@ export type BoardApp = Pick<
 };
 
 const COLUMNS =
-  "id,candidate_id,job_id,job_title,jobs,pipeline,stage,status,ai_status,ai_score,interview_score,stage_changed_at,created_at,booking_token,rec:ai_report->>recomendacao,culture:culture_quiz->score,screening,candidates(full_name,city,email,whatsapp,age_range,sources,origin,resume_path,resume_name)";
+  "id,candidate_id,job_id,job_title,jobs,pipeline,stage,status,ai_status,ai_score,interview_score,stage_changed_at,created_at,updated_at,booking_token,rec:ai_report->>recomendacao,culture:culture_quiz->score,screening,candidates(full_name,city,email,whatsapp,age_range,sources,origin,resume_path,resume_name)";
 const PAGE = 40;
 const DAY = 86_400_000;
 
@@ -177,13 +179,9 @@ export default function PipelineBoard({ pipeline, onPipeline }: { pipeline: Pipe
       // (ex.: o servidor caiu no meio), tenta de novo em segundo plano, sem botão.
       if (retried.current) return;
       retried.current = true;
-      const stuck = data.filter((a) => a.ai_status === "pendente" && Date.now() - new Date(a.created_at).getTime() > 3 * 60_000).slice(0, 5);
+      const stuck = stuckEvaluations(data);
       if (!stuck.length) return;
-      Promise.all(
-        stuck.map((a) =>
-          fetch("/api/admin/avaliar", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ applicationId: a.id }) }).catch(() => null)
-        )
-      ).then(() => alive && setReloadKey((k) => k + 1));
+      retryEvaluations(stuck).then(() => alive && setReloadKey((k) => k + 1));
     });
     return () => {
       alive = false;

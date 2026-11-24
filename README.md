@@ -225,7 +225,8 @@ navegador. O visual da área administrativa usa a classe `.rh` (em
 
 1. Rode no SQL Editor do Supabase, nessa ordem, `supabase/migrations/0010_rh.sql`,
    `0011_rh_status_vagas_roteiro.sql`, `0012_rh_mensagens_copiloto.sql`,
-   `0013_rh_cultura_eliminatorias.sql` e `0014_rh_lgpd_retencao.sql`.
+   `0013_rh_cultura_eliminatorias.sql`, `0014_rh_lgpd_retencao.sql` e
+   `0015_rh_uso_ia.sql`.
 2. Na Vercel → **Settings → Environment Variables**, adicione:
    - `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project Settings → API → `service_role`);
    - `DEEPSEEK_API_KEY` (opcional, para o scorecard de IA; crie em platform.deepseek.com → API keys e coloque saldo).
@@ -372,6 +373,20 @@ entrevistas dos próximos 7 dias, contratações, score médio da IA, candidatur
 longo do tempo, por vaga, por etapa e por origem, maiores scores da IA, maior
 **chance de contratação** (estimativa que combina a etapa atual, o score da IA e
 a nota da entrevista) e próximas entrevistas. Filtros por funil e período.
+
+### Uso da IA (painel)
+
+O painel mostra, no período escolhido, quantos **tokens** e quantos **reais** a IA
+gastou: total, entrada e saída, chamadas e custo médio da triagem por candidatura,
+separados em triagem, análise da entrevista e comparação de finalistas. Os tokens
+vêm da resposta da DeepSeek (nada de texto ou dado pessoal é guardado). O custo é
+calculado pelos preços de **Ajustar preços** (US$ por 1 milhão de tokens e a
+cotação do dólar); confira os valores em api-docs.deepseek.com/quick_start/pricing.
+
+**Se a avaliação automática falhar:** o tempo de cada avaliação é limitado (4 minutos
+no total, 25 segundos para ler o currículo) e, se terminar com erro, o card mostra o
+motivo. Avaliações que ficaram "aguardando" ou "avaliando" por muito tempo são
+refeitas sozinhas quando alguém abre o painel ou o pipeline.
 
 ### Relatórios (`/admin/relatorios`)
 
